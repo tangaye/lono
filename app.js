@@ -1,6 +1,7 @@
 const messageInputEl = document.getElementById('message');
 const messengerEl = document.getElementById('messenger');
 const conversationEl = document.querySelector('.conversation');
+const container = document.querySelector('#container');
 
 // A. a place to store chat messages
 const messages = [];
@@ -11,7 +12,7 @@ const addMessage = (message) => {
     const messenger = messengerEl.value === 'sender' ? 'Blama Doe' : 'Konah Doe';
 
     const newMessage = {
-        messenger: messenger, 
+        messenger: messenger,
         message: message,
         date: new Date()
     };
@@ -20,6 +21,8 @@ const addMessage = (message) => {
     messages.push(newMessage);
 
     displayMessage(newMessage);
+
+    updateScroll();
 
 }
 
@@ -45,7 +48,7 @@ const displayMessage = (message) => {
 
 
 messageInputEl.addEventListener('keydown', (event) => {
-    
+
     const message = messageInputEl.value;
 
     if (event.code !== 'Enter') return;
@@ -56,3 +59,5 @@ messageInputEl.addEventListener('keydown', (event) => {
 
 });
 
+
+const updateScroll = () => container.scrollTop = container.scrollHeight;

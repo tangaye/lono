@@ -1,143 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Lono</title>
+    <link rel="stylesheet" href="app.css">
 
-    <style>
-
-        /* MAIN STYLES */
-        * {
-            padding: 0;
-            margin: 0;
-            box-sizing: border-box;
-        }
-
-        main {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* HEADER STYLES */
-        header {
-            position: fixed;
-            overflow: hidden;
-            top: 0;
-            background-color: white;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            width: 100%;
-            padding: 15px 15px 10px 15px;
-        }
-
-        header .search-box {
-            width: 300px;
-            height: 35px;
-        }
-
-        /* CHAT SECTION STYLES */
-        section {
-            margin-top: 62px; /* Add a top margin to avoid content overlay for fixed top */
-            background: #e5e5e5;
-            flex: 1;   
-        }
-
-        section .conversation {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-
-        .conversation li {
-            display: flex;
-            padding: 0.5em;
-            overflow: hidden;
-        }
-
-        .conversation .sender {
-            justify-content: flex-start;
-        }
-
-        .conversation .recipient {
-            justify-content: flex-end;
-        }
-
-
-        .conversation .messages {
-            background: white;
-            padding: 10px;
-            border-radius: 2px;
-            box-shadow: 0 1px 2px rgba(black, 0.2);
-        }
-
-        .conversation .recipient .messages {
-            background-color: blue;
-            color: white;
-        }
-
-        .messages .message {
-            font-size: 0.9rem;
-            margin: 0 0 0.2rem 0;
-        }
-        
-        .messages .sender {
-            font-size: 0.8rem;
-            font-weight:600;
-        }
-
-        .messages time {
-            font-size: 0.8rem;
-            color: #ccc;
-        }
-
-
-        /* FOOTER STYLES */
-        footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            padding: 15px;
-            background-color: white;
-        }
-
-        footer .footer-input {
-            height: 40px;
-            flex: 1;
-        }
-
-        footer #message {
-            width: 300px;
-            flex: 2;
-        }
-
-        footer #messenger {
-            width: 200px;
-            flex: initial;
-        }
-
-    </style>
-   
 </head>
-<body>    
+
+<body>
 
 
-    <main>
+    <main id="container">
 
         <header>
-                <h1>Lono</h1>
-                <input class="search-box" placeholder="Search">
+            <h1>Lono</h1>
+            <input class="search-box" placeholder="Search">
         </header>
-                
+
         <section>
             <ol class="conversation">
 
-                <li class="sender">
+                <!-- <li class="sender">
                     <div class="messages">
                         <p>Hello Konah, how are you doing?</p>
                         <span class="sender">Blama Doe</span>
@@ -157,8 +43,8 @@
                         <span class="sender">Konah Doe</span>
                         <time datetime="2009-11-13T20:00">Sat Apr 27 2019 • 4:24:25 PM</time>
                     </div>
-                </li>
-    
+                </li> -->
+
             </ol>
         </section>
 
@@ -171,9 +57,10 @@
                 <option value="recipient">Konah Doe (recipient) </option>
             </select>
         </footer>
-        
+
     </main>
 
     <script type="text/javascript" src="./app.js"></script>
 </body>
+
 </html>
