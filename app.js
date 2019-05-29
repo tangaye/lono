@@ -2,6 +2,7 @@ const messageInputEl = document.getElementById('message');
 const messengerEl = document.getElementById('messenger');
 const conversationEl = document.querySelector('.conversation');
 const container = document.querySelector('#container');
+const searchBox = document.querySelector('.search-box');
 
 // A. a place to store chat messages
 const messages = [];
@@ -33,7 +34,7 @@ const displayMessage = (message) => {
     const dateString = `${date.toDateString()} • ${date.toLocaleTimeString()}`;
 
     const messageBlock = `
-        <li class="${messengerEl.value}">
+        <li class="${messengerEl.value} message-block">
             <div class="messages">
                 <p class="message">${message.message}</p>
                 <span class="sender">${message.messenger}</span>
@@ -46,8 +47,9 @@ const displayMessage = (message) => {
     conversationEl.insertAdjacentHTML('beforeend', messageBlock);
 }
 
+const updateScroll = () => container.scrollTop = container.scrollHeight;
 
-messageInputEl.addEventListener('keydown', (event) => {
+messageInputEl.addEventListener('keydown', event => {
 
     const message = messageInputEl.value;
 
@@ -60,4 +62,18 @@ messageInputEl.addEventListener('keydown', (event) => {
 });
 
 
-const updateScroll = () => container.scrollTop = container.scrollHeight;
+searchBox.addEventListener('keyup', event => {
+
+    let searchChar = event.target.value.toUpperCase();
+
+    const messageBlocks = document.querySelectorAll('.message-block');
+
+    messageBlocks.forEach(message => {
+
+        let messageText = message.firstElementChild.firstElementChild.textContent.toUpperCase();
+
+        messageText.indexOf(searchChar) !== -1 ? message.style.display = 'flex' : message.style.display = 'none';
+
+    });
+
+});
