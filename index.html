@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Lono</title>
-    <link rel="stylesheet" href="app.css">
+    <link rel="stylesheet" href="/public/css/app.css">
 
 </head>
 
@@ -16,8 +16,8 @@
     <main id="container">
 
         <header>
-            <h1>Lono</h1>
-            <input class="search-box" placeholder="Search">
+            <h1 class="brand">Lono</h1>
+            <input class="search-box" placeholder="Looking for something..... &#129488;">
         </header>
 
         <section>
@@ -49,13 +49,18 @@
         </section>
 
         <footer>
-            <input class="footer-input" id="message" type="text" placeholder="Enter Message">
 
-            <select class="footer-input" id="messenger">
-                <option value="">Select Messenger</option>
-                <option value="sender">Blama Doe (sender) </option>
-                <option value="recipient">Konah Doe (recipient) </option>
-            </select>
+
+            <input class="footer-input" id="message" type="text"
+                placeholder="Life is too short to be boring. Let's lono &#x1F917;">
+
+            <div class="footer-input" id="messenger-box">
+                <label id="senderLabel" for="senderCheckbox">
+                    <input checked type="checkbox" id="senderCheckbox" class="messenger" name="messenger"
+                        value="sender">Sender
+                </label>
+            </div>
+
         </footer>
 
     </main>

@@ -1,0 +1,198 @@
+/* COLOR PALAETTE: https://coolors.co/173753-2892d7-9dbbae-1b4353-1d70a2 */
+
+/* pacifico-regular - latin */
+@font-face {
+    font-family: 'Pacifico';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/pacifico-v13-latin/pacifico-v13-latin-regular.eot');
+    /* IE9 Compat Modes */
+    src: local('Pacifico Regular'), local('Pacifico-Regular'),
+        url('../fonts/pacifico-v13-latin/pacifico-v13-latin-regular.eot?#iefix') format('embedded-opentype'),
+        /* IE6-IE8 */
+        url('../fonts/pacifico-v13-latin/pacifico-v13-latin-regular.woff2') format('woff2'),
+        /* Super Modern Browsers */
+        url('../fonts/pacifico-v13-latin/pacifico-v13-latin-regular.woff') format('woff'),
+        /* Modern Browsers */
+        url('../fonts/pacifico-v13-latin/pacifico-v13-latin-regular.ttf') format('truetype'),
+        /* Safari, Android, iOS */
+        url('../fonts/pacifico-v13-latin/pacifico-v13-latin-regular.svg#Pacifico') format('svg');
+    /* Legacy iOS */
+}
+
+
+/* ubuntu-condensed-regular - latin */
+@font-face {
+    font-family: 'Ubuntu Condensed';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/ubuntu-condensed-v9-latin/ubuntu-condensed-v9-latin-regular.eot');
+    /* IE9 Compat Modes */
+    src: local('Ubuntu Condensed'), local('UbuntuCondensed-Regular'),
+        url('../fonts/ubuntu-condensed-v9-latin/ubuntu-condensed-v9-latin-regular.eot?#iefix') format('embedded-opentype'),
+        /* IE6-IE8 */
+        url('../fonts/ubuntu-condensed-v9-latin/ubuntu-condensed-v9-latin-regular.woff2') format('woff2'),
+        /* Super Modern Browsers */
+        url('../fonts/ubuntu-condensed-v9-latin/ubuntu-condensed-v9-latin-regular.woff') format('woff'),
+        /* Modern Browsers */
+        url('../fonts/ubuntu-condensed-v9-latin/ubuntu-condensed-v9-latin-regular.ttf') format('truetype'),
+        /* Safari, Android, iOS */
+        url('../fonts/ubuntu-condensed-v9-latin/ubuntu-condensed-v9-latin-regular.svg#UbuntuCondensed') format('svg');
+    /* Legacy iOS */
+}
+
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Ubuntu Condensed';
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    /* Theses two styles below helped me keep the scroll bar at the bottom
+    * Please don't ask me why
+     */
+    height: 100vh;
+    overflow: auto;
+}
+
+/* HEADER STYLES */
+header {
+    position: fixed;
+    top: 0;
+    background-color: #2892d7;
+    box-shadow: 0px 2px 2px 0px #82B7D8;
+    color: white;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 20px;
+}
+
+header .search-box {
+    width: 400px;
+    height: 35px;
+    margin-top: 10px;
+    color: #969292;
+    font-size: 15px;
+    padding: 20px;
+    border: 0;
+    box-shadow: inset 0px 0px 2px 2px rgba(181, 183, 184, 0.42);
+    border-radius: 20px;
+}
+
+header .brand {
+    font-family: 'Pacifico';
+}
+
+/* CHAT SECTION STYLES */
+section {
+    margin-top: 86px;
+    /* Should be about the height of the header */
+    padding-bottom: 65px;
+    /* Should be about the height of the footer, don't know why I'm using padding but it works'
+    /* Add a top margin to avoid content overlay for fixed top */
+    background: #ffffff;
+    flex: 1;
+}
+
+section .conversation {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.conversation li {
+    display: flex;
+    padding: 0.5em;
+}
+
+.conversation .sender {
+    justify-content: flex-start;
+}
+
+.conversation .receipient {
+    justify-content: flex-end;
+}
+
+/* max-width needed to break word on next line when message block content overflows */
+.conversation .messages {
+    max-width: 350px;
+    word-wrap: break-word;
+    padding: 10px;
+    border-radius: 15px;
+}
+
+/* RECEIPIENT STYLES */
+.conversation .receipient .messages {
+    background-color: #2892d7;
+    box-shadow: 0px 1px 4px 2px rgba(130, 183, 216, 0.42);
+
+    color: white;
+}
+
+/* SENDER STYLES */
+.conversation .sender .messages {
+    background-color: #e5e5e5;
+    color: #636060;
+}
+
+.messages .message {
+    font-size: 0.9rem;
+    margin: 0 0 0.2rem 0;
+}
+
+.messages .sender {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.messages time {
+    font-size: 0.8rem;
+    /* color: white; */
+}
+
+
+/* FOOTER STYLES */
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+    background-color: #e5e5e5;
+}
+
+footer #message {
+    height: 35px;
+    padding: 20px;
+    border: 0;
+    border-radius: 20px;
+    font-size: 15px;
+    flex: 1;
+}
+
+footer #messenger-box {
+    font-family: monospace;
+    margin: 12px 5px 15px 10px;
+    border: 0;
+}
+
+#messenger-box #senderLabel {
+    color: #2892d7;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#messenger-box #senderCheckbox {
+    vertical-align: -3px;
+    margin-right: 2px;
+}
