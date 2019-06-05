@@ -12,14 +12,20 @@ app.set('views', 'views');
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (request, response) => response.render('index'));
+app.get('/chat', (request, response) => response.render('chat'));
 
 io.on('connection', socket => {
 
-    console.log('a user connected');
-    // console.log(socket);
-    socket.on('disconnect', () => console.log('a user disconected'));
 
-    socket.on('chat', message => console.log(message));
+    console.log('a user connected');
+
+    socket.on('disconnect', () => {
+        console.log('a user disconected');
+    });
+
+    socket.on('chat', message => {
+        io.emit('chat', message);
+    });
 
 });
 

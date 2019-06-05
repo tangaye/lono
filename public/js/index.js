@@ -27,6 +27,7 @@ const chatModel = {
 };
 
 const chatController = {
+
     sendMessage(message) {
 
         const newMessage = {
@@ -37,8 +38,6 @@ const chatController = {
 
         // add message
         chatModel.addMessage(newMessage);
-
-        this.sendToSocket(newMessage);
 
         // display message
         this.displayMessage(newMessage);
@@ -56,10 +55,6 @@ const chatController = {
 
     setChatMessenger(messenger) {
         chatModel.setMessenger(messenger);
-    },
-
-    sendToSocket(message) {
-        socket.emit('chat', message);
     },
 
     search(needle) {
@@ -130,8 +125,8 @@ const chatView = {
             if (messenger === "") return; // Do nothing when messenger is not selected
 
             // otherwise set messenger and  send message
-            chatController.setChatMessenger(this.getMessengerName());
-            chatController.sendMessage(message);
+            socket.emit('chat', message);
+
         });
     }
 };
@@ -139,3 +134,13 @@ const chatView = {
 chatView.setupEventListeners();
 
 const updateScroll = () => (container.scrollTop = container.scrollHeight);
+
+socket.on('chat', message => {
+
+    console.log(message);
+
+    chatController.setChatMessenger(chatView.getMessengerName());
+
+    chatController.sendMessage(message);
+
+});
