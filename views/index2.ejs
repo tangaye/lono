@@ -135,6 +135,18 @@
             border-radius: 2px;
         }
 
+        li .user-details {
+            display: flex;
+            flex-direction: column;
+            /* color: whitesmoke; */
+        }
+
+        li .user-details .last-seen {
+            color: #969292;
+            font-size: 12.5px;
+            font-style: italic;
+        }
+
 
         #chat-page #chat-container {
             /* width: 80%; */
@@ -239,21 +251,29 @@
                 <ul class="users">
                     <!-- <li>
 
-                        <span class="name">john</span>
+                        <div class="user-details">
+                            <span class="name">john</span>
+                            <span class="last-seen">last seen 9pm</span>
+                        </div>
                         <span class="status offline"></span>
                     </li>
                     <li>
-                        <span class="name">amos</span>
+                        <div class="user-details">
+                            <span class="name">nathan</span>
+                            <span class="last-seen">last seen 8pm</span>
+                        </div>
                         <span class="status online"></span>
                     </li>
                     <li>
-                        <span class="name">amos</span>
+                        <div class="user-details">
+                            <span class="name">siafa</span>
+                            <span class="last-seen">last seen 10pm</span>
+                        </div>
                         <span class="status idle"></span>
                     </li> -->
                 </ul>
                 <select class="user-status">
                     <option value="online" selected>Online</option>
-                    <option value="offline">Offline</option>
                     <option value="idle">Idle</option>
                 </select>
             </aside>

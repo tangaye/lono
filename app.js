@@ -4,6 +4,7 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 const path = require('path');
 const session = require('express-session');
+
 server.listen(4000, () => console.log('App listening on port 4000'));
 
 // Setup views folder and view engine
@@ -143,6 +144,7 @@ const logout = (user, socketId) => {
 
         // a. set user status to offline
         user.status = 'offline';
+        user.lastSeen = new Date();
 
         // b. tell all connected sockets that a user has left the chat
         io.emit('disconnected', users);

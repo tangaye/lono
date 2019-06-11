@@ -184,10 +184,15 @@ const chatView = {
         users.forEach(user => {
 
             let userLi = `
-            <li id="user-${user.sessionId}">
-                <span class="name">${user.name}</span>
-                <span class="status ${user.status}"></span>
-            </li>`;
+                <li id="user-${user.sessionId}">
+                    <div class="user-details">
+                        <span class="name">${user.name}</span>
+                        <span class="last-seen">
+                            ${user.status === OFFLINE ? 'last seen ' + moment(user.lastSeen).format("h:mma") : ''}
+                        </span>
+                    </div>
+                    <span class="status ${user.status}"></span>
+                </li>`;
             pageEl.usersList.insertAdjacentHTML('beforeend', userLi);
         });
     },
@@ -215,6 +220,16 @@ const chatView = {
         userEl.lastElementChild.classList = '';
 
         userEl.lastElementChild.classList.add('status', user.status);
+
+
+        // THIS MAY NOT BE NEEEDED
+        if (user.status === OFFLINE) {
+
+            userEl.firstElementChild.lastElementChild.innerHTML = 'last seen ' + moment(Date.now()).format("h:mma");
+        } else {
+
+            userEl.firstElementChild.lastElementChild.innerHTML = '';
+        }
 
     },
 
@@ -257,8 +272,6 @@ const chatView = {
                 };
 
                 chatController.addUserMessage(message);
-
-                // chatController.sendMessageToSocket(message);
 
             }
 
