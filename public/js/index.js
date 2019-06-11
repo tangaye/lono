@@ -1,60 +1,66 @@
-const socket = io(); // Initialize socket.io
+const socket = io(); // Initialize socket.
+const OFFLINE = 'offline';
+const ONLINE = 'online';
+const IDLE = 'idle';
 
 const pageEl = {
-    messageInputEl: document.querySelector("#message"),
-    messengerEl: document.querySelector(".messenger"),
+    messageInputEl: document.querySelector(".chat-box"),
     conversationEl: document.querySelector(".conversation"),
-    container: document.querySelector("#container"),
-    searchBox: document.querySelector(".search-box")
+    container: document.querySelector("#chat-area"),
+    searchBox: document.querySelector(".search-box"),
+    usersList: document.querySelector('.users'),
+    usersCountEl: document.querySelector('.users-count')
 };
 
 const chatModel = {
     messages: [],
 
-    messenger: "",
-
     addMessage(message) {
         this.messages.push(message);
     },
 
-    setMessenger(messenger) {
-        this.messenger = messenger;
+    setUsername(username) {
+        sessionStorage.setItem('user', username);
     },
 
-    getMessenger() {
-        return this.messenger;
+    getUsername() {
+        return sessionStorage.getItem('user');
     }
 };
 
 const chatController = {
 
-    sendMessage(message) {
+    broadcastMessage(message) {
 
-        const newMessage = {
-            messenger: chatModel.getMessenger(),
-            message: message,
-            date: new Date()
-        };
+        chatView.displayMessage(message);
 
-        // add message
-        chatModel.addMessage(newMessage);
+        // keep page scroll at the bottom
+        chatView.updateScroll();
+    },
 
-        // display message
-        this.displayMessage(newMessage);
+    // Adds user message and clears input
+    addUserMessage(message) {
+
+        // display user message to user
+        chatView.displayMessage(message);
 
         // clear message input
         chatView.clearMessageInput();
 
         // keep page scroll at the bottom
-        updateScroll();
+        chatView.updateScroll();
+
+        // broadcast user message
+        this.sendMessageToSocket(message);
     },
 
-    displayMessage(message) {
-        chatView.displayMessage(message);
+    setChatUsername(username) {
+        chatModel.setUsername(username);
     },
 
-    setChatMessenger(messenger) {
-        chatModel.setMessenger(messenger);
+
+    getChatUsername() {
+        return chatModel.getUsername();
     },
 
     search(needle) {
@@ -64,83 +70,230 @@ const chatController = {
         // loop through messageBlocks
         messageBlocks.forEach(haystack => {
             // A user message sits in a <p> which sits in a <div>
-            let haystackText = haystack.firstElementChild.firstElementChild.textContent.toUpperCase();
+            let haystackText = haystack.firstElementChild.lastElementChild.textContent.toUpperCase();
 
             // if needle found in haystack display message otherwise hide it
             haystackText.indexOf(needle) !== -1 ?
                 (haystack.style.display = "flex") :
                 (haystack.style.display = "none");
         });
+    },
+
+    userLoggedIn(username, users, messages) {
+
+        this.setChatUsername(username);
+
+        this.connectedUsers(users);
+
+        this.availableUsersCount(users.length);
+
+        this.sentMessages(messages);
+
+    },
+
+    connectedUsers(users) {
+        chatView.displayConnectedUsers(users);
+    },
+
+    availableUsersCount(count) {
+        chatView.displayAvailableUsersCount(count);
+    },
+
+    sentMessages(messages) {
+        chatView.displaySentMessages(messages);
+    },
+
+    sendMessageToSocket(message) {
+
+        socket.emit('send message', message);
+    },
+
+    showConnectedUsers(users) {
+
+        this.connectedUsers(users);
+        this.availableUsersCount(users.length);
+    },
+
+    login(username) {
+        socket.emit('login', username);
+        // hide login page and show chat page
+        chatView.hideLoginPage();
+        chatView.showChatPage();
+    },
+
+    userReconnect(users, messages) {
+
+        // hide login page and show chat page
+        chatView.hideLoginPage();
+        chatView.showChatPage();
+
+        this.connectedUsers(users);
+        this.availableUsersCount(users.length);
+        this.sentMessages(messages);
+    },
+
+    updateUserStatus(user) {
+        chatView.displayUserStatus(user);
     }
 };
 
 const chatView = {
     displayMessage(message) {
-
         const messageBlock = `
-            <li class="${this.getMessenger()} message-block">
-                <div class="messages">
-                    <p class="message">${message.message}</p>
-                    <span class="sender">${message.messenger}</span>
-                    <time>${moment(message.date).format('h:mma')}</time>
-                </div>
+
+            <li class='message-block'>
+                <article class="message">
+                    <header class="sender">${message.sender}</header>
+                    <p>${message.content}</p>
+                </article>
+                <time >${moment(message.date).format("h:mma")}</time>
             </li>
+
         `;
 
         pageEl.conversationEl.insertAdjacentHTML("beforeend", messageBlock);
     },
 
-    getMessengerName() {
+    displaySentMessages(messages) {
 
-        // If messengerEl is checked sender messenger name is 'Blama Doe' otherwise 'Konah Doe'
-        return pageEl.messengerEl.checked ? "Blama Doe" : "Konah Doe";
-    },
+        pageEl.conversationEl.innerHTML = '';
 
-    getMessenger() {
+        messages.forEach(message => {
 
-        // If messengerEl is checked return 'sender' otherwise receipient
-        return pageEl.messengerEl.checked ? "sender" : "receipient";
+            let messageBlock = `
+                <li class='message-block'>
+                    <article class="message">
+                        <header class="sender">${message.sender}</header>
+                        <p>${message.content}</p>
+                    </article>
+                    <time >${moment(message.date).format("h:mma")}</time>
+                </li>`;
+
+            pageEl.conversationEl.insertAdjacentHTML("beforeend", messageBlock);
+        });
+
     },
 
     clearMessageInput() {
-        pageEl.messageInputEl.value = null;
+        pageEl.messageInputEl.value = '';
+    },
+
+    displayConnectedUsers(users) {
+        pageEl.usersList.innerHTML = '';
+
+        users.forEach(user => {
+
+            let userLi = `
+            <li id="user-${user.sessionId}">
+                <span class="name">${user.name}</span>
+                <span class="status ${user.status}"></span>
+            </li>`;
+            pageEl.usersList.insertAdjacentHTML('beforeend', userLi);
+        });
+    },
+
+    displayAvailableUsersCount(count) {
+        pageEl.usersCountEl.innerHTML = count;
+    },
+
+    hideLoginPage() {
+        document.querySelector('#login-page').style.display = 'none';
+    },
+
+    showLoginPage() {
+        document.querySelector('#login-page').style.display = 'flex';
+    },
+
+    showChatPage() {
+        document.querySelector('#chat-page').style.display = 'flex';
+    },
+
+    displayUserStatus(user) {
+
+        let userEl = document.querySelector(`#user-${user.sessionId}`);
+
+        userEl.lastElementChild.classList = '';
+
+        userEl.lastElementChild.classList.add('status', user.status);
+
+    },
+
+    updateScroll() {
+        pageEl.container.scrollTop = pageEl.container.scrollHeight;
     },
 
     setupEventListeners() {
+
+        document.addEventListener('keydown', event => {
+
+            if (event.target.classList.contains('user-handle')) {
+
+                if (event.code !== "Enter") return; // Do nothing when user doesn't press enter to send message
+
+                const username = event.target.value;
+
+                if (username.length === 0) return; // Do nothing when message input is empty
+
+                // emit add user event
+                chatController.login(username);
+            }
+
+            // Event listener for message input
+            if (event.target.classList.contains('chat-box')) {
+
+                if (event.code !== "Enter") return; // Do nothing when user doesn't press enter to send message
+
+                const value = event.target.value;
+
+                if (value.length === 0) return; // Do nothing when message input is empty
+
+                const message = {
+
+                    sender: chatController.getChatUsername(),
+                    content: value,
+                    date: new Date(),
+                    id: String(Date.now() + Math.random()),
+                    read: false
+                };
+
+                chatController.addUserMessage(message);
+
+                // chatController.sendMessageToSocket(message);
+
+            }
+
+        });
+
+        document.addEventListener('change', event => {
+
+            if (event.target.classList.contains('user-status')) {
+
+                let status = event.target.value;
+
+                socket.emit('update status', status);
+
+            }
+
+        });
+
         // Event listener for search box
-        pageEl.searchBox.addEventListener("keyup", event => {
+        pageEl.searchBox.addEventListener('keyup', event => {
             let searchChar = event.target.value.toUpperCase();
 
             chatController.search(searchChar);
         });
 
-        // Event listener for message input
-        pageEl.messageInputEl.addEventListener('keydown', event => {
-
-            const message = event.target.value;
-            let messenger = this.getMessenger();
-
-            if (event.code !== "Enter") return; // Do nothing when user doesn't press enter to send message
-            if (message.length === 0) return; // Do nothing when message input is empty
-            if (messenger === "") return; // Do nothing when messenger is not selected
-
-            // otherwise set messenger and  send message
-            socket.emit('chat', message);
-
-        });
     }
 };
 
 chatView.setupEventListeners();
 
-const updateScroll = () => (container.scrollTop = container.scrollHeight);
+socket.on('connected', (users, messages) => chatController.userReconnect(users, messages));
 
-socket.on('chat', message => {
+socket.on('broadcast message', message => chatController.broadcastMessage(message));
 
-    console.log(message);
+socket.on('logged in', (username, users, messages) => chatController.userLoggedIn(username, users, messages));
 
-    chatController.setChatMessenger(chatView.getMessengerName());
+socket.on('disconnected', users => chatController.showConnectedUsers(users));
 
-    chatController.sendMessage(message);
-
-});
+socket.on('status updated', user => chatController.updateUserStatus(user));

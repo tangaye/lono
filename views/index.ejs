@@ -48,13 +48,36 @@
 </head>
 
 <body>
-    <main>
+    <main id="welcome-container">
         <div class="welcome">Life is too short to not <span class="brand">Lono &#x1F917;</span></div>
 
         <input class="user-handle" placeholder="What do you want to be know as?">
     </main>
-    <script type="text/javascript" src="/js/libs/socket.io.js"></script>
+
     <script type="text/javascript" src="/js/libs/moment.js"></script>
+    <script type="text/javascript" src="/js/libs/socket.io.js"></script>
+    <script type="text/javascript" src="/js/init-socket.js"></script>
+    <script>
+        const userHandle = document.querySelector(".user-handle");
+
+        userHandle.addEventListener('keydown', event => {
+
+            if (event.code !== "Enter") return; // Do nothing when user doesn't press enter to send message
+
+            const username = event.target.value;
+
+            if (username.length === 0) return; // Do nothing when message input is empty
+
+            // navigate to chat room
+            window.location.href = 'http://localhost:4000/chat';
+
+            // emit add user event
+            addUser(username);
+
+        });
+
+        const addUser = username => socket.emit('addUser', username);
+    </script>
 </body>
 
 </html>

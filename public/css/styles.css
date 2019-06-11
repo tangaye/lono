@@ -2,6 +2,15 @@ body {
     font-family: 'Montserrat';
 }
 
+
+aside {
+    width: 15%;
+    display: flex;
+    flex-direction: column;
+    background-color: #173753;
+    color: #ffffff;
+}
+
 main {
     display: flex;
     flex-direction: column;
