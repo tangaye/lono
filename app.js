@@ -26,8 +26,8 @@ io.use((socket, next) => sessionMiddleware(socket.request, socket.request.res, n
 app.use(sessionMiddleware);
 
 
-app.get('/', (request, response) => response.render('index2'));
-app.get('/chat', (request, response) => response.render('chat1'));
+app.get('/', (request, response) => response.render('index'));
+
 
 const users = [];
 const messages = [];
@@ -45,9 +45,13 @@ io.on('connection', socket => {
          * 
          */
         user.connected = true;
+        user.status = 'online';
+        user.loggedId = true;
+        user.socketIds.push(socket.id);
 
         // b. If user was found, tell all connected sockets about existing users
-        socket.emit('connected', users, messages);
+        socket.emit('connected', user, users, messages);
+        socket.broadcast.emit('user reconnected', users);
     }
 
     // otherwise allow new users to login
@@ -62,30 +66,45 @@ io.on('connection', socket => {
         messages.push(message);
 
         // 2. Send user message to all connected sockets
-        socket.broadcast.emit('broadcast message', message);
+        socket.broadcast.emit('broadcast message', user, message);
 
     });
 
-    // WHAT TO DO WHEN A USER LOGS IN
-    socket.on('login', username => {
+    // WHAT TO DO WHEN A USER LOGSIN
+    socket.on('login', (username, callback) => {
 
-        //  1. Populate user info
-        let user = {
-            sessionId: socket.request.sessionID,
-            name: username,
-            status: 'online',
-            connected: true,
-            socketIds: [socket.id]
-        };
+        if (userExists(username)) {
 
-        //  2. log user in
-        login(user);
+            callback({
+                error: '&#128577; Username is taken, please choose another....'
+            });
 
-        // sending to all clients except sender
-        // socket.broadcast.emit('broadcast message', users, messages);
 
-        // 3. Tell all connected users about new user
-        io.emit('logged in', user.name, users, messages);
+        } else {
+
+            callback({
+                success: 'success'
+            });
+
+            //  1. Populate user info
+            let user = {
+                sessionId: socket.request.sessionID,
+                name: username,
+                status: 'online',
+                connected: true,
+                socketIds: [socket.id]
+            };
+
+            //  2. log user in
+            login(user);
+
+            // sending to all clients except sender
+            // socket.broadcast.emit('broadcast message', users, messages);
+
+            // 3. Tell all connected users about new user
+            io.emit('logged in', user.name, users, messages);
+            socket.emit('user details', user, users, messages);
+        }
 
     });
 
@@ -102,28 +121,40 @@ io.on('connection', socket => {
         user.status = status;
 
         // 3. Tell all connected users about user updated status
-        io.emit('status updated', user);
+        socket.broadcast.emit('status updated', user);
     });
+
+    socket.on('update message', (message, status) => {
+
+        let updatedMessage = updateMessageStatus(message, status);
+
+        io.emit('updated message', updatedMessage);
+
+    })
 
     // WHAT TO DO WHEN A USER GETS DISCONNECTED
     socket.on('disconnect', () => {
 
-        // 1. find user that is toggling status
         let user = findUser(socket.request.sessionID);
 
         // 2. Check if user wasn't found. If so, return doing nothing
         if (user === undefined) return;
 
+        // 1. remove the user channel that was disconnected
+        user.socketIds.splice(socket.id, 1);
+
         // 3. Set user connected status to false
         user.connected = false;
+        user.status = 'offline';
+        user.loggedId = false;
 
         // 5. Wait for 10secs to see if the user will reconnect
         setTimeout(() => {
 
-            // a. If user doesn't reconnect disconnect user
-            if (!user.connected) logout(user, socket.id);
+            // a. If user doesn't reconnect after 10secs disconnect user
+            if (!user.connected) logout(user);
 
-        }, 3000);
+        }, 5000);
 
     });
 
@@ -134,16 +165,12 @@ io.on('connection', socket => {
 const login = user => users.push(user);
 
 // logout user
-const logout = (user, socketId) => {
-
-    // 1. remove the user channel that was disconnected
-    user.socketIds.splice(socketId, 1);
+const logout = user => {
 
     // 2. Check if user channels is === 0, if so...
     if (user.socketIds.length === 0) {
 
         // a. set user status to offline
-        user.status = 'offline';
         user.lastSeen = new Date();
 
         // b. tell all connected sockets that a user has left the chat
@@ -151,5 +178,16 @@ const logout = (user, socketId) => {
     }
 }
 
+const updateMessageStatus = (msg, status) => {
+    let message = messages.find(message => message.id === msg.id);
+
+    if (message) {
+        message.status = status;
+        return message;
+    }
+}
+
 // find user base on browser session id
 const findUser = sessionId => users.find(user => user.sessionId === sessionId);
+
+const userExists = username => users.find(user => user.name === username);
