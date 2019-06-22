@@ -1,273 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Lono - Chat like it's ur last...</title>
     <link rel="stylesheet" href="/css/common.css" />
-    <style>
-      html,
-      body {
-        height: 100%;
-        width: 100%;
-        font-family: "Montserrat";
-        display: flex;
-        overflow: hidden;
-      }
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
 
-      #login-page {
-        width: 100%;
-        height: 100%;
-        background: url("/images/background.svg");
-        background-attachment: fixed;
-        background-size: contain;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      #login-page .welcome {
-        color: #ffffff;
-        text-align: center;
-        font-size: 50px;
-        letter-spacing: 2px;
-        margin-top: 120px;
-        margin-bottom: 20px;
-      }
-
-      #login-page .welcome .brand {
-        font-family: "Pacifico";
-      }
-
-      #login-page .user-handle {
-        font-family: "Raleway";
-        font-size: 20px;
-        width: 40%;
-        padding: 10px;
-        border: 5px solid #d2e0da;
-        color: #636060;
-        border-radius: 10px;
-      }
-
-      #login-page .username-error {
-        display: none;
-        color: red;
-        margin-top: 8px;
-      }
-
-      #chat-page {
-        height: 100%;
-        display: none;
-      }
-
-      #chat-page #main-header {
-        background-color: #2892d7;
-        color: #ffffff;
-        display: flex;
-        justify-content: space-between;
-        position: fixed;
-        width: 100%;
-        padding: 10px;
-      }
-
-      #main-header .user-div {
-        /* align-self: flex-start; */
-      }
-
-      #chat-page header .search-box {
-        width: 325px;
-        color: #969292;
-        font-size: 15px;
-        padding: 5px;
-        border: 2px solid #d2e0da;
-        border-radius: 10px;
-      }
-
-      /* SIDEBAR STYLES */
-
-      #chat-page #sidebar {
-        /* width: 20%; */
-        width: 200px;
-        /* width: 50%; */
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        background-color: #173753;
-        overflow-y: auto;
-        color: #ffffff;
-      }
-
-      #chat-page aside .users {
-        margin-top: 15px;
-        list-style: none;
-        flex-grow: 1;
-        /* fill availble space, eventually pushing select list to the bottom */
-      }
-
-      #chat-page aside .users li {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        padding-bottom: 4px;
-        width: 150px;
-        font-size: 14px;
-      }
-
-      .users li .status {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin-top: 7px;
-      }
-
-      .online {
-        background-color: rgb(15, 185, 15);
-      }
-
-      .idle {
-        background-color: rgb(172, 120, 9);
-      }
-
-      .offline {
-        background-color: rgba(107, 103, 103, 0.8);
-      }
-
-      .user-status {
-        background-color: #e5e5e5;
-        border: 0;
-        height: 30px;
-        padding: 6px;
-        border-radius: 2px;
-      }
-
-      li .user-details {
-        display: flex;
-        flex-direction: column;
-        /* color: whitesmoke; */
-      }
-
-      li .user-details .last-seen {
-        color: #969292;
-        font-size: 12.5px;
-        font-style: italic;
-      }
-
-      #chat-page #chat-container {
-        /* width: 80%; */
-        /* flex-shrink: 0; */
-        width: 1150px;
-      }
-
-      /* CHAT AREA STYLES */
-      #chat-page main {
-        height: 100%;
-        display: flex;
-        overflow: hidden;
-        padding-top: 50px;
-      }
-
-      #chat-page main .column {
-        height: 100%;
-        /*allows both columns to span the full height of the browser window*/
-        display: flex;
-        flex-direction: column;
-        /*places the left and right headers above the bottom content*/
-      }
-
-      #chat-page main #chat-area {
-        padding: 20px;
-        overflow-y: auto;
-      }
-
-      /* CHAT STYLES */
-      .conversation {
-        list-style: none;
-        padding: 0;
-        margin-bottom: 50px;
-      }
-
-      .conversation li {
-        display: flex;
-        flex-direction: column;
-        /* flex-wrap: wrap; */
-        padding-bottom: 20px;
-      }
-
-      .conversation .message {
-        background-color: #e5e5e5;
-        color: #636060;
-        padding: 5px;
-        border-radius: 5px;
-      }
-
-      .conversation .message header {
-        font-weight: bold;
-        font-family: "Raleway";
-      }
-
-      .conversation .message-status {
-        margin-top: 2px;
-        margin-left: 5px;
-        font-weight: 100;
-        color: #636060;
-        font-size: 12px;
-      }
-
-      .message-status .status {
-        font-style: italic;
-      }
-
-      /* FOOTER STYLES */
-      #chat-page footer {
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-      }
-
-      #chat-page footer .chat-box {
-        background-color: #e5e5e5;
-        width: 100%;
-        border: 0;
-        padding: 15px;
-        font-size: 15px;
-      }
-    </style>
-  </head>
-
-  <body>
+<body>
+    <!-- Login view -->
     <section id="login-page">
-      <div class="welcome">
-        Life is too short to not <span class="brand">Lono &#x1F917;</span>
-      </div>
+        <div class="welcome">
+            Life is too short to not <span class="brand">Lono &#x1F917;</span>
+        </div>
 
-      <input
-        class="user-handle"
-        placeholder="What do you want to be know as?"
-      />
-      <div class="username-error">
-        &#128577; Username is taken, please choose another....
-      </div>
+        <input class="user-handle" placeholder="What do you want to be know as?" />
+        <div class="username-error">
+            &#128577; Username is taken, please choose another....
+        </div>
     </section>
 
     <section id="chat-page">
-      <header id="main-header">
-        <div class="user-div">
-          Yatuwa,
-          <span class="username">jonah</span>
-        </div>
-        <input
-          class="search-box"
-          placeholder="Looking for something..... &#129488;"
-        />
-      </header>
 
-      <main>
         <aside id="sidebar" class="column">
-          <p>AVAILABLE - <span class="users-count">0</span></p>
-          <ul class="users">
-            <!-- <li>
+            <header>
+                <div class="username">jonah</div>
+                <button class="close-sidebar">&times;</button>
+            </header>
+            <p>AVAILABLE - <span class="users-count">0</span></p>
+            <ul class="users">
+                <!-- <li>
 
                         <div class="user-details">
                             <span class="name">john</span>
@@ -289,76 +54,76 @@
                         </div>
                         <span class="status idle"></span>
                     </li> -->
-          </ul>
-          <select class="user-status">
-            <option value="online" selected>Online</option>
-            <option value="idle">Idle</option>
-          </select>
+            </ul>
+            <select class="user-status">
+                <option value="online" selected>Online</option>
+                <option value="idle">Idle</option>
+            </select>
         </aside>
 
         <section id="chat-container" class="column">
-          <div id="chat-area">
-            <ol class="conversation">
-              <li class="message-block">
-                <article class="message">
-                  <header class="sender">Blama Doe</header>
-                  <p>Hello Konah, how are you doing?</p>
-                </article>
-                <div class="message-status">
-                  <time class="time"> 4:24 PM</time>
-                  <span class="status">delivered</span>
-                </div>
-              </li>
-              <li class="message-block">
-                <article class="message">
-                  <header class="sender">Blama Doe</header>
-                  <p>
-                    Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-                  </p>
-                </article>
-                <div class="message-status">
-                  <time class="time"> 4:24 PM</time>
-                  <span class="status">delivered</span>
-                </div>
-              </li>
-              <li class="message-block">
-                <article class="message">
-                  <header class="sender">Blama konah</header>
-                  <p>
-                    Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                    Saepe, magni similique minus doloribus minima ad nisi beatae
-                    numquam aspernatur. Lorem ipsum dolor sit, amet consectetur
-                    adipisicing elit. Aspernatur reprehenderit adipisci eius
-                    quia! Nesciunt maiores enim iure fugiat labore perferendis
-                    aut, libero id adipisci quasi tempore voluptatibus
-                    reiciendis earum neque? Lorem ipsum dolor sit amet
-                    consectetur adipisicing elit. Eos ipsa facere tempore
-                    maiores voluptate ut error excepturi labore alias impedit!
-                    Blanditiis officia distinctio atque molestias aspernatur
-                    laboriosam, reiciendis ducimus quisquam.
-                  </p>
-                </article>
-                <div class="message-status">
-                  <time class="time"> 4:24 PM</time>
-                  <span class="status">delivered</span>
-                </div>
-              </li>
-            </ol>
-          </div>
+            <header id="main-header">
+                <button type="button" class="open-sidebar">&#9776;</button>
+                <input class="search-box" placeholder="Looking for something..... &#129488;" />
+            </header>
+            <div id="chat-area">
+                <ol class="conversation">
+                    <!-- <li class="message-block">
+                        <article class="message">
+                            <header class="sender">Blama Doe</header>
+                            <p>Hello Konah, how are you doing?</p>
+                        </article>
+                        <div class="message-status">
+                            <time class="time"> 4:24 PM</time>
+                            <span class="status">delivered</span>
+                        </div>
+                    </li>
+                    <li class="message-block">
+                        <article class="message">
+                            <header class="sender">Blama Doe</header>
+                            <p>
+                                Lorem, ipsum dolor sit amet consectetur adipisicing elit.
+                            </p>
+                        </article>
+                        <div class="message-status">
+                            <time class="time"> 4:24 PM</time>
+                            <span class="status">delivered</span>
+                        </div>
+                    </li>
+                    <li class="message-block">
+                        <article class="message">
+                            <header class="sender">Blama konah</header>
+                            <p>
+                                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+                                Saepe, magni similique minus doloribus minima ad nisi beatae
+                                numquam aspernatur. Lorem ipsum dolor sit, amet consectetur
+                                adipisicing elit. Aspernatur reprehenderit adipisci eius
+                                quia! Nesciunt maiores enim iure fugiat labore perferendis
+                                aut, libero id adipisci quasi tempore voluptatibus
+                                reiciendis earum neque? Lorem ipsum dolor sit amet
+                                consectetur adipisicing elit. Eos ipsa facere tempore
+                                maiores voluptate ut error excepturi labore alias impedit!
+                                Blanditiis officia distinctio atque molestias aspernatur
+                                laboriosam, reiciendis ducimus quisquam.
+                            </p>
+                        </article>
+                        <div class="message-status">
+                            <time class="time"> 4:24 PM</time>
+                            <span class="status">delivered</span>
+                        </div>
+                    </li> -->
+                </ol>
+            </div>
 
-          <footer>
-            <input
-              class="chat-box"
-              type="text"
-              placeholder="Type something to send..... &#x1F917;"
-            />
-          </footer>
+            <footer>
+                <input class="chat-box" type="text" placeholder="Type something to send..... &#x1F917;" />
+            </footer>
         </section>
-      </main>
     </section>
 
     <script type="text/javascript" src="/js/libs/moment.js"></script>
     <script type="text/javascript" src="/js/libs/socket.io.js"></script>
     <script type="text/javascript" src="/js/index.js"></script>
-  </body>
+</body>
+
 </html>

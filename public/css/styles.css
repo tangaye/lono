@@ -1,157 +1,279 @@
+html,
 body {
-    font-family: 'Montserrat';
+    height: 100%;
+    width: 100%;
+    font-family: "Montserrat";
+    display: flex;
+    overflow: hidden;
 }
 
-
-aside {
-    width: 15%;
+#login-page {
+    width: 100%;
+    height: 100%;
+    background: url("/images/background.svg");
+    background-attachment: fixed;
+    background-size: contain;
     display: flex;
     flex-direction: column;
+    align-items: center;
+}
+
+#login-page .welcome {
+    color: #ffffff;
+    text-align: center;
+    font-size: 50px;
+    letter-spacing: 2px;
+    margin-top: 120px;
+    margin-bottom: 20px;
+}
+
+#login-page .welcome .brand {
+    font-family: "Pacifico";
+}
+
+#login-page .user-handle {
+    font-family: "Raleway";
+    font-size: 20px;
+    width: 40%;
+    padding: 10px;
+    border: 5px solid #d2e0da;
+    color: #636060;
+    border-radius: 10px;
+}
+
+#login-page .username-error {
+    display: none;
+    color: red;
+    margin-top: 8px;
+}
+
+/* CHAT AREA STYLES */
+#chat-page {
+    height: 100%;
+    width: 100%;
+    display: none;
+    overflow: hidden;
+}
+
+#chat-page .column {
+    height: 100%;
+    /*allows both columns to span the full height of the browser window*/
+    display: flex;
+    flex-direction: column;
+    /*places the left and right headers above the bottom content*/
+}
+
+/* SIDEBAR STYLES */
+
+#chat-page #sidebar {
+    width: 200px;
+    padding: 15px;
+    flex-shrink: 0;
     background-color: #173753;
+    overflow-y: auto;
     color: #ffffff;
 }
 
-main {
+#sidebar header {
     display: flex;
-    flex-direction: column;
-    /* Theses two styles below helped me keep the scroll bar at the bottom
-    * Please don't ask me why
-     */
-    height: 100vh;
-    overflow: auto;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
 }
 
-/* HEADER STYLES */
-header {
-    position: fixed;
-    top: 0;
-    background-color: #2892d7;
-    box-shadow: 0px 2px 2px 0px #82B7D8;
+#sidebar header .close-sidebar {
+    font-size: 30px;
+    cursor: pointer;
     color: white;
+    background-color: inherit;
+    border: none;
+}
+
+#sidebar .users {
+    margin-top: 10px;
+    list-style: none;
+    flex-grow: 1;
+    /* fill availble space, eventually pushing select list to the bottom */
+}
+
+#sidebar .users li {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-bottom: 4px;
+    width: 150px;
+    font-size: 14px;
+}
+
+#sidebar .users li .status {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 7px;
+}
+
+.online {
+    background-color: rgb(15, 185, 15);
+}
+
+.idle {
+    background-color: rgb(172, 120, 9);
+}
+
+.offline {
+    background-color: rgba(107, 103, 103, 0.8);
+}
+
+#sidebar .user-status {
+    background-color: #e5e5e5;
+    border: 0;
+    height: 30px;
+    padding: 6px;
+    border-radius: 2px;
+}
+
+li .user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+li .user-details .last-seen {
+    color: #969292;
+    font-size: 12.5px;
+    font-style: italic;
+}
+
+/* CHAT CONTAINER STYLES */
+#chat-container {
+    height: 100%;
+    width: 100%;
+}
+
+#chat-container #main-header {
+    background-color: #2892d7;
+    color: #ffffff;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    width: 100%;
-    padding: 10px 20px;
+    padding: 10px;
 }
 
-header .search-box {
-    width: 400px;
-    height: 35px;
-    margin-top: 10px;
+#chat-container #main-header .search-box {
+    width: 325px;
     color: #969292;
     font-size: 15px;
+    padding: 5px;
+    border: 2px solid #d2e0da;
+    border-radius: 10px;
+}
+
+
+#main-header .open-sidebar {
+    font-size: 25px;
+    cursor: pointer;
+    color: white;
+    background-color: inherit;
+    border: none;
+}
+
+#chat-container #chat-area {
     padding: 20px;
-    border: 0;
-    box-shadow: inset 0px 0px 2px 2px rgba(181, 183, 184, 0.42);
-    border-radius: 20px;
+    overflow-y: auto;
 }
 
-header .brand {
-    font-family: 'Pacifico';
-}
-
-/* CHAT SECTION STYLES */
-section {
-    margin-top: 86px;
-    /* Should be about the height of the header */
-    padding-bottom: 65px;
-    /* Should be about the height of the footer, don't know why I'm using padding but it works'
-    /* Add a top margin to avoid content overlay for fixed top */
-    background: #ffffff;
-    flex: 1;
-}
-
-section .conversation {
+/* CHAT STYLES */
+.conversation {
     list-style: none;
-    margin: 0;
     padding: 0;
+    margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
 }
 
 .conversation li {
     display: flex;
-    padding: 0.5em;
+    flex-direction: column;
+    flex-wrap: wrap;
+    padding-bottom: 20px;
 }
 
-.conversation .sender {
-    justify-content: flex-start;
-}
-
-.conversation .receipient {
-    justify-content: flex-end;
-}
-
-/* max-width needed to break word on next line when message block content overflows */
-.conversation .messages {
-    max-width: 350px;
-    word-wrap: break-word;
-    padding: 10px;
-    border-radius: 15px;
-}
-
-/* RECEIPIENT STYLES */
-.conversation .receipient .messages {
-    background-color: #2892d7;
-    box-shadow: 0px 1px 4px 2px rgba(130, 183, 216, 0.42);
-
-    color: white;
-}
-
-/* SENDER STYLES */
-.conversation .sender .messages {
+.conversation .message {
     background-color: #e5e5e5;
     color: #636060;
+    padding: 5px;
+    border-radius: 5px;
 }
 
-.messages .message {
-    font-size: 0.9rem;
-    margin: 0 0 0.2rem 0;
+.conversation .message header {
+    font-weight: bold;
+    font-family: "Raleway";
 }
 
-.messages .sender {
-    font-size: 0.8rem;
-    font-weight: 600;
+.conversation .message-status {
+    margin-top: 2px;
+    margin-left: 5px;
+    font-weight: 100;
+    color: #636060;
+    font-size: 12px;
 }
 
-.messages time {
-    font-size: 0.8rem;
-    /* color: white; */
+.message-status .status {
+    font-style: italic;
 }
-
 
 /* FOOTER STYLES */
-footer {
+#chat-container footer {
     position: fixed;
     bottom: 0;
     width: 100%;
-    padding: 15px;
-    display: flex;
-    justify-content: center;
+}
+
+#chat-container footer .chat-box {
     background-color: #e5e5e5;
-}
-
-footer #message {
-    height: 35px;
-    padding: 20px;
+    width: 100%;
     border: 0;
-    border-radius: 20px;
+    padding: 15px;
     font-size: 15px;
-    flex: 1;
 }
 
-footer #messenger-box {
-    font-family: monospace;
-    margin: 12px 5px 15px 10px;
-    border: 0;
+
+/* RESPONSIVE RULES */
+
+/* Mobile Styles */
+@media only screen and (max-width: 699px) {
+
+    /* Hide sidebar */
+    #chat-page #sidebar {
+        width: 0;
+        padding: 0;
+        position: fixed;
+        /* Stay in place */
+        z-index: 1;
+        /* Stay on top */
+        top: 0;
+        left: 0;
+        overflow-x: hidden;
+        /* Disable horizontal scroll */
+        transition: 0.5s;
+        /* 0.5 second transition effect to slide in the sidepanel */
+    }
+
+    /* Show sidebar open btn */
+    #main header .open-sidebar {
+        display: block;
+    }
 }
 
-#messenger-box #senderLabel {
-    color: #2892d7;
-    font-weight: bold;
-    cursor: pointer;
-}
+/* Desktop and Tablet Styles */
+@media only screen and (min-width: 700px) {
+    #main-header .open-sidebar {
+        display: none;
+    }
 
-#messenger-box #senderCheckbox {
-    vertical-align: -3px;
-    margin-right: 2px;
+    /* Hide close button */
+    #sidebar header .close-sidebar {
+        display: none;
+    }
 }
