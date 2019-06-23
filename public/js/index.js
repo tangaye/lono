@@ -65,7 +65,7 @@ const chatController = {
 
         this.sentMessages(messages);
 
-        showLoggedInUser(user.name);
+        showLoggedInUser(user);
     },
 
     getChatUsername() {
@@ -135,7 +135,7 @@ const chatController = {
     },
 
     userReconnect(user, users, messages) {
-        showLoggedInUser(user.name);
+        showLoggedInUser(user);
 
         this.setChatUsername(user);
 
@@ -211,8 +211,6 @@ const chatView = {
         }
     },
 
-    displayLoginUserMessages(user, messages) {},
-
     displaySentMessages(messages) {
         pageEl.conversationEl.innerHTML = "";
         let user = chatController.getChatUsername();
@@ -286,13 +284,6 @@ const chatView = {
 
         userEl.lastElementChild.classList.add("status", user.status);
 
-        // THIS MAY NOT BE NEEEDED
-        if (user.status === OFFLINE) {
-            userEl.firstElementChild.lastElementChild.innerHTML =
-                "last seen " + moment(Date.now()).format("h:mma");
-        } else {
-            userEl.firstElementChild.lastElementChild.innerHTML = "";
-        }
     },
 
     updateScroll() {
@@ -344,6 +335,7 @@ const chatView = {
             if (event.target.classList.contains("user-status")) {
                 let status = event.target.value;
 
+                updateLoggedInUserStatus(status);
                 client.emit("update status", status);
             }
         });
@@ -442,9 +434,17 @@ const notifyUser = message => {
     }
 };
 
-const showLoggedInUser = username => {
+const showLoggedInUser = user => {
     let userNameDiv = document.querySelector(".username");
-    userNameDiv.innerHTML = `Welcome, ${username}`;
+    userNameDiv.innerHTML = `Hello, ${user.name} <span class="status ${user.status}"></span>`;
+};
+
+const updateLoggedInUserStatus = status => {
+    let userNameStatusEl = document.querySelector('.username > .status');
+
+    userNameStatusEl.classList = '';
+
+    userNameStatusEl.classList.add('status', status);
 };
 
 const openSidebar = () => {
