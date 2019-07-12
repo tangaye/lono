@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Lono - Chat like it's ur last...</title>
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+
+    <main class="main">
+        <section class="left-box">
+            <h1>Life is to short to not <span class="brand">Lono &#x1F917;</span></h1>
+            <div>See how experienced developers solve problems in real-time. Watching scripted tutorials is great, but
+                understanding how developers think is invaluable.</div>
+        </section>
+        <section class="right-box">
+
+            <div class="form sign-up-form">
+                <form method="POST" action="/signup">
+                    <input name="username" placeholder="Username">
+                    <input name="phone" placeholder="Phone Number">
+                    <input type="password" name="password" placeholder="Password">
+                    <button class="button">Sign Up</button>
+                </form>
+                <a class="login" alt="login" href="javascript:void(0)">Login</a>
+            </div>
+
+            <!-- Hidden by default -->
+            <div class="form login-form">
+                <form method="POST" action="/login">
+                    <input name="phone" placeholder="Phone Number">
+                    <input type="password" name="password" placeholder="Password">
+                    <button class="button">Login</button>
+                </form>
+                <a class="signup" alt="Sign Up" href="javascript:void(0)">Sign Up</a>
+            </div>
+
+            <div class="error-message">
+                <% if (message) { %>
+                <%- message %>
+                <% } %>
+            </div>
+
+        </section>
+    </main>
+    <!-- Login view
+    <section id="login-page">
+        <div class="welcome">
+            Life is too short to not <span class="brand">Lono &#x1F917;</span>
+        </div>
+
+        <input class="user-handle" placeholder="What do you want to be know as?" />
+        <div class="username-error">
+            &#128577; Username is taken, please choose another....
+        </div>
+    </section> -->
+
+    <!-- <script type="text/javascript" src="/js/libs/socket.io.js"></script>
+    <script type="text/javascript" src="/js/index.js"></script> -->
+
+    <script type="text/javascript">
+        const domEl = {
+            loginFormEl: document.querySelector('.login-form'),
+            signUpFormEl: document.querySelector('.sign-up-form'),
+            errorEl: document.querySelector('.error-message')
+        }
+
+        document.addEventListener('click', event => {
+
+            if (event.target.classList.contains('login')) showLoginForm();
+
+            if (event.target.classList.contains('signup')) showSignUpForm();
+
+        });
+
+        const showLoginForm = () => {
+
+            clearError();
+
+            // hide signup form
+            hideSignUpForm();
+
+            // show login form
+            domEl.loginFormEl.style.display = 'block';
+        }
+
+        const showSignUpForm = () => {
+
+            clearError();
+
+            // hide login form
+            hideLoginForm();
+
+            // show signup form
+            domEl.signUpFormEl.style.display = 'block';
+
+
+        }
+
+        const hideLoginForm = () => domEl.loginFormEl.style.display = 'none';
+
+        const hideSignUpForm = () => domEl.signUpFormEl.style.display = 'none';
+
+        const clearError = () => domEl.errorEl.innerHTML = '';
+    </script>
+</body>
+
+</html>

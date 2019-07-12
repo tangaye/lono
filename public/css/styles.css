@@ -1,13 +1,102 @@
-html,
 body {
-    height: 100%;
-    width: 100%;
     font-family: "Montserrat";
-    display: flex;
-    overflow: hidden;
+    background: url("/images/background.svg");
+    background-attachment: fixed;
+    color: #fff;
+    /* overflow: hidden; */
 }
 
-#login-page {
+main {
+    width: 85%;
+    margin: auto;
+    padding: 100px 150px 100px 150px;
+    display: flex;
+}
+
+main .left-box {
+    width: 50%;
+    height: 400px;
+    margin-top: 120px;
+    padding-right: 60px;
+}
+
+main .left-box h1 {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+main .right-box {
+    margin-top: 20px;
+    width: 50%;
+    height: 100%;
+}
+
+.right-box {
+    height: 100%;
+    padding: 35px;
+    background-color: #fff;
+    text-align: center;
+    box-shadow: 0 7px 0 0 rgba(23, 55, 83, 0.5);
+    border-radius: 7px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    margin: 30px 0px 15px 0px;
+}
+
+/* Hide login form */
+.sign-up-form {
+    display: none;
+}
+
+/* Inputs style */
+input {
+    /* background-repeat: no-repeat;
+    background-position: 95%; */
+    padding: 20px 25px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: 1px solid #eeeeee;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+input:focus {
+    /* background-image: none; */
+    border: 1px solid #2892d7;
+    outline: none;
+    color: #2892d7;
+}
+
+.button {
+    width: 100%;
+    height: 50px;
+    margin-bottom: 10px;
+    background-color: #38cc8c;
+    border: none;
+    border-radius: 5px;
+    box-shadow: 0 3px 0 0 #00a367;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
+    text-align: left;
+    text-transform: uppercase;
+    color: #2892d7;
+}
+
+.error-message {
+    color: red;
+}
+
+/* #login-page {
     width: 100%;
     height: 100%;
     background: url("/images/background.svg");
@@ -16,9 +105,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
+} */
 
-#login-page .welcome {
+/* #login-page .welcome {
     color: #ffffff;
     text-align: center;
     font-size: 50px;
@@ -45,247 +134,4 @@ body {
     display: none;
     color: red;
     margin-top: 8px;
-}
-
-/* CHAT AREA STYLES */
-#chat-page {
-    height: 100%;
-    width: 100%;
-    display: none;
-    overflow: hidden;
-}
-
-#chat-page .column {
-    height: 100%;
-    /*allows both columns to span the full height of the browser window*/
-    display: flex;
-    flex-direction: column;
-    /*places the left and right headers above the bottom content*/
-}
-
-/* SIDEBAR STYLES */
-
-#chat-page #sidebar {
-    width: 200px;
-    padding: 15px;
-    flex-shrink: 0;
-    background-color: #173753;
-    overflow-y: auto;
-    color: #ffffff;
-}
-
-#sidebar header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-}
-
-#sidebar header .close-sidebar {
-    font-size: 30px;
-    cursor: pointer;
-    color: white;
-    background-color: inherit;
-    border: none;
-}
-
-#sidebar header .username {
-    display: flex;
-}
-
-#sidebar header .username .status {
-    margin-left: 5px;
-}
-
-#sidebar .users {
-    margin-top: 10px;
-    list-style: none;
-    flex-grow: 1;
-    /* fill availble space, eventually pushing select list to the bottom */
-}
-
-#sidebar .users li {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding-bottom: 4px;
-    width: 150px;
-    font-size: 14px;
-}
-
-.status {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-top: 7px;
-}
-
-.online {
-    background-color: rgb(15, 185, 15);
-}
-
-.idle {
-    background-color: rgb(172, 120, 9);
-}
-
-.offline {
-    background-color: rgba(107, 103, 103, 0.8);
-}
-
-#sidebar .user-status {
-    background-color: #e5e5e5;
-    border: 0;
-    height: 30px;
-    padding: 6px;
-    border-radius: 2px;
-}
-
-li .user-details {
-    display: flex;
-    flex-direction: column;
-}
-
-li .user-details .last-seen {
-    color: #969292;
-    font-size: 12.5px;
-    font-style: italic;
-}
-
-/* CHAT CONTAINER STYLES */
-#chat-container {
-    height: 100%;
-    width: 100%;
-}
-
-#chat-container #main-header {
-    background-color: #2892d7;
-    color: #ffffff;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    padding: 10px;
-}
-
-#chat-container #main-header .search-box {
-    width: 325px;
-    color: #969292;
-    font-size: 15px;
-    padding: 5px;
-    border: 2px solid #d2e0da;
-    border-radius: 10px;
-    flex-shrink: 1;
-}
-
-
-#main-header .open-sidebar {
-    font-size: 25px;
-    cursor: pointer;
-    color: white;
-    background-color: inherit;
-    border: none;
-    flex-shrink: 0;
-}
-
-#chat-container #chat-area {
-    padding: 20px;
-    overflow-y: auto;
-}
-
-/* CHAT STYLES */
-.conversation {
-    list-style: none;
-    padding: 0;
-    margin-bottom: 50px;
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-}
-
-.conversation li {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: wrap;
-    padding-bottom: 20px;
-}
-
-.conversation .message {
-    background-color: #e5e5e5;
-    color: #636060;
-    padding: 5px;
-    border-radius: 5px;
-}
-
-.conversation .message header {
-    font-weight: bold;
-    font-family: "Raleway";
-}
-
-.conversation .message-status {
-    margin-top: 2px;
-    margin-left: 5px;
-    font-weight: 100;
-    color: #636060;
-    font-size: 12px;
-}
-
-.message-status .status {
-    font-style: italic;
-}
-
-/* FOOTER STYLES */
-#chat-container footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-
-#chat-container footer .chat-box {
-    background-color: #e5e5e5;
-    width: 100%;
-    /* border: 0; */
-    padding: 15px;
-    font-size: 15px;
-    box-shadow: -2px 1px 10px 0px rgba(112, 111, 111, 0.77) inset;
-}
-
-
-/* RESPONSIVE RULES */
-
-/* Mobile Styles */
-@media only screen and (max-width: 699px) {
-
-    /* Hide sidebar */
-    #chat-page #sidebar {
-        width: 0;
-        padding: 0;
-        position: fixed;
-        /* Stay in place */
-        z-index: 1;
-        /* Stay on top */
-        top: 0;
-        left: 0;
-        overflow-x: hidden;
-        /* Disable horizontal scroll */
-        transition: 0.5s;
-        /* 0.5 second transition effect to slide in the sidepanel */
-    }
-
-    /* Show sidebar open btn */
-    #main header .open-sidebar {
-        display: block;
-    }
-
-}
-
-/* Desktop and Tablet Styles */
-@media only screen and (min-width: 700px) {
-    #main-header .open-sidebar {
-        display: none;
-    }
-
-    /* Hide close button */
-    #sidebar header .close-sidebar {
-        display: none;
-    }
-}
+} */
