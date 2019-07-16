@@ -1,0 +1,43 @@
+<aside id="sidebar" class="column">
+    <header>
+        <div class="username">
+            <% if (user.photo) { %>
+            <a href="/user/edit"><img src="<%= user.photo %>" class="user-photo-sm"></a>
+            <% } else { %>
+            <a href="/user/edit">JDJDKD</a>
+            <% } %>
+            <span class="status idle"></span>
+        </div>
+        <button class="close-sidebar">&times;</button>
+    </header>
+    <p>AVAILABLE - <span class="users-count">0</span></p>
+    <ul class="users">
+        <li>
+
+            <div class="user-details">
+                <span class="name">john</span>
+                <span class="last-seen">last seen 9pm</span>
+            </div>
+            <span class="status offline"></span>
+        </li>
+        <li>
+            <div class="user-details">
+                <span class="name">nathan</span>
+                <span class="last-seen">last seen 8pm</span>
+            </div>
+            <span class="status online"></span>
+        </li>
+        <li>
+            <div class="user-details">
+                <span class="name">siafa</span>
+                <span class="last-seen">last seen 10pm</span>
+            </div>
+            <span class="status idle"></span>
+        </li>
+    </ul>
+    <a class="logout-btn" href="/logout">Logout</a>
+    <select class="user-status">
+        <option value="online" selected>Online</option>
+        <option value="idle">Idle</option>
+    </select>
+</aside>

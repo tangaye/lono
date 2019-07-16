@@ -1,6 +1,6 @@
 const passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy,
-    User = require('../models/users');
+    User = require('../models/user');
 
 passport.serializeUser((user, done) => done(null, user._id));
 
@@ -9,7 +9,9 @@ passport.deserializeUser((id, done) => {
     User.find(id)
         .then(user => done(null, {
             id: user._id,
-            name: user.name
+            rev: user._rev,
+            name: user.name,
+            photo: user._attachments ? `data:${user._attachments.photo.content_type};base64,${user._attachments.photo.data}` : null
         }))
         .catch(error => done(error, null));
 
@@ -24,9 +26,7 @@ passport.use(new LocalStrategy({
 
         User.find(phone) // find user by phone number
             .then(user => user) // return found user or catch error thrown
-            .then(user => {
-                return Promise.all([user, User.validPassword(password, user.password)]);
-            }) // validate found user pwd
+            .then(user => Promise.all([user, User.validPassword(password, user.password)])) // validate found user pwd
             .then(results => {
 
                 let user = results[0];

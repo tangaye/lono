@@ -1,0 +1,49 @@
+.user-update-form {
+    display: flex;
+    flex-direction: column;
+    margin-right: 30px;
+    width: 400px;
+}
+
+label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input {
+    padding: 10px 20px;
+    margin-bottom: 17px;
+    border-radius: 5px;
+    border: 1px solid #eeeeee;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+input:focus {
+    border: 1px solid #2892d7;
+    outline: none;
+    color: #2892d7;
+}
+
+.update-button {
+    height: 30px;
+    background-color: #38cc8c;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.user-profile {
+    display: flex;
+}
+
+.user-photo {
+    border-radius: 50%;
+    border: 5px solid #636060;
+    width: 220px;
+    height: 210px;
+}

@@ -13,53 +13,12 @@
 <body>
     <section id="chat-page">
 
-        <aside id="sidebar" class="column">
-            <header>
-                <div class="username">Hello,
-                    <% if (username) { %>
-                    <%= username %>
-                    <% } %>
-                    <span class="status idle"></span>
-                </div>
-                <button class="close-sidebar">&times;</button>
-            </header>
-            <p>AVAILABLE - <span class="users-count">0</span></p>
-            <ul class="users">
-                <li>
-
-                    <div class="user-details">
-                        <span class="name">john</span>
-                        <span class="last-seen">last seen 9pm</span>
-                    </div>
-                    <span class="status offline"></span>
-                </li>
-                <li>
-                    <div class="user-details">
-                        <span class="name">nathan</span>
-                        <span class="last-seen">last seen 8pm</span>
-                    </div>
-                    <span class="status online"></span>
-                </li>
-                <li>
-                    <div class="user-details">
-                        <span class="name">siafa</span>
-                        <span class="last-seen">last seen 10pm</span>
-                    </div>
-                    <span class="status idle"></span>
-                </li>
-            </ul>
-            <a class="logout-btn" href="/logout">Logout</a>
-            <select class="user-status">
-                <option value="online" selected>Online</option>
-                <option value="idle">Idle</option>
-            </select>
-        </aside>
+        <%- include('layouts/sidebar.ejs') %>
 
         <section id="chat-container" class="column">
-            <header id="main-header">
-                <button type="button" class="open-sidebar">&#9776;</button>
-                <input class="search-box" placeholder="Looking for something..... &#129488;" />
-            </header>
+
+            <%- include('layouts/header.ejs') %>
+
             <div id="chat-area">
                 <ol class="conversation">
                     <!-- <li class="message-block">
@@ -109,15 +68,4 @@
                 </ol>
             </div>
 
-            <footer>
-                <input class="chat-box" type="text" placeholder="Type something to send..... &#x1F917;" />
-            </footer>
-        </section>
-    </section>
-
-    <script type="text/javascript" src="/js/libs/moment.js"></script>
-    <script type="text/javascript" src="/js/libs/socket.io.js"></script>
-    <script type="text/javascript" src="/js/index.js"></script>
-</body>
-
-</html>
+            <%- include('layouts/footer.ejs') %>

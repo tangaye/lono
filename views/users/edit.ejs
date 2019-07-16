@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Lono - Chat like it's ur last...</title>
+    <link rel="stylesheet" href="/css/common.css" />
+    <link rel="stylesheet" href="/css/chatroom.css" />
+    <link rel="stylesheet" href="/css/user-edit.css" />
+</head>
+
+<body>
+    <section id="chat-page">
+
+        <%- include('../layouts/sidebar.ejs') %>
+
+        <section id="chat-container" class="column">
+
+            <%- include('../layouts/header.ejs') %>
+
+            <div id="chat-area">
+                <!-- <h1>Update Account (<%= user.name %>)</h1> -->
+
+                <div class="user-profile">
+
+                    <form enctype="multipart/form-data" method="POST" action="/user/update" class="user-update-form">
+
+                        <label>Username </label>
+                        <input class="username-input" name="name" type="text" value="<%= user.name %>">
+
+                        <label>Photo </label>
+                        <input name="photo" type="file" value="<%= user.photo %>">
+
+                        <button class="update-button">Update</button>
+                        <a href="/user/delete" class="delete-button">Delete Account</a>
+                    </form>
+
+                    <img src="<%= user.photo %>" alt="Profile Photo" class="user-photo">
+                </div>
+
+            </div>
+        </section>
+    </section>
+</body>
+
+</html>

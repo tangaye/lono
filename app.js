@@ -9,7 +9,8 @@ const express = require('express'),
     path = require('path'),
     authRoutes = require('./routes/auth'),
     userRoutes = require('./routes/user'),
-    flash = require('connect-flash');
+    flash = require('connect-flash'),
+    fileUpload = require('express-fileupload');
 
 server.listen(3000, () => console.log('App listening on port 3000'));
 
@@ -24,11 +25,15 @@ const sessionMiddleware = session({
 app.use(express.static(path.join(__dirname, 'public')))
     .set('views', 'views')
     .set('view engine', 'ejs')
+    // .use(bodyParser.json())
     .use(bodyParser.urlencoded({
-        extended: false
+        extended: true
     }))
     .use(cookieParser())
     .use(flash())
+    .use(fileUpload({
+        parseNested: true
+    }))
     .use(sessionMiddleware)
     .use(passport.initialize())
     .use(passport.session())
