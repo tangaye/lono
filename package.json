@@ -1,0 +1,24 @@
+{
+  "name": "lono",
+  "version": "0.0.1",
+  "description": "Lono Messenger SMS API",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@gitlab.com/kwagei/lono-messenger/lono.git"
+  },
+  "keywords": [
+    "lono",
+    "sms",
+    "api"
+  ],
+  "author": "Kwagei Group",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/kwagei/lono-messenger/lono/issues"
+  },
+  "homepage": "https://gitlab.com/kwagei/lono-messenger/lono#readme"
+}
