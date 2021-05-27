@@ -65,10 +65,19 @@ exports.send = async (request, response) => {
 				let new_message = await storeMessage(
 					message.to,
 					message.body,
-					sender.id
+					sender.id,
+					message.ext_message_id
 				);
 
-				if (new_message) stored_messages.push(new_message);
+				if (new_message) {
+					stored_messages.push(new_message);
+				} else {
+					return response.status(SERVER_ERROR).send({
+						error_code: FAILURE_CODE,
+						error_message: "error sending messages",
+						messages: [],
+					});
+				}
 
 				// add message to queue
 				await MessageQueue.add({

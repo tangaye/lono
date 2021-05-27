@@ -58,3 +58,12 @@ exports.add = async (data) => {
 		console.log("error sending message to queue: ", error);
 	}
 };
+
+redisClient
+	.on("connect", function () {
+		console.log("connected to redis");
+	})
+	.on("error", function (error) {
+		console.log("unable to connect to redis");
+		// console.error(error);
+	});

@@ -6,6 +6,7 @@ const cors = require("cors");
 const app = express();
 const MessageQueue = require("./services/MessageQueue");
 const { NOTFOUND, SERVER_ERROR, FAILURE_CODE } = require("./constants");
+const database = require("./database/connection");
 const PORT = process.env.PORT || 8080;
 
 const Client = require("./models/Client");
@@ -13,6 +14,7 @@ const Sender = require("./models/Sender");
 
 const messagesRoutes = require("./routes/messages");
 const clientRoutes = require("./routes/clients");
+const { request } = require("express");
 
 app.use(helmet());
 app.use(cors());
@@ -37,7 +39,7 @@ app.use((request, response, next) =>
 
 // 500 middleware
 app.use((error, request, response, next) => {
-	console.error(error.stack);
+	// console.error(error.stack);
 	response.status(SERVER_ERROR).send({
 		error_code: FAILURE_CODE,
 		error_message: "An unexpected error occured.",
@@ -49,3 +51,12 @@ app.listen(PORT, () => {
 	require("./services/MessageQueueWorker").start();
 	console.log(`app listening at http://localhost:${PORT}`);
 });
+
+(async () => {
+	try {
+		await database.authenticate();
+		console.log("database connection has been established successfully.");
+	} catch (error) {
+		console.error("Unable to connect to the database:", error);
+	}
+})();

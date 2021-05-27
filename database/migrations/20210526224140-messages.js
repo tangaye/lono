@@ -15,11 +15,11 @@ module.exports = {
 				type: Sequelize.UUID,
 				defaultValue: Sequelize.UUIDV4,
 			},
-			receipient: {
+			recipient: {
 				type: Sequelize.STRING(10),
 				allowNull: false,
 				notNull: {
-					msg: "receipient is required",
+					msg: "recipient is required",
 				},
 			},
 			message: {
