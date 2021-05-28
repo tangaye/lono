@@ -8,9 +8,9 @@
   },
   "servers": [
     {
-      "url": "{_.devUrl}",
+      "url": "{apiUrl}",
       "variables": {
-        "_.devUrl": {
+        "apiUrl": {
           "default": "https://api.lonotalk.com"
         }
       }
