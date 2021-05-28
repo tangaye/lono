@@ -1,4 +1,5 @@
 const Message = require("../models/Message");
+const Sender = require("../models/Sender");
 const MessageQueue = require("../services/MessageQueue");
 
 const { Op } = require("sequelize");
@@ -16,6 +17,18 @@ exports.all = async (request, response) => {
 		let sender_ids = client.senders.map((sender) => sender.id);
 
 		let messages = await Message.findAll({
+			attributes: [
+				["id", "smsId"],
+				"recipient",
+				"message",
+				["ext_message_id", "extMessageId"],
+				"status",
+				["created_at", "date"],
+			],
+			include: {
+				model: Sender,
+				attributes: ["name"],
+			},
 			where: {
 				sender_id: { [Op.in]: sender_ids },
 			},
@@ -66,7 +79,7 @@ exports.send = async (request, response) => {
 					message.to,
 					message.body,
 					sender.id,
-					message.ext_message_id
+					message.extMessageId
 				);
 
 				if (new_message) {
@@ -95,7 +108,7 @@ exports.send = async (request, response) => {
 
 		return response.status(SERVER_ERROR).send({
 			error_code: FAILURE_CODE,
-			error_message: "sender_name and messages are required",
+			error_message: "senderName and messages are required",
 			messages: [],
 		});
 	} catch (error) {
@@ -113,21 +126,21 @@ exports.send = async (request, response) => {
  * @param {String} recipient - recipient
  * @param {String} message - message's body
  * @param {UUID} sender_id - message's sender name
- * @param {String} ext_message_id - external message id from client
+ * @param {String} extMessageId - external message id from client
  * @returns {Promise}
  */
 const storeMessage = async (
 	recipient,
 	message,
 	sender_id,
-	ext_message_id = null
+	extMessageId = null
 ) => {
 	try {
 		return await Message.create({
 			recipient,
 			message,
 			sender_id,
-			ext_message_id,
+			extMessageId,
 		});
 	} catch (error) {
 		console.log("error creating message: ", error);
