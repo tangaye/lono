@@ -1,0 +1,164 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Lono SMS API",
+    "description": "",
+    "contact": {},
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "{_.devUrl}",
+      "variables": {
+        "_.devUrl": {
+          "default": "https://api.lonotalk.com"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/sms": {
+      "get": {
+        "summary": "sms",
+        "description": "",
+        "operationId": "sms",
+        "parameters": [
+          {
+            "name": "apiKey",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "138ee9d2-8c79-4a2b-b7a8-c1b935ffff10"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      },
+      "post": {
+        "summary": "send sms",
+        "description": "",
+        "operationId": "sendsms",
+        "parameters": [
+          {
+            "name": "apiKey",
+            "in": "header",
+            "description": "",
+            "required": true,
+            "style": "simple",
+            "schema": {
+              "type": "string",
+              "example": "138ee9d2-8c79-4a2b-b7a8-c1b935ffff10"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/sendsmsRequest"
+              },
+              "example": {
+                "senderName": "Kwagei",
+                "messages": [
+                  {
+                    "to": "0778415037",
+                    "body": "final message",
+                    "extMessageId": "9629da1f-5efc-4084-a3dc-6a36102a5b6d"
+                  },
+                  {
+                    "to": "0778128252",
+                    "body": "finale message",
+                    "extMessageId": "9629da1f-5efc-4084-a3dc-6a36102a5b6d"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {},
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "sendsmsRequest": {
+        "title": "sendsmsRequest",
+        "required": [
+          "senderName",
+          "messages"
+        ],
+        "type": "object",
+        "properties": {
+          "senderName": {
+            "type": "string"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": ""
+          }
+        },
+        "example": {
+          "senderName": "Kwagei",
+          "messages": [
+            {
+              "to": "0778415037",
+              "body": "final message",
+              "extMessageId": "9629da1f-5efc-4084-a3dc-6a36102a5b6d"
+            },
+            {
+              "to": "0778128252",
+              "body": "finale message",
+              "extMessageId": "9629da1f-5efc-4084-a3dc-6a36102a5b6d"
+            }
+          ]
+        }
+      }
+    },
+    "securitySchemes": {
+      "httpBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "httpBearer": []
+    }
+  ],
+  "tags": []
+}
