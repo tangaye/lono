@@ -41,7 +41,7 @@ app.use((request, response, next) =>
 
 // 500 middleware
 app.use((error, request, response, next) => {
-	// console.error(error.stack);
+	console.error(error.stack);
 	response.status(SERVER_ERROR).send({
 		error_code: FAILURE_CODE,
 		error_message: "An unexpected error occured.",
