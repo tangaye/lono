@@ -10,12 +10,12 @@ const database = require("./database/connection");
 const PORT = process.env.PORT || 8080;
 
 const Client = require("./models/Client");
+const Message = require("./models/Message");
 const Sender = require("./models/Sender");
 
 const apiRoutes = require("./routes/api.docs.route");
 const messagesRoutes = require("./routes/messages");
 const clientRoutes = require("./routes/clients");
-const { request } = require("express");
 
 app.use(helmet());
 app.use(cors());
@@ -31,6 +31,8 @@ app.use(clientRoutes);
 // associations
 Client.hasMany(Sender);
 Sender.belongsTo(Client);
+Message.belongsTo(Sender);
+Sender.hasMany(Message);
 
 //404 middleware, should be below routes
 app.use((request, response, next) =>
@@ -42,7 +44,7 @@ app.use((request, response, next) =>
 
 // 500 middleware
 app.use((error, request, response, next) => {
-	// console.error(error.stack);
+	console.error(error.stack);
 	response.status(SERVER_ERROR).send({
 		error_code: FAILURE_CODE,
 		error_message: "An unexpected error occured.",
