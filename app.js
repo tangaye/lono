@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 8080;
 const Client = require("./models/Client");
 const Sender = require("./models/Sender");
 
+const apiRoutes = require("./routes/api.docs.route");
 const messagesRoutes = require("./routes/messages");
 const clientRoutes = require("./routes/clients");
 const { request } = require("express");
@@ -20,8 +21,10 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // routes setup
+app.use(apiRoutes);
 app.use(messagesRoutes);
 app.use(clientRoutes);
 
