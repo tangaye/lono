@@ -72,11 +72,11 @@ exports.isValidSender = async (request, response, next) => {
 	}
 };
 
-exports.forDevOnly = (request, response) => {
+exports.forDevOnly = (request, response, next) => {
 	if (process.env.NODE_ENV === "production") {
 		return response.status(NOTFOUND).send({
 			error_code: FAILURE_CODE,
-			error_message: `senderName: '${senderName}' not registered.`,
+			error_message: `${request.originalUrl} not found`,
 		});
 	}
 
