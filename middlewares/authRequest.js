@@ -71,3 +71,14 @@ exports.isValidSender = async (request, response, next) => {
 		});
 	}
 };
+
+exports.forDevOnly = (request, response) => {
+	if (process.env.NODE_ENV === "production") {
+		return response.status(NOTFOUND).send({
+			error_code: FAILURE_CODE,
+			error_message: `senderName: '${senderName}' not registered.`,
+		});
+	}
+
+	return next();
+};
