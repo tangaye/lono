@@ -42,6 +42,11 @@ Message.init(
 			type: DataTypes.STRING,
 			allowNull: true,
 		},
+		twilio_message_sid: {
+			type: DataTypes.STRING,
+			allowNull: true,
+			unique: true,
+		},
 		status: {
 			type: DataTypes.STRING,
 			defaultValue: "pending",

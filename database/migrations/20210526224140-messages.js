@@ -45,11 +45,18 @@ module.exports = {
 			ext_message_id: {
 				type: Sequelize.STRING,
 				allowNull: true,
-				comment: "external message id for client's app",
+				comment: "external message id from client's app",
+			},
+			twilio_message_sid: {
+				type: Sequelize.STRING,
+				allowNull: true,
+				unique: true,
+				comment:
+					"Message sender id from twilio. Used to update messages status",
 			},
 			status: {
 				type: Sequelize.STRING,
-				defaultValue: "pending",
+				defaultValue: "sent",
 			},
 			created_at: {
 				allowNull: false,
