@@ -1,4 +1,5 @@
 const Message = require("../models/Message");
+const Sender = require("../models/Sender");
 const MessageQueue = require("../services/MessageQueue");
 
 const { Op } = require("sequelize");
@@ -16,6 +17,18 @@ exports.all = async (request, response) => {
 		let sender_ids = client.senders.map((sender) => sender.id);
 
 		let messages = await Message.findAll({
+			attributes: [
+				["id", "smsId"],
+				"recipient",
+				"message",
+				["ext_message_id", "extMessageId"],
+				"status",
+				["created_at", "date"],
+			],
+			include: {
+				model: Sender,
+				attributes: ["name"],
+			},
 			where: {
 				sender_id: { [Op.in]: sender_ids },
 			},
@@ -43,11 +56,6 @@ exports.all = async (request, response) => {
 	}
 };
 
-exports.get = async (request, response) => {
-	try {
-	} catch (error) {}
-};
-
 /**
  * Stores and sends a message
  * @param {*} request
@@ -66,11 +74,19 @@ exports.send = async (request, response) => {
 					message.to,
 					message.body,
 					sender.id,
-					message.ext_message_id
+					message.extMessageId
 				);
 
 				if (new_message) {
 					stored_messages.push(new_message);
+					console.log(new_message);
+					// add message to queue
+					await MessageQueue.add({
+						body: message.body,
+						to: message.to,
+						sender: sender.name,
+						id: new_message.smsId,
+					});
 				} else {
 					return response.status(SERVER_ERROR).send({
 						error_code: FAILURE_CODE,
@@ -78,13 +94,6 @@ exports.send = async (request, response) => {
 						messages: [],
 					});
 				}
-
-				// add message to queue
-				await MessageQueue.add({
-					body: message.body,
-					to: message.to,
-					sender: sender.name,
-				});
 			}
 
 			return response.send({
@@ -95,7 +104,7 @@ exports.send = async (request, response) => {
 
 		return response.status(SERVER_ERROR).send({
 			error_code: FAILURE_CODE,
-			error_message: "sender_name and messages are required",
+			error_message: "senderName and messages are required",
 			messages: [],
 		});
 	} catch (error) {
@@ -113,25 +122,104 @@ exports.send = async (request, response) => {
  * @param {String} recipient - recipient
  * @param {String} message - message's body
  * @param {UUID} sender_id - message's sender name
- * @param {String} ext_message_id - external message id from client
+ * @param {String} extMessageId - external message id from client
  * @returns {Promise}
  */
 const storeMessage = async (
 	recipient,
 	message,
 	sender_id,
-	ext_message_id = null
+	extMessageId = null
 ) => {
 	try {
-		return await Message.create({
+		let new_msg = await Message.create({
 			recipient,
 			message,
 			sender_id,
-			ext_message_id,
+			ext_message_id: extMessageId,
 		});
+
+		new_msg = JSON.parse(JSON.stringify(new_msg));
+
+		new_msg = await Message.findByPk(new_msg.id, {
+			attributes: [
+				["id", "smsId"],
+				"recipient",
+				"message",
+				["ext_message_id", "extMessageId"],
+				"status",
+				["created_at", "date"],
+			],
+			include: {
+				model: Sender,
+				attributes: ["name"],
+			},
+		});
+
+		new_msg = JSON.parse(JSON.stringify(new_msg));
+
+		return new_msg;
 	} catch (error) {
 		console.log("error creating message: ", error);
 
 		return null;
+	}
+};
+
+/**
+ * Updates message with twilio status and sid
+ * @param {String} status - message status from twilio
+ * @param {String} twilio_message_sid - message sid from twilio
+ * @param {UUID} id - api message id
+ * @returns {Object} - updated message
+ */
+exports.setTwilioSid = async (status, twilio_message_sid, id) => {
+	try {
+		let [meta, updated_msg] = await Message.update(
+			{
+				twilio_message_sid: twilio_message_sid,
+				status: status,
+			},
+			{ where: { id: id }, returning: true }
+		);
+
+		updated_msg = JSON.parse(JSON.stringify(updated_msg));
+
+		console.log({ updated_msg });
+
+		return updated_msg;
+	} catch (error) {
+		console.log("error updating message: ", error);
+
+		return null;
+	}
+};
+
+/**
+ * Twilio's method to update messages status
+ * @param {*} request
+ * @param {*} response
+ * @returns {*} response
+ */
+exports.updateStatus = async (request, response) => {
+	try {
+		let message_sid = request.body.MessageSid;
+		let message_status = request.body.MessageStatus;
+
+		let [meta, updated_msg] = await Message.update(
+			{
+				status: message_status,
+			},
+			{ where: { twilio_message_sid: message_sid }, returning: true }
+		);
+
+		updated_msg = JSON.parse(JSON.stringify(updated_msg));
+
+		console.log({ updated_msg });
+
+		return response.send({ ok: 200 });
+	} catch (error) {
+		console.log("error updating message status: ", error);
+		return response.status(SERVER_ERROR).send({ failure: SERVER_ERROR });
 	}
 };

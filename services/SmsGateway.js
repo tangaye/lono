@@ -6,13 +6,21 @@ const client = require("twilio")(ACCOUNT_SID, AUTH_TOKEN);
  * Sends a message using the 'Twilio' sms gateway
  * @param {*} message - message body
  * @param {*} recipient - number to recipient message
- * @param {*} sender_name - message sender name
+ * @param {*} senderName - message sender name
  * @returns {Promise}
  */
-exports.send = async (message, recipient, sender_name) => {
-	return await client.messages.create({
+exports.send = async (message, recipient, senderName) => {
+	let payload = {
 		body: message,
 		to: `+231${recipient.substring(1)}`, // Text this number
-		from: sender_name, // From a valid Twilio number
-	});
+		from: senderName, // From a valid Twilio number
+	};
+
+	if (process.env.NODE_ENV === "production") {
+		Object.assign(payload, {
+			statusCallback: "https://api.lonotalk.com/sms/status",
+		});
+	}
+
+	return await client.messages.create(payload);
 };
