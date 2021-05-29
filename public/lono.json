@@ -31,7 +31,7 @@
             "style": "simple",
             "schema": {
               "type": "string",
-              "example": "138ee9d2-8c79-4a2b-b7a8-c1b935ffff10"
+              "example": "G3PWijbf2p9q8i"
             }
           }
         ],
@@ -63,7 +63,7 @@
             "style": "simple",
             "schema": {
               "type": "string",
-              "example": "138ee9d2-8c79-4a2b-b7a8-c1b935ffff10"
+              "example": "G3PWijbf2p9q8i"
             }
           }
         ],

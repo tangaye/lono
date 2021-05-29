@@ -17,7 +17,7 @@ const apiRoutes = require("./routes/api.docs.route");
 const messagesRoutes = require("./routes/messages");
 const clientRoutes = require("./routes/clients");
 
-app.use(helmet());
+// app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

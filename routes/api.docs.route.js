@@ -9,3 +9,25 @@ ROUTER.get('/', (request, response) => {
 })
 
 module.exports = ROUTER;
+
+// const EXPRESS = require('express');
+// const ROUTER = EXPRESS.Router();
+// const PATH = require('path');
+// const REDOC = require('redoc-express');
+
+// // serve swagger.json file
+// // ROUTER.get('/docs/swagger.json', (req, res) => {
+// //     res.setHeader('Content-Type', 'application/json');
+// //     res.sendFile(PATH.join(__dirname, '../public/docs/', 'swagger.json'));
+// // });
+
+// // serve redoc
+// ROUTER.get(
+//     '/',
+//     REDOC({
+//         title: 'API Docs',
+//         specUrl: '/lono.json'
+//     })
+// );
+
+// module.exports = ROUTER;
