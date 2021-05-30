@@ -9,4 +9,9 @@ Lono SMS API service
 - add a '.env' file by making a copy of ".env.example" and update the variables with yours
 - run `npx sequelize-cli db:migrate`
 - run `npx sequelize-cli db:seed:all`
-- run `npm start`
+- run `npm run dev`
+
+## Docker setup
+
+- run `docker build -t lonosms-dev .`
+- run `docker run --env-file ./.env --name lonosms-dev --net=host -d lonosms-dev`
