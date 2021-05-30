@@ -2,7 +2,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"title": "Lono SMS API",
-		"description": "API to send sms and view sms that have been sent. To get a key or get support, kindly contact API Support.",
+		"description": "API to send sms and view sms that have been sent. To get a key or get support, kindly contact API Support. \n\n Example: curl -i -H 'Accept:application/json' -H 'apiKey:API_KEY' \\ https://developer.lonotalk.com/api/v1/sms",
 		"version": "1.0",
 		"contact": {
 			"name": "API Support",
