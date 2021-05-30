@@ -29,21 +29,21 @@ exports.setSender = async (request, response, next) => {
 			}
 
 			return response.status(UNAUTHORIZED).send({
-				error_code: FAILURE_CODE,
-				error_message: `Unauthorized! api key: '${apiKey}' not found.`,
+				errorCode: FAILURE_CODE,
+				errorMessage: `Unauthorized!`,
 			});
 		}
 
 		return response.status(UNAUTHORIZED).send({
-			error_code: FAILURE_CODE,
-			error_message: `Unauthorized!`,
+			errorCode: FAILURE_CODE,
+			errorMessage: `Unauthorized!`,
 		});
 	} catch (error) {
 		console.log("error finding client: ", error);
 
 		return response.status(SERVER_ERROR).send({
-			error_code: FAILURE_CODE,
-			error_message: `An unexpected error occured.`,
+			errorCode: FAILURE_CODE,
+			errorMessage: `An unexpected error occured.`,
 		});
 	}
 };
@@ -60,14 +60,14 @@ exports.isValidSender = async (request, response, next) => {
 		}
 
 		return response.status(NOTFOUND).send({
-			error_code: FAILURE_CODE,
-			error_message: `senderName: '${senderName}' not registered.`,
+			errorCode: FAILURE_CODE,
+			errorMessage: `senderName: '${senderName}' not configured.`,
 		});
 	} catch (error) {
 		console.log(error);
 		return response.status(SERVER_ERROR).send({
-			error_code: FAILURE_CODE,
-			error_message: `An unexpected error ocurred.`,
+			errorCode: FAILURE_CODE,
+			errorMessage: `An unexpected error ocurred.`,
 		});
 	}
 };
@@ -75,8 +75,8 @@ exports.isValidSender = async (request, response, next) => {
 exports.forDevOnly = (request, response, next) => {
 	if (process.env.NODE_ENV === "production") {
 		return response.status(NOTFOUND).send({
-			error_code: FAILURE_CODE,
-			error_message: `${request.originalUrl} not found`,
+			errorCode: FAILURE_CODE,
+			errorMessage: `${request.originalUrl} not found`,
 		});
 	}
 
