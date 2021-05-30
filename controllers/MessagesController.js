@@ -36,21 +36,21 @@ exports.all = async (request, response) => {
 
 		if (messages) {
 			return response.send({
-				error_code: SUCCESS_CODE,
+				errorCode: SUCCESS_CODE,
 				messages: messages,
 			});
 		}
 
 		return response.send({
-			error_code: FAILURE_CODE,
-			error_message: "error fetching messages",
+			errorCode: FAILURE_CODE,
+			errorMessage: "error fetching messages",
 			messages: [],
 		});
 	} catch (error) {
 		console.log("error fetching messages: ", error);
 		return response.status(SERVER_ERROR).send({
-			error_code: FAILURE_CODE,
-			error_message: "error fetching messages",
+			errorCode: FAILURE_CODE,
+			errorMessage: "error fetching messages",
 			messages: [],
 		});
 	}
@@ -89,29 +89,29 @@ exports.send = async (request, response) => {
 					});
 				} else {
 					return response.status(SERVER_ERROR).send({
-						error_code: FAILURE_CODE,
-						error_message: "error sending messages",
+						errorCode: FAILURE_CODE,
+						errorMessage: "error sending messages",
 						messages: [],
 					});
 				}
 			}
 
 			return response.send({
-				error_code: SUCCESS_CODE,
+				errorCode: SUCCESS_CODE,
 				messages: stored_messages,
 			});
 		}
 
 		return response.status(SERVER_ERROR).send({
-			error_code: FAILURE_CODE,
-			error_message: "senderName and messages are required",
+			errorCode: FAILURE_CODE,
+			errorMessage: "senderName and messages are required",
 			messages: [],
 		});
 	} catch (error) {
 		console.log("error sending messages: ", error);
 		return response.status(SERVER_ERROR).send({
-			error_code: FAILURE_CODE,
-			error_message: "error sending messages",
+			errorCode: FAILURE_CODE,
+			errorMessage: "error sending messages",
 			messages: [],
 		});
 	}

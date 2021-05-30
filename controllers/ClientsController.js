@@ -10,21 +10,21 @@ exports.all = async (request, response) => {
 		});
 		if (clients) {
 			return response.send({
-				error_code: SUCCESS_CODE,
+				errorCode: SUCCESS_CODE,
 				clients: clients,
 			});
 		}
 
 		return response.send({
-			error_code: FAILURE_CODE,
-			error_message: "error fetching clients",
+			errorCode: FAILURE_CODE,
+			errorMessage: "error fetching clients",
 			clients: [],
 		});
 	} catch (error) {
 		console.log("error fetching clients: ", error);
 		return response.status(SERVER_ERROR).send({
-			error_code: FAILURE_CODE,
-			error_message: "error fetching clients",
+			errorCode: FAILURE_CODE,
+			errorMessage: "error fetching clients",
 			clients: [],
 		});
 	}
