@@ -26,7 +26,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // routes setup
 app.use(docRoutes);
 app.use("/api/v1/", messagesRoutes);
-app.use("/api/v1/", clientRoutes);
+app.use(clientRoutes);
 
 // db tables associations
 Client.hasMany(Sender);
@@ -37,8 +37,8 @@ Sender.hasMany(Message);
 //404 middleware, should be below routes
 app.use((request, response, next) =>
 	response.status(NOTFOUND).send({
-		error_code: FAILURE_CODE,
-		error_message: `${request.originalUrl} not found`,
+		errorCode: FAILURE_CODE,
+		errorMessage: `${request.originalUrl} not found`,
 	})
 );
 
@@ -46,8 +46,8 @@ app.use((request, response, next) =>
 app.use((error, request, response, next) => {
 	console.error(error.stack);
 	response.status(SERVER_ERROR).send({
-		error_code: FAILURE_CODE,
-		error_message: "An unexpected error occured.",
+		errorCode: FAILURE_CODE,
+		errorMessage: "An unexpected error occured.",
 	});
 });
 

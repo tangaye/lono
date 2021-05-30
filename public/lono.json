@@ -2,95 +2,93 @@
 	"openapi": "3.0.0",
 	"info": {
 		"title": "Lono SMS API",
-		"description": "SMS API to send messages and retrieve messages that have been sent using and API key. \nTo get a key or get support, kindly contact Kwagei Group at info@kwagei.com.",
-		"version": "1.0"
+		"description": "API to send sms and view sms that have been sent. To get a key or get support, kindly contact API Support.",
+		"version": "1.0",
+		"contact": {
+			"name": "API Support",
+			"email": "tech@kwagei.com"
+		}
 	},
 
 	"servers": [
 		{
-			"url": "{apiUrl}",
-			"variables": {
-				"apiUrl": {
-					"default": "https://developer.lonotalk.com/api/v1"
-				}
-			}
+			"url": "https://developer.lonotalk.com/api/v1",
+			"description": "Base url"
 		}
 	],
 	"paths": {
 		"/sms": {
 			"get": {
-				"summary": "sms",
-				"description": "Returns messages that have been sent.",
+				"summary": "All sms",
+				"description": "Returns sms that have been sent.",
 				"operationId": "sms",
-				"parameters": [
-					{
-						"name": "apiKey",
-						"in": "header",
-						"description": "API key",
-						"required": true,
-						"style": "simple",
-						"schema": {
-							"type": "string",
-							"example": "ZrAUvwdabS5GYgZAJy4Rjp"
-						}
-					}
-				],
 				"responses": {
 					"200": {
-						"description": "",
+						"description": "An array of sms",
 						"headers": {},
 						"content": {
-							"text/plain": {
+							"application/json": {
 								"schema": {
 									"type": "object"
-								}
-							}
-						}
-					},
-					"404": {
-						"description": "",
-						"headers": {},
-						"content": {
-							"text/plain": {
-								"schema": {
-									"type": "object"
+								},
+								"example": {
+									"errorCode": 0,
+									"messages": [
+										{
+											"smsId": "1cf5cfb0-1181-4c50-8e20-d0b4bfa39ec9",
+											"recipient": "0776001001",
+											"message": "Hello world!",
+											"extMessageId": "9629da1f-5efc-4084-a3dc-6a36102a5b6d",
+											"status": "delivered",
+											"date": "2021-05-30T17:50:45.911Z",
+											"sender": {
+												"name": "ExampleInc"
+											}
+										}
+									]
 								}
 							}
 						}
 					},
 					"403": {
-						"description": "",
+						"description": "Unauthorized. Invalid API key",
 						"headers": {},
 						"content": {
-							"text/plain": {
+							"application/json": {
 								"schema": {
 									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "Unauthorized!"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "An unexpected error occured."
 								}
 							}
 						}
 					}
-				},
-				"deprecated": false
+				}
 			},
 			"post": {
-				"summary": "send sms",
-				"description": "",
+				"summary": "Send sms",
+				"description": "Makes a POST request to send sms. **senderName** must be preconfigured to work. To configured senderName please contact API Support. \n\n Returns sms sent if successful.",
 				"operationId": "sendsms",
-				"parameters": [
-					{
-						"name": "apiKey",
-						"in": "header",
-						"description": "",
-						"required": true,
-						"style": "simple",
-						"schema": {
-							"type": "string",
-							"example": "G3PWijbf2p9q8i"
-						}
-					}
-				],
 				"requestBody": {
 					"description": "",
+
 					"content": {
 						"application/json": {
 							"schema": {
@@ -98,6 +96,7 @@
 							},
 							"example": {
 								"senderName": "Kwagei",
+
 								"messages": [
 									{
 										"to": "0776001001",
@@ -117,18 +116,78 @@
 				},
 				"responses": {
 					"200": {
-						"description": "",
+						"description": "An array of sms sent",
 						"headers": {},
 						"content": {
 							"application/json": {
 								"schema": {
 									"type": "object"
+								},
+								"example": {
+									"errorCode": 0,
+									"messages": [
+										{
+											"smsId": "1cf5cfb0-1181-4c50-8e20-d0b4bfa39ec9",
+											"recipient": "0776001001",
+											"message": "Hello world!",
+											"extMessageId": "9629da1f-5efc-4084-a3dc-6a36102a5b6d",
+											"status": "pending",
+											"date": "2021-05-30T17:50:45.911Z",
+											"sender": {
+												"name": "ExampleInc"
+											}
+										}
+									]
+								}
+							}
+						}
+					},
+					"404": {
+						"description": "senderName not found",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "senderName: 'ExampleInc2' not configured."
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Unauthorized. Invalid API key",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "Unauthorized!"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "An unexpected error occured."
 								}
 							}
 						}
 					}
-				},
-				"deprecated": false
+				}
 			}
 		}
 	},
@@ -168,15 +227,16 @@
 			}
 		},
 		"securitySchemes": {
-			"httpBearer": {
-				"type": "http",
-				"scheme": "bearer"
+			"ApiKeyAuth": {
+				"type": "apiKey",
+				"in": "header",
+				"name": "apiKey"
 			}
 		}
 	},
 	"security": [
 		{
-			"httpBearer": []
+			"ApiKeyAuth": []
 		}
 	],
 	"tags": []
