@@ -18,7 +18,7 @@ exports.send = async (message, recipient, senderName) => {
 
 	if (process.env.NODE_ENV === "production") {
 		Object.assign(payload, {
-			statusCallback: "https://api.lonotalk.com/sms/status",
+			statusCallback: "https://developer.lonotalk.com/api/v1/sms/status",
 		});
 	}
 
