@@ -5,6 +5,10 @@
 		<!-- needed for adaptive design -->
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="worker-src 'self' blob:"
+		/>
 		<link
 			href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700"
 			rel="stylesheet"
@@ -22,6 +26,6 @@
 	</head>
 	<body>
 		<redoc spec-url="/lono.json"></redoc>
-		<script src="/js/redoc.standalone.js"></script>
+		<script nonce="r4nd0m" src="/js/redoc.standalone.js"></script>
 	</body>
 </html>
