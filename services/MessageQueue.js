@@ -1,5 +1,6 @@
 const redis = require("redis");
 const redisSMQ = require("rsmq");
+const logger = require("../logger")
 let redisConfig = {
 	host: process.env.REDIS_HOST,
 	port: process.env.REDIS_PORT,
@@ -22,17 +23,16 @@ exports.createQueue = async () => {
 	try {
 		let response = await this.queueInstance.createQueueAsync({ qname: QUEUE });
 
-		console.log({ response });
 		if (response === 1) {
-			console.log("queue created");
+			logger.log("queue created");
 		} else {
-			console.log("unexpected error when creating queue");
+			logger.log("unexpected error when creating queue");
 		}
 	} catch (error) {
 		if (error.name === "queueExists") {
-			console.log("Queue Exists");
+			logger.log("Queue Exists");
 		} else {
-			console.log("error creating queue: ", error);
+			logger.log("error creating queue: ", error);
 		}
 	}
 };
@@ -50,20 +50,20 @@ exports.add = async (data) => {
 		});
 
 		if (response) {
-			console.log("Message sent. ID:", response);
+			logger.log("Message sent. ID:", response);
 		} else {
-			console.log("unexpected error when sending messages to queue");
+			logger.log("unexpected error when sending messages to queue");
 		}
 	} catch (error) {
-		console.log("error sending message to queue: ", error);
+		logger.log("error sending message to queue: ", error);
 	}
 };
 
 redisClient
 	.on("connect", function () {
-		console.log("connected to redis");
+		logger.log("connected to redis");
 	})
 	.on("error", function (error) {
-		console.log("unable to connect to redis");
+		logger.log("unable to connect to redis");
 		// console.error(error);
 	});

@@ -1,10 +1,10 @@
-const express = require("express");
-const router = express.Router();
-const MessagesController = require("../controllers/MessagesController");
-const { setSender, isValidSender } = require("../middlewares/authRequest");
+const express = require("express")
+const router = express.Router()
+const MessagesController = require("../controllers/MessagesController")
+const {userIsValid, senderIsValid} = require("../middlewares")
 
-router.get("/sms", setSender, MessagesController.all);
-router.post("/sms", [setSender, isValidSender], MessagesController.send);
-router.post("/sms/status", MessagesController.updateStatus);
+router.get("/sms", userIsValid, MessagesController.all)
+router.post("/sms", [userIsValid, senderIsValid], MessagesController.send)
+router.post("/sms/status", MessagesController.updateStatus)
 
 module.exports = router;

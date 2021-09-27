@@ -2,7 +2,7 @@
 
 const { v4: uuidv4 } = require("uuid");
 
-const Client = require("../../models/Client");
+const User = require("../../models/User");
 
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
@@ -15,20 +15,22 @@ module.exports = {
 		 *   isBetaMember: false
 		 * }], {});
 		 */
-		let client_count = await Client.count();
+		let user_count = await User.count();
 
 		// Insert only when there are no records
-		if (client_count > 0) {
-			console.log("\x1b[36m", "clients table is already seeded!", "\x1b[0m");
+		if (user_count > 0) {
+			console.log("\x1b[36m", "users table is already seeded!", "\x1b[0m");
 			return;
 		}
 
 		await queryInterface.bulkInsert(
-			"clients",
+			"users",
 			[
 				{
 					id: uuidv4(),
 					name: "Ponitor Web App",
+                    credits: 833,
+                    allow_overdraft: false,
 					api_key: "JH9fVVs74LBace3k7tZ43T",
 					created_at: new Date(Date.now()).toISOString(),
 					updated_at: new Date(Date.now()).toISOString(),
@@ -37,12 +39,16 @@ module.exports = {
 					id: uuidv4(),
 					name: "Cititrust Bank",
 					api_key: "u7AdX2aYyMnPnnrZRY4MA8",
+                    allow_overdraft: true,
+                    credits: 16666,
 					created_at: new Date(Date.now()).toISOString(),
 					updated_at: new Date(Date.now()).toISOString(),
 				},
 				{
 					id: uuidv4(),
 					name: "Lono Web App",
+                    credits: 833,
+                    allow_overdraft: false,
 					api_key: "4qdTrFm6jh4peHownGb42R",
 					created_at: new Date(Date.now()).toISOString(),
 					updated_at: new Date(Date.now()).toISOString(),
@@ -59,6 +65,6 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.bulkDelete('People', null, {});
 		 */
-		await queryInterface.bulkDelete("clients", null, {});
+		await queryInterface.bulkDelete("users", null, {});
 	},
 };

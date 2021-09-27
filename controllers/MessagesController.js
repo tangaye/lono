@@ -1,21 +1,27 @@
 const Message = require("../models/Message");
 const Sender = require("../models/Sender");
-const MessageQueue = require("../services/MessageQueue");
-
+const MessageQueue = require("../services/MessageQueue")
 const { Op } = require("sequelize");
-const { SUCCESS_CODE, SERVER_ERROR, FAILURE_CODE } = require("../constants");
+const { SUCCESS_CODE, SERVER_ERROR, FAILURE_CODE, BULKGATE_GATEWAY, TWILIO_GATEWAY, SMS_TARIFF } = require("../constants")
+const MessagesValidator = require("../validators/messages")
+const { v4: uuidv4 } = require("uuid")
+const Gateway = require("../models/Gateway")
+const logger = require("../logger")
 
 /**
- * Returns all messages for a client/sender
+ * Returns all messages for a user/sender
  * @param {*} request
  * @param {*} response
  * @returns
  */
 exports.all = async (request, response) => {
 	try {
-		let client = request.body.client;
-		let sender_ids = client.senders.map((sender) => sender.id);
 
+		let user = request.user
+        // get user senders
+		let sender_ids = user.senders.map((sender) => sender.id);
+
+        // query messages sent by user senders
 		let messages = await Message.findAll({
 			attributes: [
 				["id", "smsId"],
@@ -23,6 +29,7 @@ exports.all = async (request, response) => {
 				"message",
 				["ext_message_id", "extMessageId"],
 				"status",
+                "cost",
 				["created_at", "date"],
 			],
 			include: {
@@ -45,14 +52,15 @@ exports.all = async (request, response) => {
 			errorCode: FAILURE_CODE,
 			errorMessage: "error fetching messages",
 			messages: [],
-		});
+		})
+
 	} catch (error) {
-		console.log("error fetching messages: ", error);
+		logger.error("error fetching messages: ", error);
 		return response.status(SERVER_ERROR).send({
 			errorCode: FAILURE_CODE,
-			errorMessage: "error fetching messages",
+			errorMessage: error?.errors[0]?.message || "error fetching messages",
 			messages: [],
-		});
+		})
 	}
 };
 
@@ -64,36 +72,38 @@ exports.all = async (request, response) => {
  */
 exports.send = async (request, response) => {
 	try {
+
 		let { sender, messages } = request.body;
-		let stored_messages = [];
+        let user = request.user
+		let stored_messages = []
 
-		if (messages && sender) {
+        // validate messages
+		let result = await MessagesValidator.validate(messages, user)
+
+		if (result.valid) {
+
 			for (message of messages) {
-				// save message
-				let new_message = await storeMessage(
-					message.to,
-					message.body,
-					sender.id,
-					message.extMessageId
-				);
 
-				if (new_message) {
-					stored_messages.push(new_message);
-					console.log(new_message);
-					// add message to queue
-					await MessageQueue.add({
-						body: message.body,
-						to: message.to,
-						sender: sender.name,
-						id: new_message.smsId,
-					});
-				} else {
-					return response.status(SERVER_ERROR).send({
-						errorCode: FAILURE_CODE,
-						errorMessage: "error sending messages",
-						messages: [],
-					});
-				}
+                let payload = {
+                    smsId: uuidv4(),
+                    recipient: message.to,
+                    message: message.body,
+                    sender,
+                    extMessageId: message.extMessageId,
+                    status: "pending"
+                }
+
+                await MessageQueue.add({
+                    body: payload.message,
+                    to: payload.recipient,
+                    sender: payload.sender,
+                    extMessageId: payload.extMessageId,
+                    gateway: result.gateway,
+                    id: payload.smsId,
+                    user
+                })
+
+                stored_messages.push(payload)
 			}
 
 			return response.send({
@@ -102,16 +112,17 @@ exports.send = async (request, response) => {
 			});
 		}
 
-		return response.status(SERVER_ERROR).send({
+		return response.send({
 			errorCode: FAILURE_CODE,
-			errorMessage: "senderName and messages are required",
+			errorMessage: result.message,
 			messages: [],
-		});
+		})
+
 	} catch (error) {
-		console.log("error sending messages: ", error);
+		logger.error("error sending messages: ", error);
 		return response.status(SERVER_ERROR).send({
 			errorCode: FAILURE_CODE,
-			errorMessage: "error sending messages",
+			errorMessage: error?.errors[0]?.message || "error sending messages",
 			messages: [],
 		});
 	}
@@ -121,21 +132,28 @@ exports.send = async (request, response) => {
  * Stores a message in the database
  * @param {String} recipient - recipient
  * @param {String} message - message's body
- * @param {UUID} sender_id - message's sender name
- * @param {String} extMessageId - external message id from client
+ * @param {UUID} sender_id - message's sender id
+ * @param {UUID} gateway_id - sms gateway id
+ * @param {String} extMessageId - external message id from user
+ * @param {UUID} id - message id
  * @returns {Promise}
  */
-const storeMessage = async (
+exports.storeMessage = async (
 	recipient,
 	message,
 	sender_id,
-	extMessageId = null
+    gateway_id,
+	extMessageId = null,
+    id
 ) => {
 	try {
+
 		let new_msg = await Message.create({
+            id,
 			recipient,
 			message,
 			sender_id,
+            gateway_id,
 			ext_message_id: extMessageId,
 		});
 
@@ -160,36 +178,35 @@ const storeMessage = async (
 
 		return new_msg;
 	} catch (error) {
-		console.log("error creating message: ", error);
+
+		logger.log("error creating message: ", error);
 
 		return null;
 	}
 };
 
 /**
- * Updates message with twilio status and sid
- * @param {String} status - message status from twilio
- * @param {String} twilio_message_sid - message sid from twilio
- * @param {UUID} id - api message id
+ * Updates message gateway's id and message cost
+ * @param {String} gateway_message_id - message id from sms gateway
+ * @param {UUID} message_id - api message id
  * @returns {Object} - updated message
  */
-exports.setTwilioSid = async (status, twilio_message_sid, id) => {
+exports.updateMessageIdCost = async (gateway_message_id, message_id) => {
 	try {
+
 		let [meta, updated_msg] = await Message.update(
 			{
-				twilio_message_sid: twilio_message_sid,
-				status: status,
-			},
-			{ where: { id: id }, returning: true }
-		);
+                gateway_message_id: gateway_message_id,
+                cost: SMS_TARIFF
+            },
+			{ where: { id: message_id }, returning: true }
+		)
 
 		updated_msg = JSON.parse(JSON.stringify(updated_msg));
 
-		console.log({ updated_msg });
-
 		return updated_msg;
 	} catch (error) {
-		console.log("error updating message: ", error);
+		logger.error("error updating message: ", error);
 
 		return null;
 	}
@@ -203,23 +220,36 @@ exports.setTwilioSid = async (status, twilio_message_sid, id) => {
  */
 exports.updateStatus = async (request, response) => {
 	try {
-		let message_sid = request.body.MessageSid;
-		let message_status = request.body.MessageStatus;
 
-		let [meta, updated_msg] = await Message.update(
-			{
-				status: message_status,
-			},
-			{ where: { twilio_message_sid: message_sid }, returning: true }
-		);
+        let gateway = await Gateway.findOne({where: {active: true}})
 
-		updated_msg = JSON.parse(JSON.stringify(updated_msg));
+        if (gateway) {
 
-		console.log({ updated_msg });
+            if (gateway === TWILIO_GATEWAY) {
 
-		return response.send({ ok: 200 });
+                let message_sid = request.body.MessageSid
+                let message_status = request.body.MessageStatus
+
+                let [meta, updated_msg] = await Message.update(
+                    {
+                        status: message_status,
+                    },
+                    { where: { ext_message_id: message_sid }, returning: true }
+                )
+
+                updated_msg = JSON.parse(JSON.stringify(updated_msg))
+
+            } else if (gateway === BULKGATE_GATEWAY) {
+               logger.log('bulkgate: ', request.body)
+            }
+
+        }
+
+
+		return response.send({ ok: 200 })
+
 	} catch (error) {
-		console.log("error updating message status: ", error);
+		logger.error("error updating message status: ", error);
 		return response.status(SERVER_ERROR).send({ failure: SERVER_ERROR });
 	}
-};
+}
