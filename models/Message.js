@@ -66,6 +66,10 @@ Message.init({
 		type: DataTypes.STRING,
 		defaultValue: "pending",
 	},
+    cost: {
+		type: DataTypes.INTEGER,
+        allowNull: true
+	},
 }, {
     paranoid: true,
     deletedAt: 'deleted_at',

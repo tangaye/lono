@@ -22,7 +22,7 @@ User.init(
 			},
 		},
         credits: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.DECIMAL,
             defaultValue: 0,
 			allowNull: true
         },

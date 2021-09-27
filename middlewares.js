@@ -24,7 +24,7 @@ exports.requiresAdmin = async (request, response, next) => {
 
     } catch (error) {
 
-        console.log("error requiresAdmin: ", error)
+        logger.error("error requiresAdmin: ", error)
 
         return response.status(constants.UNAUTHORIZED).send({
             errorCode: constants.FAILURE_CODE,
@@ -72,7 +72,7 @@ exports.userIsValid = async (request, response, next) => {
 
 
 	} catch (error) {
-		console.log("error finding user: ", error);
+		logger.error("error finding user: ", error);
 
 		return response.status(constants.SERVER_ERROR).send({
 			errorCode: constants.FAILURE_CODE,
@@ -107,7 +107,7 @@ exports.senderIsValid = async (request, response, next) => {
 
 	} catch (error) {
 
-		console.log(error);
+		logger.error("error senderIsValid", error);
 		return response.status(constants.SERVER_ERROR).send({
 			errorCode: constants.FAILURE_CODE,
 			errorMessage: `An unexpected error ocurred.`,

@@ -1,4 +1,4 @@
-const {TWILIO_GATEWAY, BULKGATE_GATEWAY} = require("../constants")
+const {TWILIO_GATEWAY, BULKGATE_GATEWAY, SMS_TARIFF} = require("../constants")
 const Gateway = require("../models/Gateway")
 
 /**
@@ -58,17 +58,32 @@ const gatewayConfigured = async () => {
         if (gateway) return gateway
         return false
     } catch (error) {
-        console.log("error gatewayConfigured: ", error)
+        logger.error("error gatewayConfigured: ", error)
         return false
     }
 }
 
 /**
+ * Send sms only when api user has credits >= sms tariff
+ * Send sms only when api user has is allowed overdraft and credits is <= sms tariff
+ * @param {Object} user
+ * @returns {Boolean}
+ */
+const validateUserCredits = user => {
+
+    if (user.credits >= SMS_TARIFF) return true
+    else if (user.credits < SMS_TARIFF && user.allow_overdraft) return true
+
+    return false
+}
+
+/**
  * Validates messages
  * @param {Array} data
+ * @param {Object} user - api user sending message
  * @returns {Object}
  */
-exports.validate = async data => {
+exports.validate = async (data, user) => {
 
     try {
 
@@ -80,9 +95,11 @@ exports.validate = async data => {
         let msisdns_valid = validateMsisdns(msisdns)
         let messages_valid = validateMessages(messages)
         let gateway = await gatewayConfigured()
+        let valid_credits = validateUserCredits(user)
 
-        if (msisdns_valid && messages_valid && gateway) {
+        if (msisdns_valid && messages_valid && gateway && valid_credits) {
             result.gateway = gateway
+            result.user = user
             result.valid = true
         }
 
@@ -91,13 +108,15 @@ exports.validate = async data => {
 
         if (!messages_valid) result.message = "Invalid message(s). A message to a phone number should be 1 - 160 characters."
 
+        if (!valid_credits) result.message = "Insufficient credits"
+
         // todo: log to rollbar
         if (!gateway) result.message = "Unable to send message(s)"
 
         return result
 
     } catch (error) {
-        console.log("error validate: ", error)
+        logger.error("error validate: ", error)
         result.message = "error validating request"
         return result
     }

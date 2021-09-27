@@ -21,7 +21,7 @@ module.exports = {
 				unique: true
 			},
             credits: {
-                type: Sequelize.INTEGER,
+                type: Sequelize.DECIMAL,
                 defaultValue: 0,
                 allowNull: true
             },

@@ -1,6 +1,7 @@
 const rsmqWorker = require("rsmq-worker");
 const { QUEUE } = require("../constants");
-const MessageController = require("../controllers/MessagesController");
+const MessageController = require("../controllers/MessagesController")
+const UsersController = require("../controllers/UsersController")
 const queueInstance = require("../services/MessageQueue").queueInstance;
 const SmsGateway = require("../services/SmsGateway");
 const worker = new rsmqWorker(QUEUE, queueInstance);
@@ -9,7 +10,7 @@ worker.on("message", async function (msg, next, msgid) {
 	try {
 
 		let message = JSON.parse(msg);
-        let {to, body, sender, extMessageId, gateway, id} = message
+        let {to, body, sender, extMessageId, gateway, id, user} = message
 
         // save message
 		let new_message = await MessageController.storeMessage(to, body, sender.id, gateway.id, extMessageId, id)
@@ -18,7 +19,13 @@ worker.on("message", async function (msg, next, msgid) {
 		let result = await SmsGateway.send(to, body, sender.name, gateway.slug)
 
         // update message
-        if (result) await MessageController.storeGatewayMessageId(result.id, id)
+        if (result) {
+
+            await MessageController.updateMessageIdCost(result.id, id)
+
+            // update user credits
+            await UsersController.updateCredits(user.id)
+        }
 
 
 	} catch (error) {

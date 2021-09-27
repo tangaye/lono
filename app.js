@@ -7,6 +7,7 @@ const app = express()
 const MessageQueue = require("./services/MessageQueue")
 const {NOTFOUND, SERVER_ERROR, FAILURE_CODE} = require("./constants")
 const database = require("./database/connection")
+const logger = require('./logger')
 const PORT = process.env.PORT || 8080
 
 const User = require("./models/User")
@@ -58,11 +59,13 @@ app.use((error, request, response, next) => {
         await MessageQueue.createQueue()
 
         require("./services/MessageQueueWorker").start()
-		console.log("database connection has been established successfully.")
+		logger.log("database connection has been established successfully.")
 
-        app.listen(PORT, () => console.log(`app listening on localhost:${PORT}`))
+        app.listen(PORT, () => logger.log(`app listening on localhost:${PORT}`))
+        app.use(logger.rollbar.errorHandler())
 
 	} catch (error) {
-		console.error("Unable to connect to the database:", error)
+        console.log(error)
+        logger.error("Unable to connect to the database:", error)
 	}
 })()

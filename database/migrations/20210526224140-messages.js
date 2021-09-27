@@ -61,6 +61,10 @@ module.exports = {
 				type: Sequelize.STRING,
 				allowNull: false
 			},
+            cost: {
+                type: Sequelize.DECIMAL,
+				allowNull: true
+            },
             deleted_at: {
 				allowNull: true,
 				type: Sequelize.DATE,
@@ -83,6 +87,6 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.dropTable('users');
 		 */
-		await queryInterface.dropTable("messages");
+		await queryInterface.dropTable("messages")
 	},
 };
