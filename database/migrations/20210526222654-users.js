@@ -8,7 +8,7 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
 		 */
-		await queryInterface.createTable("clients", {
+		await queryInterface.createTable("users", {
 			id: {
 				allowNull: false,
 				primaryKey: true,
@@ -18,18 +18,26 @@ module.exports = {
 			name: {
 				type: Sequelize.STRING,
 				allowNull: false,
-				unique: true,
-				notNull: {
-					msg: "name is required",
-				},
+				unique: true
 			},
+            credits: {
+                type: Sequelize.INTEGER,
+                defaultValue: 0,
+                allowNull: true
+            },
+            allow_overdraft: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+                allowNull: false
+            },
 			api_key: {
 				type: Sequelize.STRING,
 				allowNull: false,
-				unique: true,
-				notNull: {
-					msg: "api_key is required",
-				},
+				unique: true
+			},
+            deleted_at: {
+				allowNull: true,
+				type: Sequelize.DATE,
 			},
 			created_at: {
 				allowNull: false,
@@ -49,6 +57,6 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.dropTable('users');
 		 */
-		await queryInterface.dropTable("clients");
+		await queryInterface.dropTable("users");
 	},
 };

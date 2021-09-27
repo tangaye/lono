@@ -19,23 +19,21 @@ module.exports = {
 				type: Sequelize.STRING(11),
 				allowNull: false,
 				unique: true,
-				notNull: {
-					msg: "name is required",
-				},
 				comment: "sender name for sending messages",
 			},
-			client_id: {
+			user_id: {
 				type: Sequelize.UUID,
 				allowNull: false,
-				notNull: {
-					msg: "client_id is required",
-				},
 				onDelete: "CASCADE",
 				references: {
-					model: "clients",
+					model: "users",
 					key: "id",
-					as: "client_id",
+					as: "user_id",
 				},
+			},
+            deleted_at: {
+				allowNull: true,
+				type: Sequelize.DATE,
 			},
 			created_at: {
 				allowNull: false,

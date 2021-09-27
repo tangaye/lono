@@ -1,9 +1,9 @@
 const { DataTypes, Sequelize, Model } = require("sequelize");
 const sequelize = require("../database/connection");
 
-class Client extends Model {}
+class User extends Model {}
 
-Client.init(
+User.init(
 	{
 		id: {
 			type: DataTypes.UUID,
@@ -21,6 +21,16 @@ Client.init(
 				},
 			},
 		},
+        credits: {
+            type: DataTypes.INTEGER,
+            defaultValue: 0,
+			allowNull: true
+        },
+        allow_overdraft: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+			allowNull: false
+        },
 		api_key: {
 			type: DataTypes.STRING,
 			unique: true,
@@ -34,9 +44,9 @@ Client.init(
 	},
 	{
 		underscored: true,
-		modelName: "clients",
+		modelName: "users",
 		sequelize, // We need to pass the connection instance
 	}
 );
 
-module.exports = Client;
+module.exports = User;

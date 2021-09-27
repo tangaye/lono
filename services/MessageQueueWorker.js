@@ -7,15 +7,20 @@ const worker = new rsmqWorker(QUEUE, queueInstance);
 
 worker.on("message", async function (msg, next, msgid) {
 	try {
+
 		let message = JSON.parse(msg);
+        let {to, body, sender, extMessageId, gateway, id} = message
 
-		let result = await SmsGateway.send(
-			message.body,
-			message.to,
-			message.sender
-		);
+        // save message
+		let new_message = await MessageController.storeMessage(to, body, sender.id, gateway.id, extMessageId, id)
 
-		await MessageController.setTwilioSid(result.status, result.sid, message.id);
+        // send sms
+		let result = await SmsGateway.send(to, body, sender.name, gateway.slug)
+
+        // update message
+        if (result) await MessageController.storeGatewayMessageId(result.id, id)
+
+
 	} catch (error) {
 		console.log("error sending message from queue: ", error);
 	}

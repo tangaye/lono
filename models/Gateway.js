@@ -1,9 +1,9 @@
 const { DataTypes, Sequelize, Model } = require("sequelize");
 const sequelize = require("../database/connection");
 
-class Sender extends Model {}
+class Gateway extends Model {}
 
-Sender.init(
+Gateway.init(
 	{
 		id: {
 			type: DataTypes.UUID,
@@ -12,7 +12,7 @@ Sender.init(
 			primaryKey: true,
 		},
 		name: {
-			type: DataTypes.STRING(11),
+			type: DataTypes.STRING,
 			unique: true,
 			allowNull: false,
 			validate: {
@@ -21,21 +21,26 @@ Sender.init(
 				},
 			},
 		},
-		user_id: {
-			type: DataTypes.UUID,
+        slug: {
+			type: DataTypes.STRING,
+			unique: true,
 			allowNull: false,
 			validate: {
 				notNull: {
-					msg: "user_id is required",
+					msg: "slug is required",
 				},
 			},
+		},
+		active: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false
 		},
 	},
 	{
 		underscored: true,
-		modelName: "senders",
+		modelName: "gateways",
 		sequelize, // We need to pass the connection instance
 	}
 );
 
-module.exports = Sender;
+module.exports = Gateway;

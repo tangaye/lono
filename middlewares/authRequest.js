@@ -1,4 +1,4 @@
-const Client = require("../models/Client");
+const User = require("../models/User");
 const Sender = require("../models/Sender");
 const {
 	UNAUTHORIZED,
@@ -7,52 +7,11 @@ const {
 	NOTFOUND,
 } = require("../constants");
 
-exports.setSender = async (request, response, next) => {
-	// request headers and case-insensitive
-	let apiKey = request.headers.apikey;
-
-	try {
-		if (apiKey) {
-			let client = await Client.findOne({
-				include: {
-					model: Sender,
-				},
-				where: {
-					api_key: apiKey,
-				},
-			});
-
-			if (client) {
-				client = JSON.parse(JSON.stringify(client));
-				request.body.client = client;
-				return next();
-			}
-
-			return response.status(UNAUTHORIZED).send({
-				errorCode: FAILURE_CODE,
-				errorMessage: `Unauthorized!`,
-			});
-		}
-
-		return response.status(UNAUTHORIZED).send({
-			errorCode: FAILURE_CODE,
-			errorMessage: `Unauthorized!`,
-		});
-	} catch (error) {
-		console.log("error finding client: ", error);
-
-		return response.status(SERVER_ERROR).send({
-			errorCode: FAILURE_CODE,
-			errorMessage: `An unexpected error occured.`,
-		});
-	}
-};
-
 exports.isValidSender = async (request, response, next) => {
 	try {
-		let client = request.body.client;
+		let user = request.body.user;
 		let senderName = request.body.senderName;
-		let sender = client.senders.find((item) => item.name === senderName);
+		let sender = user.senders.find((item) => item.name === senderName);
 
 		if (sender) {
 			request.body.sender = sender;
@@ -82,3 +41,26 @@ exports.forDevOnly = (request, response, next) => {
 
 	return next();
 };
+
+exports.validApiKey = (request, response, next) => {
+    try {
+
+        let apikey = request.headers.apikey;
+
+        if (apikey === process.env.API_KEY) return next()
+
+        return response.status(UNAUTHORIZED).send({
+            errorCode: FAILURE_CODE,
+            errorMessage: `Unauthorized!`,
+        })
+
+    } catch (error) {
+
+        console.log("error validApiKey: ", error)
+
+        return response.status(UNAUTHORIZED).send({
+            errorCode: FAILURE_CODE,
+            errorMessage: `Unauthorized!`,
+        })
+    }
+}

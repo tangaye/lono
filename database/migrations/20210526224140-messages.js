@@ -16,25 +16,19 @@ module.exports = {
 				defaultValue: Sequelize.UUIDV4,
 			},
 			recipient: {
-				type: Sequelize.STRING(10),
+				type: Sequelize.STRING,
 				allowNull: false,
 				notNull: {
 					msg: "recipient is required",
 				},
 			},
 			message: {
-				type: Sequelize.STRING(160),
-				allowNull: false,
-				notNull: {
-					msg: "message is required",
-				},
+				type: Sequelize.TEXT,
+				allowNull: false
 			},
 			sender_id: {
 				type: Sequelize.UUID,
 				allowNull: false,
-				notNull: {
-					msg: "sender_id is required",
-				},
 				onDelete: "RESTRICT",
 				references: {
 					model: "senders",
@@ -42,21 +36,34 @@ module.exports = {
 					as: "sender_id",
 				},
 			},
+            gateway_id: {
+				type: Sequelize.UUID,
+				allowNull: false,
+				onDelete: "RESTRICT",
+				references: {
+					model: "gateways",
+					key: "id",
+					as: "gateway_id",
+				},
+			},
 			ext_message_id: {
 				type: Sequelize.STRING,
 				allowNull: true,
-				comment: "external message id from client's app",
+				comment: "external message id from user's app",
 			},
-			twilio_message_sid: {
+			gateway_message_id: {
 				type: Sequelize.STRING,
 				allowNull: true,
 				unique: true,
-				comment:
-					"Message sender id from twilio. Used to update messages status",
+				comment: "Message id from sms gateway service.",
 			},
 			status: {
 				type: Sequelize.STRING,
-				defaultValue: "sent",
+				allowNull: false
+			},
+            deleted_at: {
+				allowNull: true,
+				type: Sequelize.DATE,
 			},
 			created_at: {
 				allowNull: false,

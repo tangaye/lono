@@ -2,7 +2,7 @@
 
 const { v4: uuidv4 } = require("uuid");
 
-const Client = require("../../models/Client");
+const User = require("../../models/User");
 
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
@@ -15,16 +15,16 @@ module.exports = {
 		 *   isBetaMember: false
 		 * }], {});
 		 */
-		let client_count = await Client.count();
+		let user_count = await User.count();
 
 		// Insert only when there are no records
-		if (client_count > 0) {
-			console.log("\x1b[36m", "clients table is already seeded!", "\x1b[0m");
+		if (user_count > 0) {
+			console.log("\x1b[36m", "users table is already seeded!", "\x1b[0m");
 			return;
 		}
 
 		await queryInterface.bulkInsert(
-			"clients",
+			"users",
 			[
 				{
 					id: uuidv4(),
@@ -59,6 +59,6 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.bulkDelete('People', null, {});
 		 */
-		await queryInterface.bulkDelete("clients", null, {});
+		await queryInterface.bulkDelete("users", null, {});
 	},
 };
