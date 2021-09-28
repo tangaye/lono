@@ -261,7 +261,7 @@ exports.bulkGateUpdateStatus = async (request, response) => {
                 gateway_message_id: smsID
             }})
 
-            let message_status = bulkgate_statuses.find(item => item.name === status)
+            let message_status = bulkgate_statuses.find(item => item.code === Number(status))
 
             console.log({status, price, smsID, message_status})
 
