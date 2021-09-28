@@ -6,7 +6,8 @@ const { SUCCESS_CODE, SERVER_ERROR, FAILURE_CODE, BULKGATE_GATEWAY, TWILIO_GATEW
 const MessagesValidator = require("../validators/messages")
 const { v4: uuidv4 } = require("uuid")
 const Gateway = require("../models/Gateway")
-const logger = require("../logger")
+const logger = require("../logger");
+const { request, response } = require("express");
 
 /**
  * Returns all messages for a user/sender
@@ -218,40 +219,40 @@ exports.updateMessageIdCost = async (gateway_message_id, message_id) => {
  * @param {*} response
  * @returns {*} response
  */
-exports.updateStatus = async (request, response) => {
+exports.twilioUpdateStatus = async (request, response) => {
 	try {
 
-        console.log('sms gateway callback request: ', request)
+        let message_sid = request.body.MessageSid
+        let message_status = request.body.MessageStatus
 
-        let gateway = await Gateway.findOne({where: {active: true}})
+        if (message_sid && message_status) {
+            let [meta, updated_msg] = await Message.update(
+                {
+                    status: message_status,
+                },
+                { where: { ext_message_id: message_sid }, returning: true }
+            )
 
-        if (gateway) {
-
-            if (gateway.slug === TWILIO_GATEWAY) {
-
-                let message_sid = request.body.MessageSid
-                let message_status = request.body.MessageStatus
-
-                let [meta, updated_msg] = await Message.update(
-                    {
-                        status: message_status,
-                    },
-                    { where: { ext_message_id: message_sid }, returning: true }
-                )
-
-                updated_msg = JSON.parse(JSON.stringify(updated_msg))
-
-            } else if (gateway === BULKGATE_GATEWAY) {
-               logger.log('bulkgate: ', request.body)
-            }
-
+            updated_msg = JSON.parse(JSON.stringify(updated_msg))
         }
-
 
 		return response.send({ ok: 200 })
 
 	} catch (error) {
-		logger.error("error updating message status: ", error);
+		logger.error("error updating twilio message status: ", error);
 		return response.status(SERVER_ERROR).send({ failure: SERVER_ERROR });
 	}
+}
+
+exports.bulkGateUpdateStatus = async (request, response) => {
+    try {
+        let {status, price, smsID} = request.query
+
+        console.log({status, price, smsID})
+
+        return response.send({ ok: 200 })
+    } catch (error) {
+        logger.error("error updating bulkgate message status: ", error);
+		return response.status(SERVER_ERROR).send({ failure: SERVER_ERROR });
+    }
 }
