@@ -225,7 +225,7 @@ exports.updateStatus = async (request, response) => {
 
         if (gateway) {
 
-            if (gateway === TWILIO_GATEWAY) {
+            if (gateway.slug === TWILIO_GATEWAY) {
 
                 let message_sid = request.body.MessageSid
                 let message_status = request.body.MessageStatus
