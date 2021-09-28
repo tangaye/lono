@@ -221,7 +221,7 @@ exports.updateMessageIdCost = async (gateway_message_id, message_id) => {
 exports.updateStatus = async (request, response) => {
 	try {
 
-        console.log('sms gateway callback: ', request.body)
+        console.log('sms gateway callback request: ', request)
 
         let gateway = await Gateway.findOne({where: {active: true}})
 
