@@ -248,7 +248,25 @@ exports.bulkGateUpdateStatus = async (request, response) => {
     try {
         let {status, price, smsID} = request.query
 
-        console.log({status, price, smsID})
+        let bulkgate_statuses = [
+            {code: 1, name: "delivered"},
+            {code: 2, name: "pending"},
+            {code: 3, name: "failed"}
+        ]
+
+        if (smsID) {
+
+
+            let message = await Message.findOne({where: {
+                gateway_message_id: smsID
+            }})
+
+            let message_status = bulkgate_statuses.find(item => item.name === status)
+
+            console.log({status, price, smsID, message_status})
+
+            await message.update({status: message_status.name})
+        }
 
         return response.send({ ok: 200 })
     } catch (error) {
