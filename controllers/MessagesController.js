@@ -221,11 +221,13 @@ exports.updateMessageIdCost = async (gateway_message_id, message_id) => {
 exports.updateStatus = async (request, response) => {
 	try {
 
+        console.log('sms gateway callback: ', request.body)
+
         let gateway = await Gateway.findOne({where: {active: true}})
 
         if (gateway) {
 
-            if (gateway === TWILIO_GATEWAY) {
+            if (gateway.slug === TWILIO_GATEWAY) {
 
                 let message_sid = request.body.MessageSid
                 let message_status = request.body.MessageStatus
