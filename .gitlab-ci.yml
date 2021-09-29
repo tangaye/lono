@@ -1,34 +1,34 @@
 image: docker:latest
 
 stages:
-  - build
-  - deploy
+    - build
+    - deploy
 
 services:
-  - docker:dind
+    - docker:dind
 
 build:
-  stage: build
-  tags:
-    - lonosms-dev
-  script:
-    - docker build -t lonosms-dev .
-  environment:
-    name: development
-    url: https://lonosms.kwagei.com
-  only:
-    - development
+    stage: build
+    tags:
+        - lonosms-dev
+    script:
+        - docker build -t lonosms-dev .
+    environment:
+        name: development
+        url: https://lonosms.kwagei.com
+    only:
+        - development
 
 deploy:
-  stage: deploy
-  tags:
-    - lonosms-dev
-  script:
-    - echo -e "[default]\nTWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID\nTWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN\nDB_PORT=$DB_PORT\nDB_HOSTNAME=$DB_HOSTNAME\nDB_USERNAME=$DB_USERNAME\nDB_NAME=$DB_NAME\nDB_PASSWORD=$DB_PASSWORD\nNODE_ENV=$NODE_ENV\nPORT=$PORT\nREDIS_HOST=$REDIS_HOST\nREDIS_PORT=$REDIS_PORT" > .env
-    - docker stop lonosms-dev && docker rm lonosms-dev
-    - docker run --env-file ./.env --name lonosms-dev --net=host -d lonosms-dev
-  environment:
-    name: development
-    url: https://lonosms.kwagei.com
-  only:
-    - development
+    stage: deploy
+    tags:
+        - lonosms-dev
+    script:
+        - echo -e "[default]\nTWILIO_ACCOUNT_SID=$TWILIO_ACCOUNT_SID\nTWILIO_AUTH_TOKEN=$TWILIO_AUTH_TOKEN\nDB_PORT=$DB_PORT\nDB_HOSTNAME=$DB_HOSTNAME\nDB_USERNAME=$DB_USERNAME\nDB_NAME=$DB_NAME\nDB_PASSWORD=$DB_PASSWORD\nNODE_ENV=$NODE_ENV\nPORT=$PORT\nREDIS_HOST=$REDIS_HOST\nREDIS_PORT=$REDIS_PORT\nAPI_KEY=$API_KEY\nBULKGATE_APP_ID=$BULKGATE_APP_ID\nBULKGATE_APP_TOKEN=$BULKGATE_APP_TOKEN\nBULKGATE_BASEURL=$BULKGATE_BASEURL\nROLLBAR_ACCESS_TOKEN=$ROLLBAR_ACCESS_TOKEN" > .env
+        - docker stop lonosms-dev && docker rm lonosms-dev
+        - docker run --env-file ./.env --name lonosms-dev --net=host -d lonosms-dev
+    environment:
+        name: development
+        url: https://lonosms.kwagei.com
+    only:
+        - development
