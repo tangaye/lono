@@ -265,7 +265,7 @@ exports.bulkGateUpdateStatus = async (request, response) => {
 
             console.log({status, price, smsID, message_status})
 
-            await message.update({status: message_status.name})
+            if (message) await message.update({status: message_status.name})
         }
 
         return response.send({ ok: 200 })
