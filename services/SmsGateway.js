@@ -92,6 +92,8 @@ exports.bulkGateSend = async (message, recipient, senderName) => {
                 text: message,
                 sender_id: "gText",
                 sender_id_value:senderName,
+                tag: senderName,
+                duplicates_check: "on",
                 country: "LR"
             })
 
