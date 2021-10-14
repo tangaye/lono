@@ -85,6 +85,8 @@ exports.send = async (request, response) => {
 
 			for (message of messages) {
 
+                console.log({message})
+
                 let payload = {
                     smsId: uuidv4(),
                     recipient: message.to,
