@@ -8,15 +8,15 @@ const Gateway = require("../models/Gateway")
  */
  const validateMessages = messages => {
 
-    if (messages.length > 0) {
+    // if (messages.length > 0) {
 
-        for (message of messages) {
+    //     for (message of messages) {
 
-            let valid_message = message.length > 0 && message.length <= 160
+    //         let valid_message = message.length > 0 && message.length <= 160
 
-            if (!valid_message) return false
-        }
-    }
+    //         if (!valid_message) return false
+    //     }
+    // }
 
 	return true;
 };
