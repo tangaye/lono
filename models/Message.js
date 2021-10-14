@@ -28,16 +28,12 @@ Message.init({
 		},
 	},
 	message: {
-		type: DataTypes.STRING(160),
+		type: DataTypes.TEXT,
 		allowNull: false,
 		validate: {
 			notNull: {
 				msg: "message is required",
-			},
-            len: {
-                args: [1, 160],
-                msg: "message should be no more than 160 characters"
-            }
+			}
 		},
 	},
 	sender_id: {
