@@ -73,14 +73,7 @@ exports.updateCredits = async id => {
         let user = await User.findByPk(id)
         if (user) {
 
-            let credits = user.credits - SMS_TARIFF
-
-            // round numbers to 2 decimal places
-            if (credits >= 0) {
-                credits = Math.floor(credits * 100) / 100
-            } else {
-                credits = Math.ceil(credits * 100) / 100
-            }
+            let credits = user.credits - SMS_TARIFF;
 
             return await user.update({credits})
         }

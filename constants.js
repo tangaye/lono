@@ -6,4 +6,4 @@ exports.NOTFOUND = 404
 exports.QUEUE = "messagequeue"
 exports.TWILIO_GATEWAY = "twilio"
 exports.BULKGATE_GATEWAY = "bulkgate"
-exports.SMS_TARIFF = process.env.SMS_TARIFF || 0.06
+exports.SMS_TARIFF = 1
