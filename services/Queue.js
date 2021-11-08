@@ -19,9 +19,9 @@ const { QUEUE } = require("../constants");
  * Creates a queue
  * @returns {void}
  */
-exports.createQueue = async () => {
+exports.createQueue = async (queue) => {
 	try {
-		let response = await this.queueInstance.createQueueAsync({ qname: QUEUE });
+		let response = await this.queueInstance.createQueueAsync({ qname: queue });
 
 		if (response === 1) {
 			logger.log("queue created");
@@ -30,7 +30,7 @@ exports.createQueue = async () => {
 		}
 	} catch (error) {
 		if (error.name === "queueExists") {
-			logger.log("Queue Exists");
+			logger.log(`Queue Exists: ${queue}`);
 		} else {
 			logger.log("error creating queue: ", error);
 		}
@@ -39,13 +39,14 @@ exports.createQueue = async () => {
 
 /**
  * Adds messages to the queue
- * @param {Object} data - {queue, message, gateway}
+ * @param data - data to add to queue
+ * @param queue - name of queue
  * @returns {void}
  */
-exports.add = async (data) => {
+exports.add = async (data, queue) => {
 	try {
 		let response = await this.queueInstance.sendMessageAsync({
-			qname: QUEUE,
+			qname: queue,
 			message: JSON.stringify(data),
 		});
 

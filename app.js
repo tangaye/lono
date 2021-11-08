@@ -4,10 +4,12 @@ const express = require("express")
 const helmet = require("helmet")
 const cors = require("cors")
 const app = express()
-const MessageQueue = require("./services/MessageQueue")
-const {NOTFOUND, SERVER_ERROR, FAILURE_CODE} = require("./constants")
+const Queue = require("./services/Queue")
+const {NOTFOUND, SERVER_ERROR, FAILURE_CODE, MESSAGES_QUEUE} = require("./constants")
 const database = require("./database/connection")
 const logger = require('./logger')
+const cron = require('node-cron')
+const JobQueries = require('./services/JobsQueries')
 const PORT = process.env.PORT || 8080
 
 const User = require("./models/User")
@@ -55,14 +57,34 @@ app.use((error, request, response, next) => {
 
 (async () => {
 	try {
-		await database.authenticate()
-        await MessageQueue.createQueue()
+
+        await Promise.all([
+            database.authenticate(),
+            Queue.createQueue(MESSAGES_QUEUE)
+        ])
+
 
         require("./services/MessageQueueWorker").start()
+
 		logger.log("database connection has been established successfully.")
 
         app.listen(PORT, () => logger.log(`app listening on localhost:${PORT}`))
         app.use(logger.rollbar.errorHandler())
+
+        // Run job every 10 minutes
+        cron.schedule('*/10 * * * *', async () => {
+
+            let messages = await JobQueries.findPendingFailedMessages()
+
+            console.log('Messages to retry: ', {messages})
+
+            // add messages to queue
+            for (message of messages) {
+                Queue.add(message, MESSAGES_QUEUE)
+                await Message.update({retries: 1}, {where: {id: message.id}})
+            }
+
+        })
 
 	} catch (error) {
         console.log(error)

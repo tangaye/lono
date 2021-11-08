@@ -66,6 +66,19 @@ Message.init({
 		type: DataTypes.INTEGER,
         allowNull: true
 	},
+    alt_gateway_id: {
+        type: Sequelize.UUID,
+        allowNull: true
+    },
+    alt_gateway_message_id: {
+		type: DataTypes.STRING,
+		allowNull: true,
+		unique: true,
+	},
+    retries: {
+		type: DataTypes.INTEGER,
+		allowNull: true
+	}
 }, {
     paranoid: true,
     deletedAt: 'deleted_at',

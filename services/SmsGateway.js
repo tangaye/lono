@@ -9,17 +9,17 @@ const {TWILIO_GATEWAY, BULKGATE_GATEWAY} = require("../constants")
  * Sends messages using the configured sms gateway
  * @param {String} recipient - phone number to receive the message
  * @param {String} message - message body
- * @param {String} senderName - message sender name
+ * @param {String} sender_name - message sender name
  * @param {Object} gateway - configured sms gateway
  * @returns
  */
-exports.send = async (recipient, message, senderName, gateway) => {
+exports.send = async (recipient, message, sender_name, gateway) => {
     try {
 
         if (gateway === TWILIO_GATEWAY) {
-            return await this.twilioSend(message, recipient, senderName)
+            return await this.twilioSend(message, recipient, sender_name)
         } else if (gateway === BULKGATE_GATEWAY) {
-            return await this.bulkGateSend(message, recipient, senderName)
+            return await this.bulkGateSend(message, recipient, sender_name)
         }
 
         console.log("gateway not configured")
@@ -34,17 +34,17 @@ exports.send = async (recipient, message, senderName, gateway) => {
  * Sends a message using the 'Twilio' sms gateway
  * @param {*} message - message body
  * @param {*} recipient - number to recipient message
- * @param {*} senderName - message sender name
+ * @param {*} sender_name - message sender name
  * @returns {Promise}
  */
-exports.twilioSend = async (message, recipient, senderName) => {
+exports.twilioSend = async (message, recipient, sender_name) => {
     try {
 
-        if (message && recipient && senderName) {
+        if (message && recipient && sender_name) {
             let payload = {
                 body: message,
                 to: recipient, // Text this number
-                from: senderName, // From a valid Twilio number
+                from: sender_name, // From a valid Twilio number
             };
 
             if (process.env.NODE_ENV === "production") {
@@ -75,15 +75,15 @@ exports.twilioSend = async (message, recipient, senderName) => {
 
 /**
  * Sends a message using the 'Bulkgate' sms gateway
- * @param {*} message - message body
- * @param {*} recipient - number to recipient message
- * @param {*} senderName - message sender name
+ * @param {String} message - message body
+ * @param {String} recipient - number to recipient message
+ * @param {String} sender_name - message sender name
  * @returns {Promise}
  */
-exports.bulkGateSend = async (message, recipient, senderName) => {
+exports.bulkGateSend = async (message, recipient, sender_name) => {
     try {
 
-        if (message && recipient && senderName) {
+        if (message && recipient && sender_name) {
 
             let result = await axios.post(`${process.env.BULKGATE_BASEURL}/transactional`, {
                 application_id: process.env.BULKGATE_APP_ID,
@@ -91,8 +91,8 @@ exports.bulkGateSend = async (message, recipient, senderName) => {
                 number: recipient,
                 text: message,
                 sender_id: "gText",
-                sender_id_value:senderName,
-                tag: senderName,
+                sender_id_value:sender_name,
+                tag: sender_name,
                 duplicates_check: "on",
                 country: "LR"
             })
