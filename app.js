@@ -72,7 +72,7 @@ app.use((error, request, response, next) => {
         app.use(logger.rollbar.errorHandler())
 
         // Run job every 10 minutes
-        cron.schedule('*/10 * * * *', async () => {
+        cron.schedule('*/1 * * * *', async () => {
 
             let messages = await JobQueries.findPendingFailedMessages()
 

@@ -289,6 +289,7 @@ exports.bulkGateUpdateStatus = async (request, response) => {
  */
  exports.setTwilioIds = async (status, twilio_message_sid, id) => {
 	try {
+        console.log({status, twilio_message_sid, id})
         let gateway = await Gateway.findOne({where: {slug: constants.TWILIO_GATEWAY}})
 
 		let [meta, updated_msg] = await Message.update(

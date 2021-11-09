@@ -36,7 +36,7 @@ worker.on("message", async function (msg, next, msgid) {
 
             if (gateway_slug === constants.TWILIO_GATEWAY) {
 
-                await MessageController.setTwilioIds(result.status, result.sid, id);
+                await MessageController.setTwilioIds(result.status, result.id, id);
             }
 
             if (gateway_slug === constants.BULKGATE_GATEWAY) {
