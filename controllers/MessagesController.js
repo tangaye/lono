@@ -268,6 +268,8 @@ exports.bulkGateUpdateStatus = async (request, response) => {
             )
 
             updated_msg = JSON.parse(JSON.stringify(updated_msg))
+
+            console.log('Twilio update', {updated_msg})
         }
 
 		return response.send({ ok: 200 })
