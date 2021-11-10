@@ -72,19 +72,19 @@ app.use((error, request, response, next) => {
         app.use(logger.rollbar.errorHandler())
 
         // Run job every 10 minutes
-        cron.schedule('*/10 * * * *', async () => {
+        // cron.schedule('*/10 * * * *', async () => {
 
-            let messages = await JobQueries.findPendingFailedMessages()
+        //     let messages = await JobQueries.findPendingFailedMessages()
 
-            console.log('Messages to retry: ', {messages})
+        //     console.log('Messages to retry: ', {messages})
 
-            // add messages to queue
-            for (message of messages) {
-                Queue.add(message, MESSAGES_QUEUE)
-                await Message.update({retries: 1}, {where: {id: message.id}})
-            }
+        //     // add messages to queue
+        //     for (message of messages) {
+        //         Queue.add(message, MESSAGES_QUEUE)
+        //         await Message.update({retries: 1}, {where: {id: message.id}})
+        //     }
 
-        })
+        // })
 
 	} catch (error) {
         console.log(error)
