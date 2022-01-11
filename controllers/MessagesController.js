@@ -7,6 +7,9 @@ const MessagesValidator = require("../validators/messages")
 const { v4: uuidv4 } = require("uuid")
 const Gateway = require("../models/Gateway")
 const logger = require("../logger");
+const MessageFactory = require("../factories/messages")
+
+
 
 /**
  * Returns all messages for a user/sender
@@ -17,34 +20,34 @@ const logger = require("../logger");
 exports.all = async (request, response) => {
 	try {
 
+		const { page, size } = request.query;
+		const { limit, offset } = MessageFactory.getPagination(page, size);
+
+
 		let user = request.user
         // get user senders
 		let sender_ids = user.senders.map((sender) => sender.id);
 
         // query messages sent by user senders
-		let messages = await Message.findAll({
-			attributes: [
-				["id", "smsId"],
-				"recipient",
-				"message",
-				["ext_message_id", "extMessageId"],
-				"status",
-                "cost",
-				["created_at", "date"],
-			],
+		let messages = await Message.findAndCountAll({
+			attributes: constants.MESSAGES_ATTRIBUTES,
 			include: {
 				model: Sender,
 				attributes: ["name"],
 			},
-			where: {
-				sender_id: { [Op.in]: sender_ids },
-			},
+			where: {sender_id: { [Op.in]: sender_ids }},
+			order: [['created_at', 'DESC']],
+			limit,
+			offset
 		});
 
 		if (messages) {
+
+			console.log({messages})
+
 			return response.send({
 				errorCode: constants.SUCCESS_CODE,
-				messages: messages,
+				...MessageFactory.getPagingData(messages, page, limit)
 			});
 		}
 
@@ -127,6 +130,46 @@ exports.send = async (request, response) => {
 		});
 	}
 };
+
+exports.getStats = async (request, response) => {
+
+	try {
+
+		const user = request.user
+		const sender_ids = user.senders.map((sender) => sender.id);
+
+		const last_seven_counts = await MessageFactory.lastSevenDays(sender_ids)
+		const total_today = await MessageFactory.totalToday(sender_ids)
+		const total = await MessageFactory.total(sender_ids)
+		const latest_five = await MessageFactory.latestFive(sender_ids)
+
+		if (last_seven_counts && total_today && total) return response.send({
+			errorCode: constants.SUCCESS_CODE,
+			statistics: {
+				total,
+				lastSeven: last_seven_counts,
+				latestFive: latest_five,
+				totalToday: total_today[0].count
+			},
+		})
+
+		return response.send({
+			errorCode: constants.FAILURE_CODE,
+			errorMessage: "error fetching data",
+			statistics: null
+		})
+	}
+	catch (error)
+	{
+		logger.error("error fetching data: ", error);
+		return response.status(constants.SERVER_ERROR).send({
+			errorCode: constants.FAILURE_CODE,
+			errorMessage: error?.errors[0]?.message || "error fetching data",
+			data: null,
+		})
+	}
+
+}
 
 /**
  * Stores a message in the database

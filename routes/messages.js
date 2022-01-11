@@ -5,6 +5,7 @@ const {userIsValid, senderIsValid} = require("../middlewares")
 
 router.get("/sms", userIsValid, MessagesController.all)
 router.post("/sms", [userIsValid, senderIsValid], MessagesController.send)
+router.get("/sms/stats", userIsValid, MessagesController.getStats)
 router.get("/sms/status", MessagesController.bulkGateUpdateStatus) // for bulkgate
 router.post("/sms/status", MessagesController.twilioUpdateStatus) // for twilio
 
