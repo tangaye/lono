@@ -20,8 +20,9 @@ const MessageFactory = require("../factories/messages")
 exports.all = async (request, response) => {
 	try {
 
-		const { page, size } = request.query;
+		const { page, size, search } = request.query;
 		const { limit, offset } = MessageFactory.getPagination(page, size);
+		// const condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
 
 
 		let user = request.user

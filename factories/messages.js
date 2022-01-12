@@ -13,11 +13,12 @@ exports.lastSevenDays = async sender_ids => {
 	try {
 
 		let messages = await database.query(`
-				select created_at::date as date, cast(count(id) as int) 
-				from messages 
-				where created_at::date between CURRENT_DATE - 7 and CURRENT_DATE 
-				and sender_id IN(:ids) 
-				group by date`, {
+				select date, cast(count(id) as int)
+				from (select generate_series((current_date + 1) - interval '7 days', (current_date + 1) - interval '1 days', interval '1 days')::date as date) series
+				left join messages
+				on messages.created_at::date = date
+				group by date
+				order by date desc`, {
 			replacements: { ids: sender_ids },
 			type: QueryTypes.SELECT
 		});
@@ -81,6 +82,7 @@ exports.latestFive = async sender_ids => {
 				attributes: ["name"],
 			},
 			where: {sender_id: { [Op.in]: sender_ids }},
+			order: [['created_at', 'desc']],
 			limit: 5
 		})
 
