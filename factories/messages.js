@@ -9,7 +9,7 @@ const constants = require("../constants")
  * @param {Array|Required} sender_ids
  * @returns {Promise<*[]|*>}
  */
-exports.lastSevenDays = async sender_ids => {
+exports.lastSevenDaysCount = async sender_ids => {
 	try {
 
 		let messages = await database.query(`
@@ -17,6 +17,7 @@ exports.lastSevenDays = async sender_ids => {
 				from (select generate_series((current_date + 1) - interval '7 days', (current_date + 1) - interval '1 days', interval '1 days')::date as date) series
 				left join messages
 				on messages.created_at::date = date
+				and messages.sender_id IN(:ids)
 				group by date
 				order by date desc`, {
 			replacements: { ids: sender_ids },
@@ -26,7 +27,7 @@ exports.lastSevenDays = async sender_ids => {
 		if (messages) return messages;
 		return [];
 	} catch (error) {
-		console.log('error querying for lastSevenDays: ', error);
+		console.log('error querying for lastSevenDaysCount: ', error);
 		return [];
 	}
 }
