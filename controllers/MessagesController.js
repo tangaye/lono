@@ -139,7 +139,7 @@ exports.getStats = async (request, response) => {
 		const user = request.user
 		const sender_ids = user.senders.map((sender) => sender.id);
 
-		const last_seven_counts = await MessageFactory.lastSevenDays(sender_ids)
+		const last_seven_counts = await MessageFactory.lastSevenDaysCount(sender_ids)
 		const total_today = await MessageFactory.totalToday(sender_ids)
 		const total = await MessageFactory.total(sender_ids)
 		const latest_five = await MessageFactory.latestFive(sender_ids)
