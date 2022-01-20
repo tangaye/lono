@@ -105,9 +105,23 @@ exports.getPagingData = (data, page, limit) => {
 	return { totalItems, messages, totalPages, currentPage };
 };
 
-exports.getPagination = (page, size) => {
+exports.getPagination = (page, size, order) => {
 	const limit = size ? +size : 5;
 	const offset = page ? page * limit : 0;
+	const order_by = order ? order.toUpperCase()  : 'DESC';
 
-	return { limit, offset };
+	return { limit, offset, order_by };
 };
+
+exports.getSearch  = (search) => {
+	const condition = search ? { 
+		[Op.or]: [
+			
+				{message: { [Op.iLike]: `%${search}%` }},
+				{recipient: { [Op.iLike]: `%${search}%`}},
+				{status: { [Op.iLike]: `%${search}%`}},
+			]
+		}
+		: null;
+	return condition;
+}

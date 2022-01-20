@@ -20,10 +20,10 @@ const MessageFactory = require("../factories/messages")
 exports.all = async (request, response) => {
 	try {
 
-		const { page, size, search } = request.query;
-		const { limit, offset } = MessageFactory.getPagination(page, size);
-		// const condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
 
+		const { page, size, search, order } = request.query;
+		const { limit, offset, order_by} = MessageFactory.getPagination(page, size, order);
+		const condition = MessageFactory.getSearch(search);
 
 		let user = request.user
         // get user senders
@@ -36,8 +36,8 @@ exports.all = async (request, response) => {
 				model: Sender,
 				attributes: ["name"],
 			},
-			where: {sender_id: { [Op.in]: sender_ids }},
-			order: [['created_at', 'DESC']],
+			where: condition,
+			order: [['created_at', order_by]],
 			limit,
 			offset
 		});
@@ -80,6 +80,7 @@ exports.send = async (request, response) => {
 		let { sender, messages } = request.body;
         let user = request.user
 		let stored_messages = []
+		console.log(user);
 
         // validate messages
 		let result = await MessagesValidator.validate(messages, user)
