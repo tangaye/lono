@@ -105,15 +105,20 @@ exports.getPagingData = (data, page, limit) => {
 	return { totalItems, messages, totalPages, currentPage };
 };
 
-exports.getPagination = (page, size, order) => {
+exports.getPagination = (page, size) => {
 	const limit = size ? +size : 5;
 	const offset = page ? page * limit : 0;
-	const order_by = order ? order.toUpperCase()  : 'DESC';
 
-	return { limit, offset, order_by };
+	return { limit, offset };
 };
 
-exports.getSearch  = (search) => {
+exports.getOrder = (order) => {
+	const order_by = order ? order.toUpperCase()  : 'DESC';
+
+	return { order_by };
+};
+
+exports.getCondition  = (search) => {
 	const condition = search ? { 
 		[Op.or]: [
 			

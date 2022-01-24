@@ -22,8 +22,9 @@ exports.all = async (request, response) => {
 
 
 		const { page, size, search, order } = request.query;
-		const { limit, offset, order_by} = MessageFactory.getPagination(page, size, order);
-		const condition = MessageFactory.getSearch(search);
+		const { limit, offset} = MessageFactory.getPagination(page, size);
+		const { order_by } = MessageFactory.getOrder(order);
+		const condition = MessageFactory.getCondition(search);
 
 		let user = request.user
         // get user senders
@@ -80,7 +81,6 @@ exports.send = async (request, response) => {
 		let { sender, messages } = request.body;
         let user = request.user
 		let stored_messages = []
-		console.log(user);
 
         // validate messages
 		let result = await MessagesValidator.validate(messages, user)
