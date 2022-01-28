@@ -127,6 +127,5 @@ exports.getCondition  = (search, sender_ids) => {
 				{recipient: { [Op.iLike]: `%${search}%`}},
 				{status: { [Op.iLike]: `%${search}%`}},
 			] : {sender_id: { [Op.in]: sender_ids }}
-			
-	}
+		}
 }
