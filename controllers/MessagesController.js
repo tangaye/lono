@@ -27,7 +27,7 @@ exports.all = async (request, response) => {
 		const { page, size, search, order } = request.query;
 		const { limit, offset} = MessageFactory.getPagination(page, size);
 		const { order_by } = MessageFactory.getOrder(order);
-		const condition = MessageFactory.getCondition(search, sender_ids);
+		const condition = MessageFactory.getSearch(search);
 
 
 
@@ -38,15 +38,16 @@ exports.all = async (request, response) => {
 				model: Sender,
 				attributes: ["name"],
 			},			
-			where: condition,
+			where: {
+				...condition,
+				sender_id: { [Op.in]: sender_ids }
+			},
 			order: [['created_at', order_by]],
 			limit,
 			offset
 		});
 
 		if (messages) {
-
-			console.log({messages})		
 
 			return response.send({
 				errorCode: constants.SUCCESS_CODE,

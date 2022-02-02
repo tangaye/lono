@@ -119,13 +119,27 @@ exports.getOrder = (order) => {
 };
 
 
-exports.getCondition  = (search, sender_ids) => {
-	return { 
-		[Op.or]: search ?  [
-			
-				{message: { [Op.iLike]: `%${search}%` }}, 
+/**
+ * Returns search condition
+ * @param {string|required} search
+ * @return {null|object}
+ */
+exports.getSearch  = search => {
+
+	if (search) {
+
+		if (Number(search[0]) === 0) search = search.substring(1)
+
+		return search ? {
+			[Op.or]: [
+
+				{message: { [Op.iLike]: `%${search}%` }},
 				{recipient: { [Op.iLike]: `%${search}%`}},
 				{status: { [Op.iLike]: `%${search}%`}},
-			] : {sender_id: { [Op.in]: sender_ids }}
-		}
+			]
+		} : null
+
+	}
+	return null
+
 }
