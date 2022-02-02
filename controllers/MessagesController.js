@@ -20,14 +20,16 @@ const MessageFactory = require("../factories/messages")
 exports.all = async (request, response) => {
 	try {
 
-		const { page, size, search } = request.query;
-		const { limit, offset } = MessageFactory.getPagination(page, size);
-		// const condition = title ? { title: { [Op.like]: `%${title}%` } } : null;
-
-
 		let user = request.user
-        // get user senders
+		// get user senders
 		let sender_ids = user.senders.map((sender) => sender.id);
+
+		const { page, size, search, order } = request.query;
+		const { limit, offset} = MessageFactory.getPagination(page, size);
+		const { order_by } = MessageFactory.getOrder(order);
+		const condition = MessageFactory.getSearch(search);
+
+
 
         // query messages sent by user senders
 		let messages = await Message.findAndCountAll({
@@ -35,16 +37,17 @@ exports.all = async (request, response) => {
 			include: {
 				model: Sender,
 				attributes: ["name"],
+			},			
+			where: {
+				...condition,
+				sender_id: { [Op.in]: sender_ids }
 			},
-			where: {sender_id: { [Op.in]: sender_ids }},
-			order: [['created_at', 'DESC']],
+			order: [['created_at', order_by]],
 			limit,
 			offset
 		});
 
 		if (messages) {
-
-			console.log({messages})
 
 			return response.send({
 				errorCode: constants.SUCCESS_CODE,

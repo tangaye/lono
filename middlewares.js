@@ -90,7 +90,6 @@ exports.userIsValid = async (request, response, next) => {
  */
 exports.senderIsValid = async (request, response, next) => {
 	try {
-
 		let user = request.user;
 		let senderName = request.body.senderName;
 		let sender = user.senders.find((item) => item.name === senderName);

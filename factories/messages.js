@@ -111,3 +111,35 @@ exports.getPagination = (page, size) => {
 
 	return { limit, offset };
 };
+
+exports.getOrder = (order) => {
+	const order_by = order ? order.toUpperCase()  : 'DESC';
+
+	return { order_by };
+};
+
+
+/**
+ * Returns search condition
+ * @param {string|required} search
+ * @return {null|object}
+ */
+exports.getSearch  = search => {
+
+	if (search) {
+
+		if (Number(search[0]) === 0) search = search.substring(1)
+
+		return search ? {
+			[Op.or]: [
+
+				{message: { [Op.iLike]: `%${search}%` }},
+				{recipient: { [Op.iLike]: `%${search}%`}},
+				{status: { [Op.iLike]: `%${search}%`}},
+			]
+		} : null
+
+	}
+	return null
+
+}
