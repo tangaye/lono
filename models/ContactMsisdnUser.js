@@ -1,9 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/connection");
 
-class Sender extends Model {}
+class ContactMsisdnUser extends Model {}
 
-Sender.init(
+ContactMsisdnUser.init(
 	{
 		id: {
 			type: DataTypes.UUID,
@@ -11,13 +11,21 @@ Sender.init(
 			allowNull: false,
 			primaryKey: true,
 		},
-		name: {
-			type: DataTypes.STRING(11),
-			unique: true,
+		contact_id: {
+			type: DataTypes.UUID,
 			allowNull: false,
 			validate: {
 				notNull: {
-					msg: "name is required",
+					msg: "contact_id is required",
+				},
+			},
+		},
+		msisdn_id: {
+			type: DataTypes.UUID,
+			allowNull: false,
+			validate: {
+				notNull: {
+					msg: "msisdn_id is required",
 				},
 			},
 		},
@@ -29,15 +37,16 @@ Sender.init(
 					msg: "user_id is required",
 				},
 			},
-		},
+		}
 	},
 	{
+		underscored: true,
 		paranoid: true,
 		deletedAt: 'deleted_at',
-		underscored: true,
-		modelName: "senders",
+		tableName: 'contact_msisdns_users',
+		indexes: [{ unique: true, fields: ['contact_id', 'msisdn_id', 'user_id'] }],
 		sequelize, // We need to pass the connection instance
 	}
 );
 
-module.exports = Sender;
+module.exports = ContactMsisdnUser;

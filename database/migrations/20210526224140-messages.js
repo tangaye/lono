@@ -17,10 +17,7 @@ module.exports = {
 			},
 			recipient: {
 				type: Sequelize.STRING,
-				allowNull: false,
-				notNull: {
-					msg: "recipient is required",
-				},
+				allowNull: false
 			},
 			message: {
 				type: Sequelize.TEXT,

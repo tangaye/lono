@@ -1,9 +1,9 @@
-const { DataTypes, Sequelize, Model } = require("sequelize");
+const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/connection");
 
-class Gateway extends Model {}
+class ContactGroup extends Model {}
 
-Gateway.init(
+ContactGroup.init(
 	{
 		id: {
 			type: DataTypes.UUID,
@@ -11,38 +11,32 @@ Gateway.init(
 			allowNull: false,
 			primaryKey: true,
 		},
-		name: {
-			type: DataTypes.STRING,
-			unique: true,
+		contact_id: {
+			type: DataTypes.UUID,
 			allowNull: false,
 			validate: {
 				notNull: {
-					msg: "name is required",
+					msg: "contact_id is required",
 				},
 			},
 		},
-        slug: {
-			type: DataTypes.STRING,
-			unique: true,
+		group_id: {
+			type: DataTypes.UUID,
 			allowNull: false,
 			validate: {
 				notNull: {
-					msg: "slug is required",
+					msg: "group_id is required",
 				},
 			},
-		},
-		active: {
-			type: DataTypes.BOOLEAN,
-			allowNull: false
 		},
 	},
 	{
 		paranoid: true,
 		deletedAt: 'deleted_at',
 		underscored: true,
-		tableName: "gateways",
+		tableName: "contact_groups",
 		sequelize, // We need to pass the connection instance
 	}
 );
 
-module.exports = Gateway;
+module.exports = ContactGroup;

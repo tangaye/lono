@@ -83,7 +83,7 @@ Message.init({
     paranoid: true,
     deletedAt: 'deleted_at',
 	underscored: true,
-	modelName: "messages",
+	tableName: "messages",
 	sequelize, // We need to pass the connection instance
 });
 
