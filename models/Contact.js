@@ -1,12 +1,12 @@
 const {DataTypes, Model} = require("sequelize")
-const sequelize = require("../database/connection")
+const database = require("../database/connection")
 
 class Contact extends Model {}
 
 Contact.init({
 	id: {
 		type: DataTypes.UUID,
-		defaultValue: Sequelize.UUIDV4,
+		defaultValue: DataTypes.UUIDV4,
 		allowNull: false,
 		primaryKey: true,
 	},
@@ -32,7 +32,7 @@ Contact.init({
 	underscored: true,
 	modelName: "contact",
 	tableName: "contacts",
-	sequelize, // We need to pass the connection instance
+	sequelize: database, // We need to pass the connection instance
 });
 
 module.exports = Contact;

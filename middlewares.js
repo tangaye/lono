@@ -1,21 +1,22 @@
 const User = require("./models/User")
 const Sender = require("./models/Sender")
 const constants = require("./constants")
+const logger = require("./logger");
 
 /**
- * Only admins with app's api key are allowed
+ * Only admins
  * @param {*} request
  * @param {*} response
  * @param {*} next
  * @returns
  */
-exports.requiresAdmin = async (request, response, next) => {
+exports.isAdmin = async (request, response, next) => {
 
     try {
 
-        let api_key = request.headers.apikey
+        const user = request.body.user
 
-        if (api_key && api_key === process.env.API_KEY) return next()
+        if (user.role === "admin") return next()
 
         return response.status(constants.UNAUTHORIZED).send({
             errorCode: constants.FAILURE_CODE,
@@ -24,7 +25,7 @@ exports.requiresAdmin = async (request, response, next) => {
 
     } catch (error) {
 
-        logger.error("error requiresAdmin: ", error)
+        logger.error("error isAdmin: ", error)
 
         return response.status(constants.UNAUTHORIZED).send({
             errorCode: constants.FAILURE_CODE,
@@ -34,28 +35,28 @@ exports.requiresAdmin = async (request, response, next) => {
 }
 
 /**
- * Only users with valid api key and user id are allowed
+ * Only users with a valid api key
  * @param {*} request
  * @param {*} response
  * @param {*} next
  */
-exports.userIsValid = async (request, response, next) => {
+exports.authenticate = async (request, response, next) => {
 
     // request headers and case-insensitive
 	try {
 
-        let api_key = request.headers.apikey
+        const api_key = request.headers.apikey
 
         if (api_key) {
 
-            let user = await User.findOne({
+            const user = await User.findOne({
                 where: {api_key},
                 include: {model: Sender, attributes: ['id', 'name']}
             })
 
             if (user) {
 
-                request.user = user
+                request.body.user = user
                 return next()
             }
 
@@ -72,7 +73,8 @@ exports.userIsValid = async (request, response, next) => {
 
 
 	} catch (error) {
-		logger.error("error finding user: ", error);
+
+		logger.error("error authentication request: ", error);
 
 		return response.status(constants.SERVER_ERROR).send({
 			errorCode: constants.FAILURE_CODE,
@@ -90,7 +92,8 @@ exports.userIsValid = async (request, response, next) => {
  */
 exports.senderIsValid = async (request, response, next) => {
 	try {
-		let user = request.user;
+
+		let user = request.body.user;
 		let senderName = request.body.senderName;
 		let sender = user.senders.find((item) => item.name === senderName);
 
@@ -106,10 +109,11 @@ exports.senderIsValid = async (request, response, next) => {
 
 	} catch (error) {
 
-		logger.error("error senderIsValid", error);
+		logger.error("error senderIsValid", error)
+
 		return response.status(constants.SERVER_ERROR).send({
 			errorCode: constants.FAILURE_CODE,
-			errorMessage: `An unexpected error ocurred.`,
+			errorMessage: `An unexpected error occurred.`,
 		});
 	}
 };

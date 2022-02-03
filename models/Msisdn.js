@@ -22,6 +22,7 @@ Msisdn.init({
 	paranoid: true,
 	deletedAt: 'deleted_at',
 	underscored: true,
+	modelName: "msisdns",
 	tableName: "msisdns",
 	sequelize, // We need to pass the connection instance
 });
