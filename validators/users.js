@@ -1,5 +1,7 @@
 const helper = require("../helpers")
 const constants = require("../constants")
+const User = require("../models/User")
+const { Op } = require("sequelize")
 const logger = require("../logger")
 
 /**
@@ -33,17 +35,33 @@ exports.validateStore = async (request, response, next) => {
 
 	try {
 
-		const {name, credits} = request.body
+		const {name, email, credits} = request.body
 
-		if (name && Number(credits) >= 0) {
+		if (name && (Number(credits) >= 0) && email && helper.isValidEmail(email)) {
 
-			request.body.api_key = helper.generateApiKey()
+			const user = await User.findOne({
+				where: {
+					[Op.or]: [
+						{name},
+						{email}
+					]
+				}
+			})
+
+			if (user) return helper.respond(response, {
+				code: constants.INVALID_DATA,
+				message: "user exists"
+			})
+
+			request.body.api_key = helper.generateSecret()
+			request.body.password = helper.generateSecret()
+
 			return next()
 		}
 
 		return helper.respond(response, {
 			code: constants.INVALID_DATA,
-			message: "invalid name and credits"
+			message: "invalid name, credits or email"
 		})
 
 

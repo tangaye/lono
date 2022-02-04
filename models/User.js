@@ -26,6 +26,13 @@ User.init(
 			allowNull: false,
 			defaultValue: 'client'
 		},
+		email: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			validate: {
+				isEmail: true
+			},
+		},
         credits: {
             type: DataTypes.INTEGER,
             defaultValue: 0,

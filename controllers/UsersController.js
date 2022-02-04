@@ -2,7 +2,8 @@ const User = require("../models/User")
 const Sender = require("../models/Sender")
 const constants = require("../constants")
 const logger = require("../logger")
-const helper = require("../helpers");
+const helper = require("../helpers")
+const KeycloakFactory = require("../factories/KeycloakFactory")
 
 
 exports.all = async (request, response) => {
@@ -12,7 +13,7 @@ exports.all = async (request, response) => {
 		const {where_clause} = request.body
 
 		const users = await User.findAll({
-			attributes: ["id", "name", "credits", "allow_overdraft", ["api_key", "apiKey"]],
+			attributes: ["id", "name", "credits", "email", "allow_overdraft", ["api_key", "apiKey"]],
 			include: { model: Sender, attributes: ["id", "name"] },
 			where: where_clause || null
 		})
@@ -43,13 +44,24 @@ exports.all = async (request, response) => {
 exports.store = async (request, response) => {
 	try {
 
-		const {name, credits, api_key} = request.body
-		const user = await User.create({name, credits, api_key})
+		const {name, email, credits, password, api_key} = request.body
 
-		if (user) return helper.respond(response, {
-			code: constants.SUCCESS_CODE,
-			user
-		})
+		const result = await KeycloakFactory.createUser(email, password, api_key)
+
+		if (result)
+		{
+			const user = await User.create({name, email, credits, api_key})
+
+			if (user) {
+
+				user.dataValues.password = password
+
+				return helper.respond(response, {
+					code: constants.SUCCESS_CODE,
+					user
+				})
+			}
+		}
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
@@ -83,6 +95,7 @@ exports.details = async (request, response) => {
 			user: {
 				id: user.id,
 				name: user.name,
+				email: user.email,
 				apiKey: user.api_key,
 				senderNames: user.senders,
 				smsCredits: user.credits

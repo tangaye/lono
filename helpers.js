@@ -17,6 +17,14 @@ exports.isValidUrl = url => validator.isValidUrl(url)
  */
 exports.isValidUuid = id => validator.isUUID(id)
 
+
+/**
+ * Checks if id is a uuid
+ * @param {string|required} email
+ * @returns {Boolean}
+ */
+exports.isValidEmail = email => validator.isEmail(email)
+
 /**
  * Checks if a sender name for SMS is a valid one.
  * Should be of length 11
@@ -62,7 +70,7 @@ exports.checkEnvVariables = () => {
 
 }
 
-exports.generateApiKey = () => generateApiKey({
+exports.generateSecret = () => generateApiKey({
 	method: 'string',
 	pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.@#$*',
 	min: 32,

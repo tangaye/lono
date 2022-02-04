@@ -1,7 +1,8 @@
 const User = require("./models/User")
 const Sender = require("./models/Sender")
 const constants = require("./constants")
-const logger = require("./logger");
+const logger = require("./logger")
+const helper = require("./helpers")
 
 /**
  * Only admins
@@ -18,19 +19,20 @@ exports.isAdmin = async (request, response, next) => {
 
         if (user.role === constants.ADMIN_ROLE) return next()
 
-        return response.status(constants.UNAUTHORIZED).send({
-            errorCode: constants.FAILURE_CODE,
-            errorMessage: "Unauthorized!",
-        })
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "Unauthorized!"
+		}, constants.UNAUTHORIZED)
+
 
     } catch (error) {
 
         logger.error("error isAdmin: ", error)
 
-        return response.status(constants.UNAUTHORIZED).send({
-            errorCode: constants.FAILURE_CODE,
-            errorMessage: "Unauthorized!",
-        })
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "Unauthorized!"
+		}, constants.UNAUTHORIZED)
     }
 }
 
@@ -60,26 +62,22 @@ exports.authenticate = async (request, response, next) => {
                 return next()
             }
 
-            return response.status(constants.UNAUTHORIZED).send({
-                errorCode: constants.FAILURE_CODE,
-                errorMessage: "Unauthorized!",
-            })
         }
 
-        return response.status(constants.UNAUTHORIZED).send({
-            errorCode: constants.FAILURE_CODE,
-            errorMessage: "Unauthorized!",
-        })
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "Unauthorized!"
+		}, constants.UNAUTHORIZED)
 
 
 	} catch (error) {
 
 		logger.error("error authentication request: ", error);
 
-		return response.status(constants.SERVER_ERROR).send({
-			errorCode: constants.FAILURE_CODE,
-			errorMessage: `An unexpected error occurred.`,
-		})
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "An unexpected error occurred."
+		}, constants.UNAUTHORIZED)
 	}
 }
 
@@ -102,18 +100,18 @@ exports.senderIsValid = async (request, response, next) => {
 			return next();
 		}
 
-		return response.send({
-			errorCode: constants.FAILURE_CODE,
-			errorMessage: `Invalid senderName: '${senderName}'.`,
-		});
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: `Invalid senderName: '${senderName}'.`,
+		})
 
 	} catch (error) {
 
 		logger.error("error senderIsValid", error)
 
-		return response.status(constants.SERVER_ERROR).send({
-			errorCode: constants.FAILURE_CODE,
-			errorMessage: `An unexpected error occurred.`,
-		});
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "An unexpected error occurred."
+		}, constants.UNAUTHORIZED)
 	}
 };

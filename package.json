@@ -23,6 +23,7 @@
     },
     "homepage": "https://gitlab.com/kwagei/lono-messenger/lono#readme",
     "dependencies": {
+        "@keycloak/keycloak-admin-client": "^16.1.1",
         "axios": "^0.21.1",
         "colors": "^1.4.0",
         "cors": "^2.8.5",
