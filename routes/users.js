@@ -7,6 +7,6 @@ router.route("/users")
 	.get([authenticate, isAdmin, validateAll], UsersController.all)
 	.post([authenticate, isAdmin, validateStore], UsersController.store)
 
-router.get("/users/account", [authenticate, isAdmin], UsersController.details)
+router.get("/users/account", authenticate, UsersController.details)
 
 module.exports = router;
