@@ -5,9 +5,6 @@ const Message = require("../models/Message")
 const UsersController = require("../controllers/UsersController")
 const Queue = require("../Queue")
 const Bulkgate = require("../services/Bulkgate")
-const Msisdn = require("../models/Msisdn");
-const ContactMsisdnUser = require("../models/ContactMsisdnUser")
-const Contact = require("../models/Contact")
 const logger = require("../logger")
 const ContactFactory = require("../factories/ContactsFactory");
 

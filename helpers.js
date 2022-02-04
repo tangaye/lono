@@ -68,3 +68,10 @@ exports.generateApiKey = () => generateApiKey({
 	min: 32,
 	max: 64
 })
+
+exports.getGatewayQueue = gateway_slug => {
+
+	if (gateway_slug === 'twilio') return constants.TWILIO_MESSAGES_QUEUE
+	if (gateway_slug === 'bulkgate') return constants.BULKGATE_MESSAGES_QUEUE
+
+}

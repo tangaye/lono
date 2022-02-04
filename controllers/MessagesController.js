@@ -110,7 +110,7 @@ exports.send = async (request, response) => {
                     gateway: result.gateway,
                     id: payload.smsId,
                     user
-                }, constants.BULKGATE_MESSAGES_QUEUE)
+                }, helper.getGatewayQueue(result.gateway.slug))
 
 				queued_messages.push(payload)
 			}

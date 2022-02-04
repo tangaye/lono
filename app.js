@@ -86,6 +86,7 @@ app.use((error, request, response, next) => {
 		app.listen(PORT, () => logger.log(`app listening on localhost:${PORT}`))
 
 		require("./workers/BulkgateWorker").start()
+		require("./workers/TwilioWorker").start()
 
 		logger.log("database connection has been established successfully.")
 
