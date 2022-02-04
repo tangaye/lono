@@ -1,9 +1,12 @@
-const express = require("express");
-const router = express.Router();
-const UsersController = require("../controllers/UsersController");
-const {isAdmin, authenticate} = require("../middlewares");
+const router = require("express").Router()
+const UsersController = require("../controllers/UsersController")
+const {isAdmin, authenticate} = require("../middlewares")
+const {validateAll, validateStore} = require("../validators/users")
 
-router.get("/users", isAdmin, UsersController.all)
-router.get("/users/account", authenticate, UsersController.getAccountDetails)
+router.route("/users")
+	.get([authenticate, isAdmin, validateAll], UsersController.all)
+	.post([authenticate, isAdmin, validateStore], UsersController.store)
+
+router.get("/users/account", [authenticate, isAdmin], UsersController.details)
 
 module.exports = router;

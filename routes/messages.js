@@ -1,12 +1,15 @@
-const express = require("express")
-const router = express.Router()
+const router = require("express").Router()
 const MessagesController = require("../controllers/MessagesController")
 const {authenticate, senderIsValid} = require("../middlewares")
 
-router.get("/sms", authenticate, MessagesController.all)
-router.post("/sms", [authenticate, senderIsValid], MessagesController.send)
-router.get("/sms/stats", authenticate, MessagesController.getStats)
-router.get("/sms/status", MessagesController.bulkGateUpdateStatus) // for bulkgate
-router.post("/sms/status", MessagesController.twilioUpdateStatus) // for twilio
+router.route('/sms')
+	.get(authenticate, MessagesController.all)
+	.post([authenticate, senderIsValid], MessagesController.send)
+
+router.get("/sms/stats", authenticate, MessagesController.statistics)
+
+router.route("/sms/status")
+	.get(MessagesController.bulkGateUpdateStatus) // for bulkgate
+	.post(MessagesController.twilioUpdateStatus) // for twilio
 
 module.exports = router;

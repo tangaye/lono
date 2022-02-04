@@ -1,49 +1,61 @@
 const User = require("../models/User")
 const Msisdn = require("../models/Msisdn")
 const Contact = require("../models/Contact")
-const ContactMsisdnUser = require("../models/ContactMsisdnUser")
-const database = require("../database/connection")
-const MsisdnFactory = require("../factories/MsisdnsFactory")
+const Group = require("../models/Group")
+const ContactFactory = require("../factories/ContactsFactory")
 const logger = require("../logger")
 const constants = require("../constants")
+const helper = require("../helpers")
 
 exports.all = async (request, response) => {
 
 	try {
 
-		const user = request.body.user
+		const {user, where_clause} = request.body
 
 		const contacts = await Contact.findAll({
+			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
 			include: [
 				{
 					model: User,
+					attributes: ['id', 'name'],
 					through: {attributes: []},
 					where: {id: user.id}
-				}, {
+				},
+				{
+					model: Group,
+					attributes: ['id', 'name'],
+					through: {attributes: []}
+				},
+				{
 					model: Msisdn,
+					attributes: ['id'],
 					through: {attributes: []},
 				}
-			]
+			],
+			order: [['created_at', 'desc']],
+			where: where_clause || null
 		})
 
-		if (contacts) return response.send({
-			errorCode: constants.SUCCESS_CODE,
+		if (contacts) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
 			contacts
 		})
 
-		return response.send({
-			errorCode: constants.FAILURE_CODE,
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
 			message: "error fetching contacts"
 		})
 	}
 	catch (error)
 	{
 		const message = "error fetching contacts"
-		logger.error(message, error)
 
-		return response.status(constants.SERVER_ERROR).send({
-			errorCode: constants.FAILURE_CODE,
-			errorMessage: error?.errors[0]?.message || message
+		logger.log(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
 		})
 	}
 
@@ -53,54 +65,31 @@ exports.store = async (request, response) => {
 
 	try {
 
-		const user = request.body.user
-		const {first_name, middle_name, last_name, metadata, msisdns} = request.body
+		const {first_name, middle_name, last_name, metadata, msisdns, groups, user} = request.body
+		const contact = await ContactFactory.createContact(first_name, middle_name, last_name, metadata, msisdns, groups, user)
 
-		if (MsisdnFactory.validate(msisdns)) {
+		if (contact) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			contact
+		})
 
-			const result = await database.transaction(async (t) => {
+		console.log({contact})
 
-				// create msisdns
-				const prepared_msisdns = msisdns.map(msisdn => ({id: msisdn}))
-				const created_msisdns = await Msisdn.bulkCreate(prepared_msisdns, {transaction: t})
-
-				// create contact
-				const contact = await Contact.create({
-					first_name, middle_name, last_name, metadata
-				}, { transaction: t })
-
-				// assign msisdn, contact to user
-				for (const msisdn of created_msisdns) {
-
-					await ContactMsisdnUser.create({
-						contact_id: contact.id, msisdn_id: msisdn.id, user_id: user.id
-					}, {transaction: t})
-				}
-
-				return contact;
-
-			});
-
-			if (result) return response.send({
-				errorCode: constants.SUCCESS_CODE,
-				contact: result
-			})
-		}
-
-		return response.send({
-			errorCode: constants.FAILURE_CODE,
-			message: "Invalid msisdns"
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error creating contact"
 		})
 
 	}
 	catch (error)
 	{
-		const message = "error creating contacts"
-		logger.error(message, error)
+		const message = "error creating contact"
 
-		return response.status(constants.SERVER_ERROR).send({
-			errorCode: constants.FAILURE_CODE,
-			errorMessage: error?.errors[0]?.message || message
+		logger.log(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
 		})
 	}
 }

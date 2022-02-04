@@ -6,7 +6,7 @@ class Group extends Model {}
 Group.init({
 	id: {
 		type: DataTypes.UUID,
-		defaultValue: Sequelize.UUIDV4,
+		defaultValue: DataTypes.UUIDV4,
 		allowNull: false,
 		primaryKey: true,
 	},
@@ -37,6 +37,7 @@ Group.init({
 	deletedAt: 'deleted_at',
 	indexes: [{ unique: true, fields: ['name', 'user_id'] }],
 	underscored: true,
+	modelName: "group",
 	tableName: "groups",
 	sequelize, // We need to pass the connection instance
 });

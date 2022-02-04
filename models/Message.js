@@ -14,7 +14,7 @@ Message.init({
 		allowNull: false,
 		primaryKey: true,
 	},
-	recipient: {
+	msisdn_id: {
 		type: DataTypes.STRING(12),
 		allowNull: false,
 		validate: {
@@ -45,6 +45,15 @@ Message.init({
 			},
 		},
 	},
+	user_id: {
+		type: DataTypes.UUID,
+		allowNull: false,
+		validate: {
+			notNull: {
+				msg: "user_id is required",
+			},
+		},
+	},
 	ext_message_id: {
 		type: DataTypes.STRING,
 		allowNull: true,
@@ -62,7 +71,7 @@ Message.init({
 		type: DataTypes.STRING,
 		defaultValue: "pending",
 	},
-    cost: {
+    credits: {
 		type: DataTypes.INTEGER,
         allowNull: true
 	},
@@ -83,6 +92,7 @@ Message.init({
     paranoid: true,
     deletedAt: 'deleted_at',
 	underscored: true,
+	modelName: "message",
 	tableName: "messages",
 	sequelize, // We need to pass the connection instance
 });

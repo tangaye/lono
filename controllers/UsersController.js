@@ -1,64 +1,107 @@
 const User = require("../models/User")
 const Sender = require("../models/Sender")
-const { SUCCESS_CODE, SERVER_ERROR, FAILURE_CODE, NOTFOUND, SMS_TARIFF } = require("../constants")
+const constants = require("../constants")
 const logger = require("../logger")
+const helper = require("../helpers");
+
 
 exports.all = async (request, response) => {
+
 	try {
-		let users = await User.findAll({
+
+		const {where_clause} = request.body
+
+		const users = await User.findAll({
 			attributes: ["id", "name", "credits", "allow_overdraft", ["api_key", "apiKey"]],
 			include: { model: Sender, attributes: ["id", "name"] },
-		});
-		if (users) {
-			return response.send({
-				errorCode: SUCCESS_CODE,
-				users: users,
-			});
-		}
+			where: where_clause || null
+		})
 
-		return response.send({
-			errorCode: FAILURE_CODE,
-			errorMessage: "error fetching users",
-			users: [],
-		});
+		if (users) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			users
+		})
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error fetching users"
+		})
+
 	} catch (error) {
-		logger.log("error fetching users: ", error);
-		return response.status(SERVER_ERROR).send({
-			errorCode: FAILURE_CODE,
-			errorMessage: "error fetching users",
-			users: [],
-		});
+
+		const message = "error fetching users"
+
+		logger.log(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
+		})
 	}
 };
 
-exports.getAccountDetails = async (request, response) => {
+exports.store = async (request, response) => {
+	try {
+
+		const {name, credits, api_key} = request.body
+		const user = await User.create({name, credits, api_key})
+
+		if (user) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			user
+		})
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error creating user"
+		})
+	}
+	catch (error)
+	{
+		const message = "error creating users"
+
+		logger.log(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
+		})
+	}
+}
+
+
+exports.details = async (request, response) => {
+
     try {
-        if (request.user) {
 
-            let user = request.user
+		const user = request.body.user
 
-            return response.send({
-				errorCode: SUCCESS_CODE,
-				user: {
-                    id: user.id,
-                    name: user.name,
-                    apiKey: user.api_key,
-                    senderNames: user.senders,
-                    smsCredits: user.credits
-                }
-			})
+		if (user) return response.send({
 
-        }
+			errorCode: constants.SUCCESS_CODE,
 
-        return response.status(NOTFOUND).send({errorCode: FAILURE_CODE, message: "user not found"})
+			user: {
+				id: user.id,
+				name: user.name,
+				apiKey: user.api_key,
+				senderNames: user.senders,
+				smsCredits: user.credits
+			}
+
+		})
+
+        return response.status(constants.NOTFOUND).send({
+			errorCode: constants.FAILURE_CODE, message: "user not found"
+		})
 
     } catch (error) {
-        logger.log("getAccountDetails: ", error)
-        return response.status(SERVER_ERROR).send({
-			errorCode: FAILURE_CODE,
-			errorMessage: "error getting user details",
-			user: null,
-		});
+
+		const message = "error getting user details"
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
+		})
     }
 }
 
@@ -68,20 +111,19 @@ exports.getAccountDetails = async (request, response) => {
  * @returns
  */
 exports.updateCredits = async id => {
+
     try {
 
-        let user = await User.findByPk(id)
+        const user = await User.findByPk(id)
+
         if (user) {
 
-            let credits = user.credits - SMS_TARIFF;
+            const credits = user.credits - constants.SMS_TARIFF;
 
             return await user.update({credits})
         }
 
-        return
-
     } catch (error) {
         logger.log("error updateCredits: ", error)
-        return
     }
 }

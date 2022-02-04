@@ -21,8 +21,13 @@ User.init(
 				},
 			},
 		},
+		role: {
+			type: DataTypes.ENUM('admin', 'client'),
+			allowNull: false,
+			defaultValue: 'client'
+		},
         credits: {
-            type: DataTypes.DECIMAL,
+            type: DataTypes.INTEGER,
             defaultValue: 0,
 			allowNull: true
         },

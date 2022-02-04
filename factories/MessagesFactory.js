@@ -3,6 +3,7 @@ const Message = require("../models/Message")
 const {Op, QueryTypes} = require("sequelize");
 const Sender = require("../models/Sender");
 const constants = require("../constants")
+const logger = require("../logger");
 
 /**
  * Returns all messages in the last seven days for sender
@@ -134,7 +135,7 @@ exports.getSearch  = search => {
 			[Op.or]: [
 
 				{message: { [Op.iLike]: `%${search}%` }},
-				{recipient: { [Op.iLike]: `%${search}%`}},
+				{msisdn_id: { [Op.iLike]: `%${search}%`}},
 				{status: { [Op.iLike]: `%${search}%`}},
 			]
 		} : null
@@ -143,3 +144,48 @@ exports.getSearch  = search => {
 	return null
 
 }
+
+
+/**
+ * Stores a message in the database
+ * @param {string|required} msisdn_id - recipient
+ * @param {string|required} text - message's body
+ * @param {string|required} sender_id - message's sender id
+ * @param {string|required} gateway_id - sms gateway id
+ * @param {string|null} ext_message_id - external message id from user
+ * @param {string|required} user_id - external message id from user
+ * @param {string|null} gateway_message_id - sms gateway message_id
+ * @param {string|required} id - message id
+ * @returns {Promise}
+ */
+exports.storeMessage = async (
+	msisdn_id,
+	text,
+	sender_id,
+	gateway_id,
+	ext_message_id = null,
+	user_id,
+	gateway_message_id = null,
+	id
+) => {
+	try {
+
+		return await Message.create({
+			id,
+			msisdn_id,
+			message: text,
+			sender_id,
+			gateway_id,
+			user_id,
+			gateway_message_id,
+			ext_message_id,
+			credits: constants.SMS_TARIFF
+		})
+
+	} catch (error) {
+
+		logger.log("error creating message: ", error);
+
+		return null;
+	}
+};

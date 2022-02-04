@@ -16,7 +16,7 @@ exports.isAdmin = async (request, response, next) => {
 
         const user = request.body.user
 
-        if (user.role === "admin") return next()
+        if (user.role === constants.ADMIN_ROLE) return next()
 
         return response.status(constants.UNAUTHORIZED).send({
             errorCode: constants.FAILURE_CODE,

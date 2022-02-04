@@ -1,5 +1,7 @@
-const {TWILIO_GATEWAY, BULKGATE_GATEWAY, SMS_TARIFF} = require("../constants")
+const constants = require("../constants")
 const Gateway = require("../models/Gateway")
+const MsisdnsFactory = require("../factories/MsisdnsFactory")
+const logger = require("../logger")
 
 /**
  * Messages length should be <= 160
@@ -22,44 +24,16 @@ const Gateway = require("../models/Gateway")
 };
 
 /**
- * Msisdn must be of length 12
- * Msisdn must be a valid orange or lonestar number
- * All values in msisdn should be an number/integer > 0. No characters allowed
- * @param {Array} msisdn
- * @returns {Boolean}
+ * Checks if a sms gateway has been configured
+ * @returns {Promise<Gateway | null>}
  */
- const validateMsisdns = msisdns => {
-
-    if (msisdns.length > 0) {
-
-        for (msisdn of msisdns) {
-
-            msisdn = msisdn.trim()
-            let valid_numbers = /^[0-9]*$/.test(msisdn)
-            let starting_digits = msisdn.substring(0, 5)
-            let valid_msisdn_starting = ["23177", "23188", "23155"].includes(starting_digits)
-            let length_is_valid = msisdn.length === 12
-
-            return valid_msisdn_starting && length_is_valid && valid_numbers
-        }
-    }
-
-    return false
-}
-
-/**
- * Checks if an sms gateway has been configured
- * @returns {Boolean}
- */
-const gatewayConfigured = async () => {
+const gatewayConfigured = () => {
 
     try {
-        let gateway = await Gateway.findOne({where: {active: true}})
-        if (gateway) return gateway
-        return false
+        return Gateway.findOne({where: {active: true}})
     } catch (error) {
         logger.error("error gatewayConfigured: ", error)
-        return false
+        return null
     }
 }
 
@@ -71,8 +45,8 @@ const gatewayConfigured = async () => {
  */
 const validateUserCredits = user => {
 
-    if (user.credits >= SMS_TARIFF) return true
-    else if (user.credits < SMS_TARIFF && user.allow_overdraft) return true
+    if (user.credits >= constants.SMS_TARIFF) return true
+    else if (user.credits < constants.SMS_TARIFF && user.allow_overdraft) return true
 
     return false
 }
@@ -85,17 +59,17 @@ const validateUserCredits = user => {
  */
 exports.validate = async (data, user) => {
 
+    const result = {valid: false}
+
     try {
 
-        let result = {valid: false}
+        const msisdns = data.map(message => message.to).filter(msisdn => msisdn !== undefined)
+        const messages = data.map(message => message.body).filter(message => message !== undefined)
 
-        let msisdns = data.map(message => message.to).filter(msisdn => msisdn !== undefined)
-        let messages = data.map(message => message.body).filter(message => message !== undefined)
-
-        let msisdns_valid = validateMsisdns(msisdns)
-        let messages_valid = validateMessages(messages)
-        let gateway = await gatewayConfigured()
-        let valid_credits = validateUserCredits(user)
+        const msisdns_valid = MsisdnsFactory.validate(msisdns)
+        const messages_valid = validateMessages(messages)
+        const gateway = await gatewayConfigured()
+        const valid_credits = validateUserCredits(user)
 
         if (msisdns_valid && messages_valid && gateway && valid_credits) {
             result.gateway = gateway
@@ -105,19 +79,18 @@ exports.validate = async (data, user) => {
 
 
         if (!msisdns_valid) result.message = "Invalid phone number(s). Phone number(s) should be of 12 characters. Ex: 213889998009 or 231778909890"
-
         if (!messages_valid) result.message = "Invalid message(s). A message to a phone number should be 1 - 160 characters."
-
         if (!valid_credits) result.message = "Insufficient credits"
-
-        // todo: log to rollbar
         if (!gateway) result.message = "Unable to send message(s)"
 
         return result
 
     } catch (error) {
+
         logger.error("error validate: ", error)
+
         result.message = "error validating request"
+
         return result
     }
 }
