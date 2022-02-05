@@ -1,22 +1,29 @@
-const Group = require("../models/Group");
-const constants = require("../constants");
+const Group = require("../models/Group")
+const GroupFactory = require("../factories/GroupsFactory")
+const constants = require("../constants")
 const logger = require("../logger")
 const helper = require("../helpers")
+const MessageFactory = require("../factories/MessagesFactory");
 
 exports.all = async (request, response) => {
 
 	try {
 
-		const user = request.body.user
+		const {user} = request.body
+		const { page, size, search, order, id } = request.query
+		const { limit, offset} = helper.getPagination(page, size)
 
-		const groups = await Group.findAll({
+		const groups = await Group.findAndCountAll({
 			attributes: ['id', 'name', 'description', 'created_at'],
-			where: {user_id: user.id}
+			where: GroupFactory.getWhereClause(user.id, search, id),
+			order: [['created_at', helper.getOrder(order)]],
+			limit,
+			offset
 		})
 
 		if (groups) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
-			groups
+			...GroupFactory.getPagingData(groups, page, limit)
 		})
 
 		return helper.respond(response, {
@@ -44,24 +51,16 @@ exports.store = async (request, response) => {
 	{
 		const {name, description, user} = request.body
 
-		if (name && description && user) {
+		const group = await Group.create({name, description, user_id: user.id})
 
-			const group = await Group.create({name, description, user_id: user.id})
+		if (group) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			group
+		})
 
-			if (group) return helper.respond(response, {
-				code: constants.SUCCESS_CODE,
-				group
-			})
-
-			return response.send({
-				errorCode: constants.FAILURE_CODE,
-				message: "error creating group"
-			})
-		}
-
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "name, description & user are required"
+		return response.send({
+			errorCode: constants.FAILURE_CODE,
+			message: "error creating group"
 		})
 	}
 	catch (error)

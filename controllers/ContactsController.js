@@ -86,8 +86,6 @@ exports.store = async (request, response) => {
 			contact
 		})
 
-		console.log({contact})
-
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
 			message: "error creating contact"

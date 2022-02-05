@@ -1,7 +1,5 @@
 const helper = require("../helpers")
 const constants = require("../constants")
-const User = require("../models/User")
-const { Op } = require("sequelize")
 const logger = require("../logger")
 
 /**
@@ -13,7 +11,7 @@ const logger = require("../logger")
  */
 exports.validateAll = (request, response, next) => {
 
-	let id = request.query.id;
+	const id = request.query.id;
 
 	if (id && !helper.isValidUuid(id)) {
 		return helper.respond(response, {message: "invalid id"})
@@ -33,43 +31,24 @@ exports.validateStore = async (request, response, next) => {
 
 	try {
 
-		const {name, email, credits} = request.body
+		const {name, user} = request.body
 
-		if (name && (Number(credits) >= 0) && email && helper.isValidEmail(email)) {
+		if (name && user) return next()
 
-			const user = await User.findOne({
-				where: {
-					[Op.or]: [
-						{name},
-						{email}
-					]
-				}
-			})
-
-			if (user) return helper.respond(response, {
-				code: constants.INVALID_DATA,
-				message: "user exists"
-			})
-
-			request.body.api_key = helper.generateSecret()
-			request.body.password = helper.generateSecret()
-
-			return next()
-		}
 
 		return helper.respond(response, {
 			code: constants.INVALID_DATA,
-			message: "invalid name, credits or email"
+			message: "name and user are required"
 		})
 
 
 	} catch (error) {
 
-		logger.error("error validating data to store user: ", error)
+		logger.error("error validating data to store group: ", error)
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
-			message: "error validating data to store user"
+			message: "error validating data to store group"
 		})
 
 	}
