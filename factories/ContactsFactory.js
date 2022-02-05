@@ -5,7 +5,6 @@ const Group = require("../models/Group")
 const ContactGroup = require("../models/ContactGroup")
 const database = require("../database/connection")
 const logger = require("../logger")
-const User = require("../models/User");
 const {Op} = require("sequelize");
 
 

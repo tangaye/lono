@@ -28,7 +28,6 @@ exports.all = async (request, response) => {
 				},
 				{
 					model: Group,
-					required: true, // required for top level where
 					duplicating: false,
 					attributes: ['id', 'name'],
 					through: {attributes: []},
@@ -47,8 +46,6 @@ exports.all = async (request, response) => {
 			limit,
 			offset
 		})
-
-		console.log({contacts})
 
 		if (contacts) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
