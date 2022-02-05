@@ -35,7 +35,7 @@ module.exports = {
 					role: constants.ADMIN_ROLE,
 					credits: 0,
 					allow_overdraft: false,
-					api_key: helpers.generateApiKey(),
+					api_key: helpers.generateSecret(),
 					created_at: new Date(Date.now()).toISOString(),
 					updated_at: new Date(Date.now()).toISOString(),
 				}

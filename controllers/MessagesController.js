@@ -3,7 +3,6 @@ const Sender = require("../models/Sender")
 const User = require("../models/User")
 const Gateway = require("../models/Gateway")
 const Queue = require("../Queue")
-const { Op } = require("sequelize")
 const { v4: uuidv4 } = require("uuid")
 const constants = require("../constants")
 const MessageFactory = require("../factories/MessagesFactory")
@@ -126,14 +125,24 @@ exports.statistics = async (request, response) => {
 	try {
 
 		const user = request.body.user
-		const sender_ids = user.senders.map((sender) => sender.id);
+		const sender_ids = user.senders.map((sender) => sender.id)
+
+		if (sender_ids.length <= 0) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			statistics: {
+				total: 0,
+				lastSeven: 0,
+				latestFive: 0,
+				totalToday: 0
+			},
+		})
 
 		const last_seven_counts = await MessageFactory.lastSevenDaysCount(sender_ids)
 		const total_today = await MessageFactory.totalToday(sender_ids)
 		const total = await MessageFactory.total(sender_ids)
 		const latest_five = await MessageFactory.latestFive(sender_ids)
 
-		if (last_seven_counts && total_today && total) return helper.respond(response, {
+		if (last_seven_counts && total_today && total !== null) return helper.respond(response, {
 				code: constants.SUCCESS_CODE,
 				statistics: {
 					total,

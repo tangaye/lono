@@ -38,49 +38,49 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 					transaction: t
 				})
 
-				// check if msisdn has been assigned to contact and user
-				const msisdn_assigned = await ContactMsisdnUser.findOne({
-					where: {msisdn_id: msisdn.id, user_id: user.id}
-				})
-
-				// if msisdn has been assigned, set contact to the contact the msisdn
-				// has been assigned to
-				if (msisdn_assigned)
-				{
-					contact = await Contact.findByPk(msisdn_assigned.contact_id)
-				}
-				else
+				if (created)
 				{
 					// create contact
 					contact = await Contact.create({
 						first_name, middle_name, last_name, metadata
 					}, { transaction: t })
-
-					// assign contact to groups
-					if (groups && groups.length > 0) {
-						for (const name of groups) {
-
-							// find or create groups
-							const [group, created] = await Group.findOrCreate({
-								where: {name, user_id: user.id},
-								defaults: {name, user_id: user.id},
-								transaction: t
-							})
-
-							// assign contact to groups
-							if (group) await ContactGroup.findOrCreate({
-								where: {contact_id: contact.id, group_id: group.id},
-								defaults: {contact_id: contact.id, group_id: group.id},
-								transaction: t
-							})
-						}
-					}
-
-					// assign msisdn to contact and user
-					await ContactMsisdnUser.create({
-						msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id
-					}, { transaction: t })
 				}
+				else
+				{
+					// check if msisdn has been assigned to contact and user
+					const msisdn_assigned = await ContactMsisdnUser.findOne({
+						where: {msisdn_id: msisdn.id, user_id: user.id}
+					})
+
+					// if msisdn has been assigned, set contact to the contact the msisdn
+					// has been assigned to
+					if (msisdn_assigned) contact = await Contact.findByPk(msisdn_assigned.contact_id)
+				}
+
+				// assign contact to groups
+				if (groups && groups.length > 0) {
+					for (const name of groups) {
+
+						// find or create groups
+						const [group, created] = await Group.findOrCreate({
+							where: {name, user_id: user.id},
+							defaults: {name, user_id: user.id},
+							transaction: t
+						})
+
+						// assign contact to groups
+						if (group) await ContactGroup.findOrCreate({
+							where: {contact_id: contact.id, group_id: group.id},
+							defaults: {contact_id: contact.id, group_id: group.id},
+							transaction: t
+						})
+					}
+				}
+
+				// assign msisdn to contact and user
+				if (contact) await ContactMsisdnUser.findOrCreate({
+					msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id
+				}, { transaction: t })
 			}
 
 			if (contact) return Contact.findByPk(contact.id,{

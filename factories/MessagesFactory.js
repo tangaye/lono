@@ -13,7 +13,7 @@ const logger = require("../logger")
 exports.lastSevenDaysCount = async sender_ids => {
 	try {
 
-		let messages = await database.query(`
+		 const messages = await database.query(`
 				select date, cast(count(id) as int)
 				from (select generate_series((current_date + 1) - interval '7 days', (current_date + 1) - interval '1 days', interval '1 days')::date as date) series
 				left join messages
@@ -40,11 +40,12 @@ exports.lastSevenDaysCount = async sender_ids => {
  */
 exports.total = async sender_ids => {
 	try {
+
 		return await Message.count({where: {sender_id: { [Op.in]: sender_ids }}})
 	}
 	catch (error) {
 		console.log('error querying for total: ', error);
-		return 0;
+		return null;
 	}
 }
 
