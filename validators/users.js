@@ -33,9 +33,9 @@ exports.validateStore = async (request, response, next) => {
 
 	try {
 
-		const {name, email, credits} = request.body
+		const {name, email, credits, senders} = request.body
 
-		if (name && (Number(credits) >= 0) && email && helper.isValidEmail(email)) {
+		if (name && senders && (Number(credits) >= 0) && email && helper.isValidEmail(email)) {
 
 			const user = await User.findOne({
 				where: {
@@ -49,6 +49,13 @@ exports.validateStore = async (request, response, next) => {
 			if (user) return helper.respond(response, {
 				code: constants.INVALID_DATA,
 				message: "user exists"
+			})
+
+			const senders_valid = senders.every(sender => helper.isValidSenderName(sender))
+
+			if (!senders_valid) return helper.respond(response, {
+				code: constants.INVALID_DATA,
+				message: "Invalid senders. Sender names should be of length 11 and not contain numbers or special characters."
 			})
 
 			request.body.api_key = helper.generateSecret()

@@ -33,8 +33,8 @@ exports.isValidEmail = email => validator.isEmail(email)
  * @returns {Boolean}
  */
 exports.isValidSenderName = name => {
-	let alpha = /^[a-z]+$/i.test(name)
-	let valid_length = name.length > 1 && name.length <= 11
+	const alpha = /^[a-z]+$/i.test(name)
+	const valid_length = name.length > 1 && name.length <= 11
 
 	return alpha && valid_length
 }

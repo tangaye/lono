@@ -44,7 +44,7 @@ exports.all = async (request, response) => {
 exports.store = async (request, response) => {
 	try {
 
-		const {name, email, credits, password, api_key} = request.body
+		const {name, email, credits, password, api_key, senders} = request.body
 
 		const result = await KeycloakFactory.createUser(email, password, api_key)
 
@@ -53,6 +53,14 @@ exports.store = async (request, response) => {
 			const user = await User.create({name, email, credits, api_key})
 
 			if (user) {
+
+				for (const sender of senders) {
+
+					await Sender.findOrCreate({
+						where: {name: sender, user_id: user.id},
+						defaults: {name: sender, user_id: user.id}
+					})
+				}
 
 				user.dataValues.password = password
 
