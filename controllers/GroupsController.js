@@ -10,7 +10,7 @@ exports.all = async (request, response) => {
 		const user = request.body.user
 
 		const groups = await Group.findAll({
-			attributes: ['id', 'name', 'description'],
+			attributes: ['id', 'name', 'description', 'created_at'],
 			where: {user_id: user.id}
 		})
 

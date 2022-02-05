@@ -2,6 +2,75 @@ const constants = require("../constants")
 const Gateway = require("../models/Gateway")
 const MsisdnsFactory = require("../factories/MsisdnsFactory")
 const logger = require("../logger")
+const helper = require("../helpers")
+
+
+/**
+ * Validates and prepares requests to display apps
+ * @param {Request} request
+ * @param {Response} response
+ * @param {next} next
+ * @returns
+ */
+exports.validateAll = (request, response, next) => {
+
+    const id = request.query.id;
+
+    if (id && !helper.isValidUuid(id)) return helper.respond(response, {message: "invalid id"})
+
+    return next()
+}
+
+/**
+ * Validates and prepares requests to store apps
+ * @param {Request} request
+ * @param {Response} response
+ * @param {next} next
+ * @returns
+ */
+exports.validateStore = async (request, response, next) => {
+
+    try {
+
+        const { sender, messages, user } = request.body;
+
+        if (sender && messages && user) {
+
+            const result = validate(messages, user)
+
+            if (result.valid) {
+
+                request.body.gateway = result.gateway
+
+                return next ()
+            }
+
+            return helper.respond(response, {
+                code: constants.INVALID_DATA,
+                message: result.message
+            })
+
+        }
+
+        return helper.respond(response, {
+            code: constants.INVALID_DATA,
+            message: "messages, sender & user are required"
+        })
+
+
+    } catch (error) {
+
+        const message = "error validating data to create messages"
+
+        logger.error(message, error)
+
+        return helper.respond(response, {
+            code: constants.FAILURE_CODE,
+            message
+        })
+
+    }
+}
 
 /**
  * Messages length should be <= 160
@@ -57,7 +126,7 @@ const validateUserCredits = user => {
  * @param {Object} user - api user sending message
  * @returns {Object}
  */
-exports.validate = async (data, user) => {
+const validate = async (data, user) => {
 
     const result = {valid: false}
 

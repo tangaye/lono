@@ -13,13 +13,9 @@ const logger = require("../logger")
  */
 exports.validateAll = (request, response, next) => {
 
-	let id = request.query.id;
+	const id = request.query.id;
 
-	if (id && helper.isValidUuid(id)) {
-		request.body.where_clause = {id}
-	} else if (id && !helper.isValidUuid(id)) {
-		return helper.respond(response, {message: "invalid id"})
-	}
+	if (id && !helper.isValidUuid(id)) return helper.respond(response, {message: "invalid id"})
 
 	return next()
 }

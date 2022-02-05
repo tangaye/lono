@@ -6,10 +6,9 @@ const Queue = require("../Queue")
 const { Op } = require("sequelize")
 const { v4: uuidv4 } = require("uuid")
 const constants = require("../constants")
-const MessagesValidator = require("../validators/messages")
 const MessageFactory = require("../factories/MessagesFactory")
-const logger = require("../logger");
-const helper = require("../helpers");
+const logger = require("../logger")
+const helper = require("../helpers")
 
 
 /**
@@ -22,14 +21,10 @@ exports.all = async (request, response) => {
 	try {
 
 		const user = request.body.user
+		const senders = user.senders.map((sender) => sender.id)
 
-		// get user senders
-		const sender_ids = user.senders.map((sender) => sender.id);
-
-		const { page, size, search, order } = request.query;
-		const { limit, offset} = MessageFactory.getPagination(page, size);
-		const { order_by } = MessageFactory.getOrder(order)
-		const condition = MessageFactory.getSearch(search)
+		const { page, size, search, order, id } = request.query
+		const { limit, offset} = helper.getPagination(page, size)
 
         // query messages sent by user senders
 		const messages = await Message.findAndCountAll({
@@ -41,11 +36,8 @@ exports.all = async (request, response) => {
 				model: User,
 				attributes: ['id', 'name']
 			}],
-			where: {
-				...condition,
-				sender_id: { [Op.in]: sender_ids }
-			},
-			order: [['created_at', order_by]],
+			where: MessageFactory.getWhereClause(senders, search, id) || null,
+			order: [['created_at', helper.getOrder(order)]],
 			limit,
 			offset
 		});
@@ -83,49 +75,39 @@ exports.all = async (request, response) => {
 exports.send = async (request, response) => {
 	try {
 
-		const { sender, messages, user } = request.body;
+		const { sender, messages, user, gateway } = request.body;
 		const queued_messages = []
 
-        // validate messages
-		const result = await MessagesValidator.validate(messages, user)
+		for (message of messages) {
 
-		if (result.valid) {
-
-			for (message of messages) {
-
-                const payload = {
-                    smsId: uuidv4(),
-                    recipient: message.to,
-                    message: message.body,
-                    sender,
-                    extMessageId: message.extMessageId,
-                    status: constants.PENDING_STATUS
-                }
-
-                await Queue.add({
-                    body: payload.message,
-                    to: payload.recipient,
-                    sender: payload.sender,
-                    extMessageId: payload.extMessageId,
-                    gateway: result.gateway,
-                    id: payload.smsId,
-                    user
-                }, helper.getGatewayQueue(result.gateway.slug))
-
-				queued_messages.push(payload)
+			const payload = {
+				smsId: uuidv4(),
+				recipient: message.to,
+				message: message.body,
+				sender,
+				extMessageId: message.extMessageId,
+				status: constants.PENDING_STATUS
 			}
 
-			return response.send({
-				errorCode: constants.SUCCESS_CODE,
-				messages: queued_messages,
-			});
+			await Queue.add({
+				body: payload.message,
+				to: payload.recipient,
+				sender: payload.sender,
+				extMessageId: payload.extMessageId,
+				gateway,
+				id: payload.smsId,
+				user
+			}, helper.getGatewayQueue(gateway.slug))
+
+			queued_messages.push(payload)
 		}
 
 		return response.send({
-			errorCode: constants.FAILURE_CODE,
-			errorMessage: result.message,
-			messages: [],
-		})
+			errorCode: constants.SUCCESS_CODE,
+			messages: queued_messages,
+		});
+
+
 
 	} catch (error) {
 

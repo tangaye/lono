@@ -1,9 +1,9 @@
 const database = require("../database/connection")
 const Message = require("../models/Message")
-const {Op, QueryTypes} = require("sequelize");
-const Sender = require("../models/Sender");
+const {Op, QueryTypes} = require("sequelize")
+const Sender = require("../models/Sender")
 const constants = require("../constants")
-const logger = require("../logger");
+const logger = require("../logger")
 
 /**
  * Returns all messages in the last seven days for sender
@@ -98,51 +98,48 @@ exports.latestFive = async sender_ids => {
 	}
 }
 
+/**
+ * Prepares and returns where clause for messages query
+ * @param {array<string>|required} senders - message senders
+ * @param {string|null} search
+ * @param {string|null} id - message id
+ * @return {object}
+ */
+exports.getWhereClause = (senders, search, id) => {
+
+	const where_clause = {sender_id: { [Op.in]: senders }}
+
+	if (search) {
+
+		if (Number(search[0]) === 0) search = search.substring(1)
+
+		where_clause[Op.or] = [
+
+			{message: { [Op.iLike]: `%${search}%` }},
+			{msisdn_id: { [Op.iLike]: `%${search}%`}},
+			{status: { [Op.iLike]: `%${search}%`}},
+		]
+	}
+
+	if (id) where_clause.id = id
+
+	return where_clause
+
+}
+
+/**
+ * Returns pagination data
+ * @param data
+ * @param page
+ * @param limit
+ * @return {{totalItems, totalPages: number, messages, currentPage: number}}
+ */
 exports.getPagingData = (data, page, limit) => {
 	const { count: totalItems, rows: messages } = data;
 	const currentPage = page ? +page : 0;
 	const totalPages = Math.ceil(totalItems / limit);
 
 	return { totalItems, messages, totalPages, currentPage };
-};
-
-exports.getPagination = (page, size) => {
-	const limit = size ? +size : 5;
-	const offset = page ? page * limit : 0;
-
-	return { limit, offset };
-};
-
-exports.getOrder = (order) => {
-	const order_by = order ? order.toUpperCase()  : 'DESC';
-
-	return { order_by };
-};
-
-
-/**
- * Returns search condition
- * @param {string|required} search
- * @return {null|object}
- */
-exports.getSearch  = search => {
-
-	if (search) {
-
-		if (Number(search[0]) === 0) search = search.substring(1)
-
-		return search ? {
-			[Op.or]: [
-
-				{message: { [Op.iLike]: `%${search}%` }},
-				{msisdn_id: { [Op.iLike]: `%${search}%`}},
-				{status: { [Op.iLike]: `%${search}%`}},
-			]
-		} : null
-
-	}
-	return null
-
 }
 
 

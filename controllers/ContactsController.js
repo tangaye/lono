@@ -6,40 +6,53 @@ const ContactFactory = require("../factories/ContactsFactory")
 const logger = require("../logger")
 const constants = require("../constants")
 const helper = require("../helpers")
+const MessageFactory = require("../factories/MessagesFactory");
 
 exports.all = async (request, response) => {
 
 	try {
 
-		const {user, where_clause} = request.body
+		const user = request.body.user
+		const { page, size, search, order, id} = request.query
+		const { limit, offset} = helper.getPagination(page, size)
 
-		const contacts = await Contact.findAll({
+		const contacts = await Contact.findAndCountAll({
 			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
 			include: [
 				{
 					model: User,
-					attributes: ['id', 'name'],
-					through: {attributes: []},
-					where: {id: user.id}
-				},
-				{
-					model: Group,
+					required: true,
+					duplicating: false,
 					attributes: ['id', 'name'],
 					through: {attributes: []}
 				},
 				{
+					model: Group,
+					required: true, // required for top level where
+					duplicating: false,
+					attributes: ['id', 'name'],
+					through: {attributes: []},
+				},
+				{
 					model: Msisdn,
+					required: true, // required for top level where
+					duplicating: false, // required for top level where
 					attributes: ['id'],
 					through: {attributes: []},
 				}
 			],
-			order: [['created_at', 'desc']],
-			where: where_clause || null
+			distinct: true,
+			where: ContactFactory.getWhereClause(user.id, search, id) || null,
+			order: [['created_at', helper.getOrder(order)]],
+			limit,
+			offset
 		})
+
+		console.log({contacts})
 
 		if (contacts) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
-			contacts
+			...ContactFactory.getPagingData(contacts, page, limit)
 		})
 
 		return helper.respond(response, {

@@ -57,7 +57,6 @@ exports.authenticate = async (request, response, next) => {
             })
 
             if (user) {
-
                 request.body.user = user
                 return next()
             }
@@ -91,9 +90,8 @@ exports.authenticate = async (request, response, next) => {
 exports.senderIsValid = async (request, response, next) => {
 	try {
 
-		let user = request.body.user;
-		let senderName = request.body.senderName;
-		let sender = user.senders.find((item) => item.name === senderName);
+		const {user, senderName} = request.body
+		const sender = user.senders.find((item) => item.name === senderName);
 
 		if (sender) {
 			request.body.sender = sender;

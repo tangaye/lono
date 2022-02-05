@@ -6,6 +6,7 @@ const ContactGroup = require("../models/ContactGroup")
 const database = require("../database/connection")
 const logger = require("../logger")
 const User = require("../models/User");
+const {Op} = require("sequelize");
 
 
 /**
@@ -102,4 +103,51 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 
 		return null
 	}
+}
+
+/**
+ * Prepares and returns where clause for contacts query
+ * @param {string|required} user_id - user id
+ * @param {string|null} search
+ * @param {string|null} id - contact id
+ * @return {object}
+ */
+exports.getWhereClause = (user_id, search, id) => {
+
+	const where_clause = {'$users.id$': user_id}
+
+	if (search) {
+
+		if (Number(search[0]) === 0) search = search.substring(1)
+
+		where_clause[Op.or] = [
+
+			{first_name: { [Op.iLike]: `%${search}%` }},
+			{middle_name: { [Op.iLike]: `%${search}%`}},
+			{last_name: { [Op.iLike]: `%${search}%`}},
+			{'$msisdns.id$': { [Op.iLike]: `%${search}%`}},
+			{'$groups.name$': { [Op.iLike]: `%${search}%`}}
+		]
+	}
+
+	if (id) where_clause.id = id
+
+
+	return where_clause
+
+}
+
+/**
+ * Returns pagination data
+ * @param data
+ * @param page
+ * @param limit
+ * @return {{totalItems, totalPages: number, messages, currentPage: number}}
+ */
+exports.getPagingData = (data, page, limit) => {
+	const { count: totalItems, rows: contacts } = data;
+	const currentPage = page ? +page : 0;
+	const totalPages = Math.ceil(totalItems / limit);
+
+	return { totalItems, contacts, totalPages, currentPage };
 }

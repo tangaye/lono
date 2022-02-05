@@ -83,3 +83,27 @@ exports.getGatewayQueue = gateway_slug => {
 	if (gateway_slug === 'bulkgate') return constants.BULKGATE_MESSAGES_QUEUE
 
 }
+
+/**
+ * returns order
+ * @param order
+ * @return {string|*}
+ */
+exports.getOrder = order => {
+
+	if (order && ['asc', 'desc'].includes(order)) return order
+	return 'desc'
+}
+
+/**
+ * gets pagination
+ * @param page
+ * @param size
+ * @return {{offset: number, limit: number}}
+ */
+exports.getPagination = (page, size) => {
+	const limit = size ? +size : 5;
+	const offset = page ? page * limit : 0;
+
+	return { limit, offset };
+};

@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const ContactsController = require("../controllers/ContactsController");
-const {isAdmin, authenticate} = require("../middlewares")
+const {authenticate} = require("../middlewares")
 const {validateAll, validateStore} = require("../validators/contacts")
 
 router.route('/contacts')
