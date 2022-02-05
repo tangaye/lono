@@ -72,7 +72,7 @@ exports.checkEnvVariables = () => {
 
 exports.generateSecret = () => generateApiKey({
 	method: 'string',
-	pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.@#$*',
+	pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$*',
 	min: 32,
 	max: 64
 })

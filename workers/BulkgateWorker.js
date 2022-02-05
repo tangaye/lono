@@ -39,6 +39,10 @@ worker.on("message", async function (msg, next, msgid) {
 
 					if (message) await UsersController.updateCredits(user.id)
 				}
+				else
+				{
+					logger.error("message not stored. msisdn not returned", {contact})
+				}
 			}
 
 			await Queue.removeFromQueue(constants.BULKGATE_MESSAGES_QUEUE, msgid);

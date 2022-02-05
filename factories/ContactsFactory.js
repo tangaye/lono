@@ -25,7 +25,7 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 
 	try {
 
-		return await database.transaction(async (t) => {
+		const result = await database.transaction(async (t) => {
 
 			let contact = null
 
@@ -79,22 +79,26 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 
 				// assign msisdn to contact and user
 				if (contact) await ContactMsisdnUser.findOrCreate({
-					msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id
-				}, { transaction: t })
+					where: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+					defaults: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+					transaction: t
+				})
 			}
 
-			if (contact) return Contact.findByPk(contact.id,{
-				attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
-				include: {
-					model: Msisdn,
-					attributes: ['id'],
-					through: {attributes: []},
-				}
-			})
-
-			return null
+			return contact
 
 		})
+
+		if (result) return Contact.findByPk(result.id,{
+			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
+			include: {
+				model: Msisdn,
+				attributes: ['id'],
+				through: {attributes: []},
+			}
+		})
+
+		return null
 
 	}
 	catch (error)

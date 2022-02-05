@@ -36,7 +36,7 @@ exports.validateStore = async (request, response, next) => {
 
         if (sender && messages && user) {
 
-            const result = validate(messages, user)
+            const result = await validate(messages, user)
 
             if (result.valid) {
 
