@@ -27,74 +27,153 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 		const result = await database.transaction(async (t) => {
 
 			let contact = null
+			let created_contact = null
 
+			// 1. loop through msisdns
 			for (const id of msisdns)
 			{
-				// find or create msisdn
-				const [msisdn, created] = await Msisdn.findOrCreate({
-					where: {id},
-					defaults: {id},
-					transaction: t
+
+				let msisdn = null
+
+				// check if msisdn has been assigned to user
+				const msisdn_assigned = await ContactMsisdnUser.findOne({
+					where: {msisdn_id: id, user_id: user.id}
 				})
 
-				if (created)
+				// If msisdn has been assigned to user
+				if (msisdn_assigned)
 				{
-					// create contact
-					contact = await Contact.create({
-						first_name, middle_name, last_name, metadata
-					}, { transaction: t })
+					// set contact to the contact msisdn was assigned to when assigning to user
+					contact = await Contact.findByPk(msisdn_assigned.contact_id)
+
+					// set msisdn to msisdn
+					msisdn = await Msisdn.findByPk(msisdn_assigned.msisdn_id)
 				}
 				else
 				{
-					// check if msisdn has been assigned to contact and user
-					const msisdn_assigned = await ContactMsisdnUser.findOne({
-						where: {msisdn_id: msisdn.id, user_id: user.id}
+					const [found_msisdn, msisdn_created] = await Msisdn.findOrCreate({
+						where: {id},
+						defaults: {id},
+						transaction: t
 					})
 
-					// if msisdn has been assigned, set contact to the contact the msisdn
-					// has been assigned to
-					if (msisdn_assigned) contact = await Contact.findByPk(msisdn_assigned.contact_id)
-				}
+					msisdn = found_msisdn
 
-				// assign contact to groups
-				if (groups && groups.length > 0) {
-					for (const name of groups) {
-
-						// find or create groups
-						const [group, created] = await Group.findOrCreate({
-							where: {name, user_id: user.id},
-							defaults: {name, user_id: user.id},
-							transaction: t
-						})
-
-						// assign contact to groups
-						if (group) await ContactGroup.findOrCreate({
-							where: {contact_id: contact.id, group_id: group.id},
-							defaults: {contact_id: contact.id, group_id: group.id},
-							transaction: t
-						})
+					// create contact
+					if (msisdn_created && !created_contact) {
+						contact = await Contact.create({first_name, middle_name, last_name, metadata}, { transaction: t })
+						created_contact = contact
 					}
+
+					if (contact && msisdn) await ContactMsisdnUser.findOrCreate({
+						where: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+						defaults: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+						transaction: t
+					})
 				}
+				// else
+				// {
+				//
+				// 	// find or create msisdn
+				// 	const [found_msisdn, msisdn_created] = await Msisdn.findOrCreate({
+				// 		where: {id},
+				// 		defaults: {id},
+				// 		transaction: t
+				// 	})
+				//
+				// 	msisdn = found_msisdn
+				//
+				// 	// create contact
+				// 	contact = await Contact.create({
+				// 		first_name, middle_name, last_name, metadata
+				// 	}, { transaction: t })
+				//
+				// 	// assign newly created contact to user and msisdn
+				// 	await ContactMsisdnUser.findOrCreate({
+				// 		where: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+				// 		defaults: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+				// 		transaction: t
+				// 	})
+				// }
+
+
+
+				// find or create msisdn
+				// const [msisdn, msisdn_created] = await Msisdn.findOrCreate({
+				// 	where: {id},
+				// 	defaults: {id},
+				// 	transaction: t
+				// })
+				//
+				// console.log({msisdn_created})
+				//
+				// if (msisdn_created)
+				// {
+				// 	// create contact for msisdn if contact is null
+				// 	if (!contact) contact = await Contact.create({
+				// 		first_name, middle_name, last_name, metadata
+				// 	}, { transaction: t })
+				// }
+				// else
+				// {
+				// 	// check if msisdn has been assigned to user
+				// 	const msisdn_assigned = await ContactMsisdnUser.findOne({
+				// 		where: {msisdn_id: msisdn.id, user_id: user.id}
+				// 	})
+				//
+				// 	// if msisdn has been assigned, set contact to the contact the msisdn
+				// 	// has been assigned to
+				// 	if (msisdn_assigned && !contact) contact = await Contact.findByPk(msisdn_assigned.contact_id)
+				// }
 
 				// assign msisdn to contact and user
-				if (contact) await ContactMsisdnUser.findOrCreate({
-					where: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
-					defaults: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
-					transaction: t
-				})
+				// if (contact && msisdn) await ContactMsisdnUser.findOrCreate({
+				// 	where: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+				// 	defaults: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
+				// 	transaction: t
+				// })
 			}
 
-			return contact
+			// assign contact to groups
+			if (groups && groups.length > 0) {
+
+				const group_contact = created_contact ? created_contact : contact
+				for (const name of groups) {
+
+					// find or create groups
+					const [group, created] = await Group.findOrCreate({
+						where: {name, user_id: user.id},
+						defaults: {name, user_id: user.id},
+						transaction: t
+					})
+
+					// assign contact to groups
+					if (group) await ContactGroup.findOrCreate({
+						where: {contact_id: group_contact.id, group_id: group.id},
+						defaults: {contact_id: group_contact.id, group_id: group.id},
+						transaction: t
+					})
+				}
+			}
+
+			return created_contact ? created_contact : contact
 
 		})
 
 		if (result) return Contact.findByPk(result.id,{
 			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
-			include: {
-				model: Msisdn,
-				attributes: ['id'],
-				through: {attributes: []},
-			}
+			include: [
+				{
+					model: Msisdn,
+					attributes: ['id'],
+					through: {attributes: []}
+				},
+				{
+					model: Group,
+					attributes: ['id', 'name'],
+					through: {attributes: []}
+				}
+				]
 		})
 
 		return null

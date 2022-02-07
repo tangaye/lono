@@ -6,7 +6,6 @@ const ContactFactory = require("../factories/ContactsFactory")
 const logger = require("../logger")
 const constants = require("../constants")
 const helper = require("../helpers")
-const MessageFactory = require("../factories/MessagesFactory");
 
 exports.all = async (request, response) => {
 
@@ -28,14 +27,14 @@ exports.all = async (request, response) => {
 				},
 				{
 					model: Group,
-					duplicating: false,
+					duplicating: !search,
 					attributes: ['id', 'name'],
 					through: {attributes: []},
 				},
 				{
 					model: Msisdn,
-					required: true, // required for top level where
-					duplicating: false, // required for top level where
+					// required: true, // required for top level where
+					duplicating: true, // required for top level where
 					attributes: ['id'],
 					through: {attributes: []},
 				}
