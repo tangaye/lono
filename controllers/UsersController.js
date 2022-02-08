@@ -106,7 +106,8 @@ exports.details = async (request, response) => {
 				email: user.email,
 				apiKey: user.api_key,
 				senderNames: user.senders,
-				smsCredits: user.credits
+				smsCredits: user.credits,
+				dateCreated: user.created_at
 			}
 
 		})
