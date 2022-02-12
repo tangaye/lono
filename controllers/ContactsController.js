@@ -3,9 +3,11 @@ const Msisdn = require("../models/Msisdn")
 const Contact = require("../models/Contact")
 const Group = require("../models/Group")
 const ContactFactory = require("../factories/ContactsFactory")
+const database = require("../database/connection")
 const logger = require("../logger")
 const constants = require("../constants")
 const helper = require("../helpers")
+const {Op, QueryTypes} = require("sequelize")
 
 exports.all = async (request, response) => {
 
@@ -15,46 +17,24 @@ exports.all = async (request, response) => {
 		const { page, size, search, order, id} = request.query
 		const { limit, offset} = helper.getPagination(page, size)
 
-		const contacts = await Contact.findAndCountAll({
-			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
-			include: [
-				{
-					model: User,
-					required: true,
-					duplicating: false,
-					attributes: ['id', 'name'],
-					through: {attributes: []}
-				},
-				{
-					model: Group,
-					duplicating: !search,
-					attributes: ['id', 'name'],
-					through: {attributes: []},
-				},
-				{
-					model: Msisdn,
-					// required: true, // required for top level where
-					duplicating: true, // required for top level where
-					attributes: ['id'],
-					through: {attributes: []},
-				}
-			],
-			distinct: true,
-			where: ContactFactory.getWhereClause(user.id, search, id) || null,
-			order: [['created_at', helper.getOrder(order)]],
-			limit,
-			offset
+		const replacements = ContactFactory.buildReplacements(user.id, id, limit, offset)
+		const query_string = ContactFactory.buildQuery(search, id, order)
+
+		const count = await Contact.count({distinct: true})
+		const results = await database.query(query_string, {
+			replacements,
+			type: QueryTypes.SELECT
 		})
 
-		if (contacts) return helper.respond(response, {
+		if (results) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
-			...ContactFactory.getPagingData(contacts, page, limit)
+			...ContactFactory.getPagingData(results, count, page, limit)
 		})
 
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "error fetching contacts"
-		})
+		// return helper.respond(response, {
+		// 	code: constants.FAILURE_CODE,
+		// 	message: "error fetching contacts"
+		// })
 	}
 	catch (error)
 	{
@@ -99,4 +79,64 @@ exports.store = async (request, response) => {
 			message: error?.errors ? error?.errors[0]?.message : message
 		})
 	}
+}
+
+const populateItemGroups = results => {
+
+	return results.map(item => {
+
+		for (const [key, value] of Object.entries(item))
+		{
+			const split_key = key.split('.')
+
+			if (split_key.length === 2)
+			{
+				const new_object = {}
+				new_object[`${split_key[1]}`] = value
+
+				item[split_key[0]].push(new_object)
+
+				delete item[key]
+
+			}
+			else if (split_key.length === 1)
+			{
+				item[split_key[0]] = value
+			}
+			else
+			{
+				throw new Error('invalid field')
+			}
+		}
+
+		return item
+	})
+
+}
+
+const setupResultGroups = (results, groups) => {
+
+	const data = []
+
+	results.forEach(result => {
+
+		const found = data.find(item => item.id === result.id)
+
+		if (!found) {
+			for (const group of groups) {
+				if (!result.hasOwnProperty(group)) result[group] = []
+			}
+
+			data.push(result)
+		}
+	})
+
+	return data
+
+}
+
+const prepareResults = (results, groups) => {
+	results = setupResultGroups(results, groups)
+	results = populateItemGroups(results)
+	return results
 }

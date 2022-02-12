@@ -1,9 +1,10 @@
 const Group = require("../models/Group")
+const Contact = require("../models/Contact")
 const GroupFactory = require("../factories/GroupsFactory")
 const constants = require("../constants")
 const logger = require("../logger")
 const helper = require("../helpers")
-const MessageFactory = require("../factories/MessagesFactory");
+const database = require("../database/connection")
 
 exports.all = async (request, response) => {
 
@@ -14,16 +15,24 @@ exports.all = async (request, response) => {
 		const { limit, offset} = helper.getPagination(page, size)
 
 		const groups = await Group.findAndCountAll({
-			attributes: ['id', 'name', 'description', 'created_at'],
+			attributes: ['id', 'name', 'description', 'created_at', [database.fn('COUNT', database.col('contacts.id')), 'count']],
 			where: GroupFactory.getWhereClause(user.id, search, id),
 			order: [['created_at', helper.getOrder(order)]],
+			include: {
+				model: Contact,
+				attributes: ["id"],
+				through: {attributes: []},
+				// duplicating: false
+			},
 			limit,
-			offset
+			offset,
+			// group: ['contacts.id', 'group.id']
 		})
 
 		if (groups) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
-			...GroupFactory.getPagingData(groups, page, limit)
+			groups
+			// ...GroupFactory.getPagingData(groups, page, limit)
 		})
 
 		return helper.respond(response, {

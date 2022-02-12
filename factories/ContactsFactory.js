@@ -71,67 +71,7 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 						transaction: t
 					})
 				}
-				// else
-				// {
-				//
-				// 	// find or create msisdn
-				// 	const [found_msisdn, msisdn_created] = await Msisdn.findOrCreate({
-				// 		where: {id},
-				// 		defaults: {id},
-				// 		transaction: t
-				// 	})
-				//
-				// 	msisdn = found_msisdn
-				//
-				// 	// create contact
-				// 	contact = await Contact.create({
-				// 		first_name, middle_name, last_name, metadata
-				// 	}, { transaction: t })
-				//
-				// 	// assign newly created contact to user and msisdn
-				// 	await ContactMsisdnUser.findOrCreate({
-				// 		where: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
-				// 		defaults: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
-				// 		transaction: t
-				// 	})
-				// }
 
-
-
-				// find or create msisdn
-				// const [msisdn, msisdn_created] = await Msisdn.findOrCreate({
-				// 	where: {id},
-				// 	defaults: {id},
-				// 	transaction: t
-				// })
-				//
-				// console.log({msisdn_created})
-				//
-				// if (msisdn_created)
-				// {
-				// 	// create contact for msisdn if contact is null
-				// 	if (!contact) contact = await Contact.create({
-				// 		first_name, middle_name, last_name, metadata
-				// 	}, { transaction: t })
-				// }
-				// else
-				// {
-				// 	// check if msisdn has been assigned to user
-				// 	const msisdn_assigned = await ContactMsisdnUser.findOne({
-				// 		where: {msisdn_id: msisdn.id, user_id: user.id}
-				// 	})
-				//
-				// 	// if msisdn has been assigned, set contact to the contact the msisdn
-				// 	// has been assigned to
-				// 	if (msisdn_assigned && !contact) contact = await Contact.findByPk(msisdn_assigned.contact_id)
-				// }
-
-				// assign msisdn to contact and user
-				// if (contact && msisdn) await ContactMsisdnUser.findOrCreate({
-				// 	where: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
-				// 	defaults: {msisdn_id: msisdn.id, contact_id: contact.id, user_id: user.id},
-				// 	transaction: t
-				// })
 			}
 
 			// assign contact to groups
@@ -187,49 +127,80 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 	}
 }
 
-/**
- * Prepares and returns where clause for contacts query
- * @param {string|required} user_id - user id
- * @param {string|null} search
- * @param {string|null} id - contact id
- * @return {object}
- */
-exports.getWhereClause = (user_id, search, id) => {
+const getLimitOffsetQuery = () => ` LIMIT :limit OFFSET :offset`
+const getSearchQuery = search => ` WHERE (
+		groups::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
+      	msisdns::jsonb @? '$[*].id ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
+      	users::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
+      	first_name ilike '%${search}%' OR
+      	middle_name ilike '%${search}%' OR
+      	last_name ilike '%${search}%' )`
 
-	const where_clause = {'$users.id$': user_id}
+const getIdQuery = search => search ? ` AND id = :contact_id` : ` WHERE id = :contact_id`
 
-	if (search) {
-
-		if (Number(search[0]) === 0) search = search.substring(1)
-
-		where_clause[Op.or] = [
-
-			{first_name: { [Op.iLike]: `%${search}%` }},
-			{middle_name: { [Op.iLike]: `%${search}%`}},
-			{last_name: { [Op.iLike]: `%${search}%`}},
-			{'$msisdns.id$': { [Op.iLike]: `%${search}%`}},
-			{'$groups.name$': { [Op.iLike]: `%${search}%`}}
-		]
-	}
-
-	if (id) where_clause.id = id
+const getOrderQuery = order => ` ORDER BY created_at ${order}`
 
 
-	return where_clause
+exports.buildReplacements = (user_id, contact_id, limit, offset) => {
 
+	const replacements = {user_id, limit, offset}
+
+	if (contact_id) replacements.contact_id = contact_id
+
+	return replacements
+}
+
+exports.buildQuery = (search, contact_id, order) => {
+
+	order = order ? order.toUpperCase() : 'DESC'
+
+	if (search && Number(search[0]) === 0) search = search.substring(1)
+
+	let query = `
+				SELECT *
+				FROM (
+					 SELECT
+						   c.id,
+						   c.first_name,
+						   c.middle_name,
+						   c.last_name,
+						   c.created_at,
+						   json_agg(json_build_object('id', m.id)) as msisdns,
+						   json_agg(json_build_object('id', u.id, 'name', u.name)) as users,
+						   (
+								SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
+								FROM contact_groups
+								LEFT JOIN groups g on g.id = contact_groups.group_id
+								WHERE contact_groups.contact_id = c.id
+						   ) as groups
+					FROM contacts c
+						LEFT JOIN contact_msisdns_users cmu on c.id = cmu.contact_id
+						LEFT JOIN msisdns m on m.id = cmu.msisdn_id
+						LEFT JOIN users u on u.id = cmu.user_id AND u.id =:user_id
+					GROUP BY c.id, c.created_at
+				) contacts`
+
+	if (search) query += getSearchQuery(search)
+	if (contact_id) query += getIdQuery()
+
+	query += getOrderQuery(order)
+	query += getLimitOffsetQuery()
+
+	return query
 }
 
 /**
  * Returns pagination data
- * @param data
+ * @param contacts
+ * @param totalItems
  * @param page
  * @param limit
  * @return {{totalItems, totalPages: number, messages, currentPage: number}}
  */
-exports.getPagingData = (data, page, limit) => {
-	const { count: totalItems, rows: contacts } = data;
+exports.getPagingData = (contacts, totalItems, page, limit) => {
+
 	const currentPage = page ? +page : 0;
 	const totalPages = Math.ceil(totalItems / limit);
 
-	return { totalItems, contacts, totalPages, currentPage };
+	return {totalItems, contacts, totalPages, currentPage };
 }
