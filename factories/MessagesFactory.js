@@ -4,6 +4,7 @@ const {Op, QueryTypes} = require("sequelize")
 const Sender = require("../models/Sender")
 const constants = require("../constants")
 const logger = require("../logger")
+const helper = require("../helpers")
 
 /**
  * Returns all messages in the last seven days for sender
@@ -100,51 +101,6 @@ exports.latestFive = async sender_ids => {
 }
 
 /**
- * Prepares and returns where clause for messages query
- * @param {array<string>|required} senders - message senders
- * @param {string|null} search
- * @param {string|null} id - message id
- * @return {object}
- */
-exports.getWhereClause = (senders, search, id) => {
-
-	const where_clause = {sender_id: { [Op.in]: senders }}
-
-	if (search) {
-
-		if (Number(search[0]) === 0) search = search.substring(1)
-
-		where_clause[Op.or] = [
-
-			{message: { [Op.iLike]: `%${search}%` }},
-			{msisdn_id: { [Op.iLike]: `%${search}%`}},
-			{status: { [Op.iLike]: `%${search}%`}},
-		]
-	}
-
-	if (id) where_clause.id = id
-
-	return where_clause
-
-}
-
-/**
- * Returns pagination data
- * @param data
- * @param page
- * @param limit
- * @return {{totalItems, totalPages: number, messages, currentPage: number}}
- */
-exports.getPagingData = (data, page, limit) => {
-	const { count: totalItems, rows: messages } = data;
-	const currentPage = page ? +page : 0;
-	const totalPages = Math.ceil(totalItems / limit);
-
-	return { totalItems, messages, totalPages, currentPage };
-}
-
-
-/**
  * Stores a message in the database
  * @param {string|required} msisdn_id - recipient
  * @param {string|required} text - message's body
@@ -187,3 +143,72 @@ exports.storeMessage = async (
 		return null;
 	}
 };
+
+const getIdQuery = () => ` AND id = :message_id`
+
+const getSearchQuery = () => ` AND (
+	u.name iLike :search OR
+	m.id iLike :search OR
+	s.name iLike :search OR
+	msg.message iLike :search OR
+	msg.status iLike :search
+)`
+
+
+exports.buildReplacements = (senders, message_id, search, limit, offset) => {
+
+	const replacements = {senders, limit, offset, search: `%${search}%`}
+
+	if (search && Number(search[0]) === 0) replacements.search = `%${search.substring(1)}%`
+
+	if (message_id) replacements.message_id = message_id
+
+	return replacements
+}
+
+exports.buildQuery = (search, message_id, order) => {
+
+	order = order ? order.toUpperCase() : 'DESC'
+
+	let query = `
+				SELECT 
+					   msg.id,
+					   msg.message,
+					   msg.credits,
+					   msg.status,
+					   json_build_object('id', u.id, 'name', u.name) as user,
+					   json_build_object('id', s.id, 'name', s.name) as sender,
+					   json_build_object('id', g.id, 'name', g.name) as gateway,
+					   json_build_object('id', u.id) as msisdn,
+					   msg.created_at
+				FROM messages msg
+					INNER JOIN msisdns m on m.id = msg.msisdn_id
+					INNER JOIN gateways g on g.id = msg.gateway_id
+					INNER JOIN users u on msg.user_id = u.id
+					INNER JOIN senders s on msg.sender_id = s.id
+				WHERE msg.sender_id IN (:senders)`
+
+	if (search) query += getSearchQuery()
+	if (message_id) query += getIdQuery()
+
+	query += helper.getOrderQuery(order)
+	query += helper.getLimitOffsetQuery()
+
+	return query
+}
+
+/**
+ * Returns pagination data
+ * @param messages
+ * @param totalItems
+ * @param page
+ * @param limit
+ * @return {{totalItems, totalPages: number, messages, currentPage: number}}
+ */
+exports.getPagingData = (messages, totalItems, page, limit) => {
+
+	const currentPage = page ? +page : 0;
+	const totalPages = Math.ceil(totalItems / limit)
+
+	return {totalItems, messages, totalPages, currentPage}
+}

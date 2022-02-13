@@ -6,6 +6,7 @@ const ContactGroup = require("../models/ContactGroup")
 const database = require("../database/connection")
 const logger = require("../logger")
 const {Op} = require("sequelize");
+const helpers = require("../helpers");
 
 
 /**
@@ -127,7 +128,6 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 	}
 }
 
-const getLimitOffsetQuery = () => ` LIMIT :limit OFFSET :offset`
 const getSearchQuery = search => ` WHERE (
 		groups::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
       	msisdns::jsonb @? '$[*].id ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
@@ -137,8 +137,6 @@ const getSearchQuery = search => ` WHERE (
       	last_name ilike '%${search}%' )`
 
 const getIdQuery = search => search ? ` AND id = :contact_id` : ` WHERE id = :contact_id`
-
-const getOrderQuery = order => ` ORDER BY created_at ${order}`
 
 
 exports.buildReplacements = (user_id, contact_id, limit, offset) => {
@@ -165,26 +163,34 @@ exports.buildQuery = (search, contact_id, order) => {
 						   c.middle_name,
 						   c.last_name,
 						   c.created_at,
-						   json_agg(json_build_object('id', m.id)) as msisdns,
-						   json_agg(json_build_object('id', u.id, 'name', u.name)) as users,
+						   (
+								SELECT json_agg(json_build_object('id', m.id))
+								FROM msisdns m
+								LEFT JOIN contact_msisdns_users cmu ON m.id = cmu.msisdn_id
+								WHERE cmu.contact_id = c.id AND cmu.user_id = :user_id
+				
+						   ) AS msisdns,
+							(
+								SELECT json_agg(json_build_object('id', u.id, 'name', u.name))
+								FROM users u
+								LEFT JOIN contact_msisdns_users cmu ON u.id = cmu.user_id
+								WHERE cmu.contact_id = c.id AND u.id = :user_id
+						   ) AS users,
 						   (
 								SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
 								FROM contact_groups
-								LEFT JOIN groups g on g.id = contact_groups.group_id
+								LEFT JOIN groups g ON g.id = contact_groups.group_id
 								WHERE contact_groups.contact_id = c.id
-						   ) as groups
+						   ) AS groups
 					FROM contacts c
-						LEFT JOIN contact_msisdns_users cmu on c.id = cmu.contact_id
-						LEFT JOIN msisdns m on m.id = cmu.msisdn_id
-						LEFT JOIN users u on u.id = cmu.user_id AND u.id =:user_id
 					GROUP BY c.id, c.created_at
 				) contacts`
 
 	if (search) query += getSearchQuery(search)
 	if (contact_id) query += getIdQuery()
 
-	query += getOrderQuery(order)
-	query += getLimitOffsetQuery()
+	query += helpers.getOrder(order)
+	query += helpers.getLimitOffsetQuery()
 
 	return query
 }

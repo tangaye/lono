@@ -31,10 +31,10 @@ exports.all = async (request, response) => {
 			...ContactFactory.getPagingData(results, count, page, limit)
 		})
 
-		// return helper.respond(response, {
-		// 	code: constants.FAILURE_CODE,
-		// 	message: "error fetching contacts"
-		// })
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error fetching contacts"
+		})
 	}
 	catch (error)
 	{

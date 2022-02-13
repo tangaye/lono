@@ -84,16 +84,8 @@ exports.getGatewayQueue = gateway_slug => {
 
 }
 
-/**
- * returns order
- * @param order
- * @return {string|*}
- */
-exports.getOrder = order => {
-
-	if (order && ['asc', 'desc'].includes(order)) return order
-	return 'desc'
-}
+exports.getOrderQuery = order => ` ORDER BY created_at ${order}`
+exports.getLimitOffsetQuery = () => ` LIMIT :limit OFFSET :offset`
 
 /**
  * gets pagination
@@ -107,3 +99,5 @@ exports.getPagination = (page, size) => {
 
 	return { limit, offset };
 };
+
+

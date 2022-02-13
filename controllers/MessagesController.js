@@ -8,6 +8,10 @@ const constants = require("../constants")
 const MessageFactory = require("../factories/MessagesFactory")
 const logger = require("../logger")
 const helper = require("../helpers")
+const ContactFactory = require("../factories/ContactsFactory");
+const Contact = require("../models/Contact");
+const database = require("../database/connection");
+const {QueryTypes} = require("sequelize");
 
 
 /**
@@ -25,25 +29,18 @@ exports.all = async (request, response) => {
 		const { page, size, search, order, id } = request.query
 		const { limit, offset} = helper.getPagination(page, size)
 
-        // query messages sent by user senders
-		const messages = await Message.findAndCountAll({
-			attributes: constants.MESSAGES_ATTRIBUTES,
-			include: [{
-				model: Sender,
-				attributes: ["name"],
-			}, {
-				model: User,
-				attributes: ['id', 'name']
-			}],
-			where: MessageFactory.getWhereClause(senders, search, id) || null,
-			order: [['created_at', helper.getOrder(order)]],
-			limit,
-			offset
-		});
+		const replacements = MessageFactory.buildReplacements(senders, id, search, limit, offset)
+		const query_string = MessageFactory.buildQuery(search, id, order)
 
-		if (messages) return helper.respond(response, {
+		const count = await Message.count({distinct: true})
+		const results = await database.query(query_string, {
+			replacements,
+			type: QueryTypes.SELECT
+		})
+
+		if (results) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
-			...MessageFactory.getPagingData(messages, page, limit)
+			...MessageFactory.getPagingData(results, count, page, limit)
 		})
 
 		return helper.respond(response, {
