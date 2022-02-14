@@ -128,7 +128,7 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 	}
 }
 
-const getSearchQuery = search => ` WHERE (
+const getSearchQuery = search => ` AND (
 		groups::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
       	msisdns::jsonb @? '$[*].id ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
       	users::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
@@ -136,8 +136,7 @@ const getSearchQuery = search => ` WHERE (
       	middle_name ilike '%${search}%' OR
       	last_name ilike '%${search}%' )`
 
-const getIdQuery = search => search ? ` AND id = :contact_id` : ` WHERE id = :contact_id`
-
+const getIdQuery = () => ` AND id = :contact_id`
 
 exports.buildReplacements = (user_id, contact_id, limit, offset) => {
 
@@ -148,7 +147,7 @@ exports.buildReplacements = (user_id, contact_id, limit, offset) => {
 	return replacements
 }
 
-exports.queryContacts = (search, contact_id, order) => {
+exports.queryContacts = (search, contact_id, user_id, order) => {
 
 	order = order ? order.toUpperCase() : 'DESC'
 
@@ -174,7 +173,7 @@ exports.queryContacts = (search, contact_id, order) => {
 								SELECT json_agg(json_build_object('id', u.id, 'name', u.name))
 								FROM users u
 								LEFT JOIN contact_msisdns_users cmu ON u.id = cmu.user_id
-								WHERE cmu.contact_id = c.id AND u.id = :user_id
+								WHERE cmu.contact_id = c.id AND cmu.user_id = :user_id
 						   ) AS users,
 						   (
 								SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
@@ -185,7 +184,8 @@ exports.queryContacts = (search, contact_id, order) => {
 						   ) AS groups
 					FROM contacts c
 					GROUP BY c.id, c.created_at
-				) contacts`
+				) contacts
+				WHERE users::jsonb @> '[{"id": ${JSON.stringify(user_id)}}]'`
 
 	if (search) query += getSearchQuery(search)
 	if (contact_id) query += getIdQuery()

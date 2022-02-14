@@ -1,12 +1,10 @@
 const Group = require("../models/Group")
-const Contact = require("../models/Contact")
 const GroupFactory = require("../factories/GroupsFactory")
 const constants = require("../constants")
 const logger = require("../logger")
 const helper = require("../helpers")
 const database = require("../database/connection")
-const ContactFactory = require("../factories/ContactsFactory");
-const {QueryTypes} = require("sequelize");
+const {QueryTypes} = require("sequelize")
 
 exports.all = async (request, response) => {
 

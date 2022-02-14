@@ -15,7 +15,7 @@ exports.all = async (request, response) => {
 		const { limit, offset} = helper.getPagination(page, size)
 
 		const replacements = ContactFactory.buildReplacements(user.id, id, limit, offset)
-		const query_string = ContactFactory.queryContacts(search, id, order)
+		const query_string = ContactFactory.queryContacts(search, id, user.id, order)
 
 		const count_result = await database.query(`
 			SELECT count(distinct contact_id)
