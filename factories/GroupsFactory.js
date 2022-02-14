@@ -62,7 +62,7 @@ exports.queryGroups = (search, group_id, order) => {
 					   g.created_at,
 					   count(contact_id) AS contacts
 				FROM groups g
-				INNER JOIN contact_groups cg on g.id = cg.group_id
+				LEFT JOIN contact_groups cg on g.id = cg.group_id
 				WHERE g.user_id = :user_id`
 
 	if (search) query += getSearchQuery()
@@ -71,6 +71,8 @@ exports.queryGroups = (search, group_id, order) => {
 	query += getGroupByQuery()
 	query += helper.getOrderQuery(order)
 	query += helper.getLimitOffsetQuery()
+
+	console.log({query})
 
 	return query
 }

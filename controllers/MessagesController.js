@@ -1,6 +1,4 @@
 const Message = require("../models/Message")
-const Sender = require("../models/Sender")
-const User = require("../models/User")
 const Gateway = require("../models/Gateway")
 const Queue = require("../Queue")
 const { v4: uuidv4 } = require("uuid")
@@ -8,10 +6,8 @@ const constants = require("../constants")
 const MessageFactory = require("../factories/MessagesFactory")
 const logger = require("../logger")
 const helper = require("../helpers")
-const ContactFactory = require("../factories/ContactsFactory");
-const Contact = require("../models/Contact");
 const database = require("../database/connection");
-const {QueryTypes} = require("sequelize");
+const {Op, QueryTypes} = require("sequelize");
 
 
 /**
@@ -33,9 +29,10 @@ exports.all = async (request, response) => {
 		const query_string = MessageFactory.buildQuery(search, id, order)
 
 		const count = await Message.count({
-			// where: {sender_ids}
+			where: {sender_id: {[Op.in]: senders}},
 			distinct: true
 		})
+
 		const results = await database.query(query_string, {
 			replacements,
 			type: QueryTypes.SELECT
