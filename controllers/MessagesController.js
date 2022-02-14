@@ -32,7 +32,10 @@ exports.all = async (request, response) => {
 		const replacements = MessageFactory.buildReplacements(senders, id, search, limit, offset)
 		const query_string = MessageFactory.buildQuery(search, id, order)
 
-		const count = await Message.count({distinct: true})
+		const count = await Message.count({
+			// where: {sender_ids}
+			distinct: true
+		})
 		const results = await database.query(query_string, {
 			replacements,
 			type: QueryTypes.SELECT

@@ -148,7 +148,7 @@ exports.buildReplacements = (user_id, contact_id, limit, offset) => {
 	return replacements
 }
 
-exports.buildQuery = (search, contact_id, order) => {
+exports.queryContacts = (search, contact_id, order) => {
 
 	order = order ? order.toUpperCase() : 'DESC'
 
@@ -180,7 +180,8 @@ exports.buildQuery = (search, contact_id, order) => {
 								SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
 								FROM contact_groups
 								LEFT JOIN groups g ON g.id = contact_groups.group_id
-								WHERE contact_groups.contact_id = c.id
+								WHERE contact_groups.contact_id = c.id AND
+								g.user_id = :user_id
 						   ) AS groups
 					FROM contacts c
 					GROUP BY c.id, c.created_at
@@ -189,7 +190,7 @@ exports.buildQuery = (search, contact_id, order) => {
 	if (search) query += getSearchQuery(search)
 	if (contact_id) query += getIdQuery()
 
-	query += helpers.getOrder(order)
+	query += helpers.getOrderQuery(order)
 	query += helpers.getLimitOffsetQuery()
 
 	return query

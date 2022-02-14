@@ -5,6 +5,8 @@ const constants = require("../constants")
 const logger = require("../logger")
 const helper = require("../helpers")
 const database = require("../database/connection")
+const ContactFactory = require("../factories/ContactsFactory");
+const {QueryTypes} = require("sequelize");
 
 exports.all = async (request, response) => {
 
@@ -14,25 +16,22 @@ exports.all = async (request, response) => {
 		const { page, size, search, order, id } = request.query
 		const { limit, offset} = helper.getPagination(page, size)
 
-		const groups = await Group.findAndCountAll({
-			attributes: ['id', 'name', 'description', 'created_at', [database.fn('COUNT', database.col('contacts.id')), 'count']],
-			where: GroupFactory.getWhereClause(user.id, search, id),
-			order: [['created_at', helper.getOrder(order)]],
-			include: {
-				model: Contact,
-				attributes: ["id"],
-				through: {attributes: []},
-				// duplicating: false
-			},
-			limit,
-			offset,
-			// group: ['contacts.id', 'group.id']
+		const replacements = GroupFactory.buildReplacements(user.id, id, search, limit, offset)
+		const query_string = GroupFactory.queryGroups(search, id, order)
+
+		const count = await Group.count({
+			where: {user_id: user.id},
+			distinct: true
 		})
 
-		if (groups) return helper.respond(response, {
+		const results = await database.query(query_string, {
+			replacements,
+			type: QueryTypes.SELECT
+		})
+
+		if (results) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
-			groups
-			// ...GroupFactory.getPagingData(groups, page, limit)
+			...GroupFactory.getPagingData(results, count, page, limit)
 		})
 
 		return helper.respond(response, {

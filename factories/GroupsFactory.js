@@ -1,7 +1,6 @@
 const logger = require("../logger")
 const helper = require("../helpers")
 const Group = require("../models/Group")
-const {Op} = require("sequelize");
 
 /**
  * Returns true if groups array is valid
@@ -33,42 +32,61 @@ exports.groupsValid = async groups => {
 	}
 }
 
-/**
- * Prepares and returns where clause for groups query
- * @param {string|required} user_id - message senders
- * @param {string|null} search
- * @param {string|null} id - message id
- * @return {object}
- */
-exports.getWhereClause = (user_id, search, id) => {
+const getIdQuery = () => ` AND id = :group_id`
+const getSearchQuery = () => ` AND (
+	g.name iLike :search OR
+	g.description iLike :search
+)`
+const getGroupByQuery = () => ` GROUP BY g.id, g.name, g.created_at`
 
-	const where_clause = {user_id}
-	if (search) {
 
-		where_clause[Op.or] = [
+exports.buildReplacements = (user_id, group_id, search, limit, offset) => {
 
-			{name: { [Op.iLike]: `%${search}%` }},
-			{description: { [Op.iLike]: `%${search}%`}}
-		]
-	}
+	const replacements = {user_id, limit, offset, search: `%${search}%`}
 
-	if (id) where_clause.id = id
+	if (search && Number(search[0]) === 0) replacements.search = `%${search.substring(1)}%`
 
-	return where_clause
+	if (group_id) replacements.group_id = group_id
 
+	return replacements
+}
+
+exports.queryGroups = (search, group_id, order) => {
+
+	order = order ? order.toUpperCase() : 'DESC'
+
+	let query = `
+				SELECT g.id, 
+					   g.name, 
+					   g.description,
+					   g.created_at,
+					   count(contact_id) AS contacts
+				FROM groups g
+				INNER JOIN contact_groups cg on g.id = cg.group_id
+				WHERE g.user_id = :user_id`
+
+	if (search) query += getSearchQuery()
+	if (group_id) query += getIdQuery()
+
+	query += getGroupByQuery()
+	query += helper.getOrderQuery(order)
+	query += helper.getLimitOffsetQuery()
+
+	return query
 }
 
 /**
  * Returns pagination data
- * @param data
+ * @param groups
+ * @param totalItems
  * @param page
  * @param limit
  * @return {{totalItems, totalPages: number, messages, currentPage: number}}
  */
-exports.getPagingData = (data, page, limit) => {
-	const { count: totalItems, rows: groups } = data;
+exports.getPagingData = (groups, totalItems, page, limit) => {
+
 	const currentPage = page ? +page : 0;
 	const totalPages = Math.ceil(totalItems / limit);
 
-	return { totalItems, groups, totalPages, currentPage };
+	return {totalItems, groups, totalPages, currentPage };
 }
