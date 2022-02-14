@@ -179,7 +179,7 @@ exports.buildQuery = (search, message_id, order) => {
 					   json_build_object('id', u.id, 'name', u.name) as user,
 					   json_build_object('id', s.id, 'name', s.name) as sender,
 					   json_build_object('id', g.id, 'name', g.name) as gateway,
-					   json_build_object('id', u.id) as msisdn,
+					   json_build_object('id', m.id) as msisdn,
 					   msg.created_at
 				FROM messages msg
 					INNER JOIN msisdns m on m.id = msg.msisdn_id
