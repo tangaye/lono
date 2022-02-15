@@ -5,14 +5,9 @@ class ContactMsisdnUser extends Model {}
 
 ContactMsisdnUser.init(
 	{
-		id: {
-			type: DataTypes.UUID,
-			defaultValue: DataTypes.UUIDV4,
-			allowNull: false,
-			primaryKey: true,
-		},
 		contact_id: {
 			type: DataTypes.UUID,
+			primaryKey: true,
 			allowNull: false,
 			validate: {
 				notNull: {
@@ -22,6 +17,7 @@ ContactMsisdnUser.init(
 		},
 		msisdn_id: {
 			type: DataTypes.UUID,
+			primaryKey: true,
 			allowNull: false,
 			validate: {
 				notNull: {
@@ -31,6 +27,7 @@ ContactMsisdnUser.init(
 		},
 		user_id: {
 			type: DataTypes.UUID,
+			primaryKey: true,
 			allowNull: false,
 			validate: {
 				notNull: {
@@ -44,7 +41,6 @@ ContactMsisdnUser.init(
 		paranoid: true,
 		deletedAt: 'deleted_at',
 		tableName: 'contact_msisdns_users',
-		indexes: [{ unique: true, fields: ['contact_id', 'msisdn_id', 'user_id'] }],
 		sequelize, // We need to pass the connection instance
 	}
 );

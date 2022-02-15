@@ -1,6 +1,6 @@
-const Contact = require("../models/Contact")
 const ContactFactory = require("../factories/ContactsFactory")
 const database = require("../database/connection")
+const ContactMsisdnUser = require("../models/ContactMsisdnUser")
 const logger = require("../logger")
 const constants = require("../constants")
 const helper = require("../helpers")

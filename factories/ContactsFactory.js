@@ -52,6 +52,7 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 				}
 				else
 				{
+
 					const [found_msisdn, msisdn_created] = await Msisdn.findOrCreate({
 						where: {id},
 						defaults: {id},
@@ -61,7 +62,8 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 					msisdn = found_msisdn
 
 					// create contact
-					if (msisdn_created && !created_contact) {
+					if (!created_contact) {
+
 						contact = await Contact.create({first_name, middle_name, last_name, metadata}, { transaction: t })
 						created_contact = contact
 					}
@@ -79,6 +81,7 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 			if (groups && groups.length > 0) {
 
 				const group_contact = created_contact ? created_contact : contact
+
 				for (const name of groups) {
 
 					// find or create groups
@@ -100,6 +103,8 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 			return created_contact ? created_contact : contact
 
 		})
+
+		console.log({result})
 
 		if (result) return Contact.findByPk(result.id,{
 			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],

@@ -9,14 +9,9 @@ module.exports = {
 		 * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
 		 */
 		await queryInterface.createTable("contact_msisdns_users", {
-			id: {
-				allowNull: false,
-				primaryKey: true,
-				type: Sequelize.UUID,
-				defaultValue: Sequelize.UUIDV4,
-			},
 			contact_id: {
 				type: Sequelize.UUID,
+				primaryKey: true,
 				allowNull: false,
 				onDelete: "CASCADE",
 				onUpdate: "CASCADE",
@@ -28,6 +23,7 @@ module.exports = {
 			},
 			msisdn_id: {
 				type: Sequelize.STRING(12),
+				primaryKey: true,
 				allowNull: true,
 				onDelete: "CASCADE",
 				onUpdate: "CASCADE",
@@ -39,6 +35,7 @@ module.exports = {
 			},
 			user_id: {
 				type: Sequelize.UUID,
+				primaryKey: true,
 				allowNull: false,
 				onDelete: "CASCADE",
 				onUpdate: "CASCADE",
@@ -60,12 +57,6 @@ module.exports = {
 				allowNull: false,
 				type: Sequelize.DATE,
 			},
-		}, {
-			uniqueKeys: {
-				unique_contact_msisdn_user: {
-					fields: ['contact_id', 'msisdn_id', 'user_id']
-				}
-			}
 		})
 	},
 
