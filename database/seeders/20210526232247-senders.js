@@ -31,31 +31,46 @@ module.exports = {
 		if (users.length > 0) {
 			await queryInterface.bulkInsert(
 				"senders",
-				[{
+				[
+					{
+						id: uuidv4(),
+						name: "LonoDemo1",
+						user_id: users[0].id,
+						created_at: new Date(Date.now()).toISOString(),
+						updated_at: new Date(Date.now()).toISOString(),
+					},
+					{
+						id: uuidv4(),
+						name: "LonoDemo2",
+						user_id: users[0].id,
+						created_at: new Date(Date.now()).toISOString(),
+						updated_at: new Date(Date.now()).toISOString(),
+					},
+					{
 						id: uuidv4(),
 						name: "Ponitor",
-						user_id: users[0].id,
+						user_id: users[1].id,
 						created_at: new Date(Date.now()).toISOString(),
 						updated_at: new Date(Date.now()).toISOString(),
 					},
 					{
 						id: uuidv4(),
 						name: "Lono",
-						user_id: users[0].id,
+						user_id: users[1].id,
 						created_at: new Date(Date.now()).toISOString(),
 						updated_at: new Date(Date.now()).toISOString(),
 					},
 					{
 						id: uuidv4(),
 						name: "KIT",
-						user_id: users[0].id,
+						user_id: users[1].id,
 						created_at: new Date(Date.now()).toISOString(),
 						updated_at: new Date(Date.now()).toISOString(),
 					},
 					{
 						id: uuidv4(),
 						name: "Kwagei",
-						user_id: users[0].id,
+						user_id: users[1].id,
 						created_at: new Date(Date.now()).toISOString(),
 						updated_at: new Date(Date.now()).toISOString(),
 					}

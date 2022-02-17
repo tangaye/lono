@@ -29,9 +29,9 @@ module.exports = {
 			[
 				{
 					id: uuidv4(),
-					name: "Ponitor Web App",
+					name: "Lono Demo",
 					role: constants.CLIENT_ROLE,
-                    credits: 833,
+                    credits: 500,
                     allow_overdraft: false,
 					api_key: helpers.generateSecret(),
 					created_at: new Date(Date.now()).toISOString(),
@@ -39,9 +39,9 @@ module.exports = {
 				},
 				{
 					id: uuidv4(),
-					name: "Lono Web App",
+					name: "Kwagei Group",
 					role: constants.CLIENT_ROLE,
-                    credits: 833,
+                    credits: 1000,
                     allow_overdraft: false,
 					api_key: helpers.generateSecret(),
 					created_at: new Date(Date.now()).toISOString(),

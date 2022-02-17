@@ -1,12 +1,10 @@
-const rsmqWorker = require("rsmq-worker");
-const constants = require("../constants");
-const MessagesFactory = require("../factories/MessagesFactory")
-const Message = require("../models/Message")
+const rsmqWorker = require("rsmq-worker")
+const constants = require("../constants")
 const UsersController = require("../controllers/UsersController")
 const Queue = require("../Queue")
 const Twilio = require("../services/Twilio")
 const logger = require("../logger")
-const ContactFactory = require("../factories/ContactsFactory");
+const MessagePart = require("../models/MessagePart")
 
 const worker = new rsmqWorker(constants.TWILIO_MESSAGES_QUEUE, Queue.queueInstance);
 
@@ -14,36 +12,23 @@ worker.on("message", async function (msg, next, msgid) {
 
 	try {
 
+
 		const message = JSON.parse(msg);
-		const {to, body, sender, extMessageId, gateway, id, user} = message
+		const {to, body, sender, message_id, user} = message
 
 		// send sms
-		const twilio = new Twilio(to, body, sender.name)
+		const twilio = new Twilio(to, body, sender)
 		const result = await twilio.send()
 
-		// update message
-		if (result) {
+		if (result)
+		{
+			await MessagePart.create({
+				part: body,
+				message_id,
+				gateway_message_id: result.id
+			})
 
-			const contact = await ContactFactory.createContact(null, null, null, null, [to], null, user)
-			const message_stored = await Message.findByPk(id)
-
-			// If the message doesn't exist then it is being sent for the first time
-			if (!message_stored) {
-
-				const msisdn = contact?.msisdns.find(msisdn => msisdn.id === to)
-
-				if (msisdn) {
-
-					// save message
-					const message = await MessagesFactory.storeMessage(msisdn.id, body, sender.id, gateway.id, extMessageId, user.id, result.id, id)
-
-					if (message) await UsersController.updateCredits(user.id)
-				}
-				else
-				{
-					logger.error("message not stored. msisdn not returned", {contact})
-				}
-			}
+			await UsersController.updateCredits(user.id)
 
 			await Queue.removeFromQueue(constants.TWILIO_MESSAGES_QUEUE, msgid);
 		}

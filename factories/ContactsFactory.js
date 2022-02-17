@@ -5,8 +5,7 @@ const Group = require("../models/Group")
 const ContactGroup = require("../models/ContactGroup")
 const database = require("../database/connection")
 const logger = require("../logger")
-const {Op} = require("sequelize");
-const helpers = require("../helpers");
+const helpers = require("../helpers")
 
 
 /**
@@ -21,7 +20,15 @@ const helpers = require("../helpers");
  * @param {object|required} user - user to assign contact to
  * @return {Promise<null|*>}
  */
-exports.createContact = async (first_name, middle_name, last_name, metadata, msisdns, groups, user) => {
+exports.createContact = async ({
+	first_name = null,
+	middle_name = null,
+	last_name = null,
+	metadata= null,
+	msisdns,
+	groups = null,
+	user
+}) => {
 
 	try {
 
@@ -104,8 +111,6 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 
 		})
 
-		console.log({result})
-
 		if (result) return Contact.findByPk(result.id,{
 			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
 			include: [
@@ -133,6 +138,17 @@ exports.createContact = async (first_name, middle_name, last_name, metadata, msi
 	}
 }
 
+/**
+ * returns search query for contacts
+ * @param search
+ * @return {` AND (
+		groups::jsonb @? '$[*].name ? (@ like_regex ${string} flag "i")' OR
+      	msisdns::jsonb @? '$[*].id ? (@ like_regex ${string} flag "i")' OR
+      	users::jsonb @? '$[*].name ? (@ like_regex ${string} flag "i")' OR
+      	first_name ilike '%${string}%' OR
+      	middle_name ilike '%${string}%' OR
+      	last_name ilike '%${string}%' )`}
+ */
 const getSearchQuery = search => ` AND (
 		groups::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
       	msisdns::jsonb @? '$[*].id ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
@@ -141,6 +157,10 @@ const getSearchQuery = search => ` AND (
       	middle_name ilike '%${search}%' OR
       	last_name ilike '%${search}%' )`
 
+/**
+ * returns query to find a particular contact
+ * @return {string}
+ */
 const getIdQuery = () => ` AND id = :contact_id`
 
 exports.buildReplacements = (user_id, contact_id, limit, offset) => {
@@ -152,6 +172,14 @@ exports.buildReplacements = (user_id, contact_id, limit, offset) => {
 	return replacements
 }
 
+/**
+ * setups query to fetch contacts
+ * @param search search value
+ * @param contact_id contact id, when fetching a particular contact
+ * @param user_id contacts user id
+ * @param order asc or desc
+ * @return {string}
+ */
 exports.queryContacts = (search, contact_id, user_id, order) => {
 
 	order = order ? order.toUpperCase() : 'DESC'

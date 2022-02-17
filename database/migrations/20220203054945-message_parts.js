@@ -26,7 +26,7 @@ module.exports = {
 					as: "message_id",
 				},
 			},
-			parts: {
+			part: {
 				type: Sequelize.STRING(160),
 				allowNull: false
 			},
@@ -34,6 +34,17 @@ module.exports = {
 				type: Sequelize.INTEGER,
 				defaultValue: 1,
 				allowNull: false
+			},
+			status: {
+				type: Sequelize.STRING,
+				allowNull: false,
+				defaultValue: "pending"
+			},
+			gateway_message_id: {
+				type: Sequelize.STRING,
+				allowNull: true,
+				unique: true,
+				comment: "Message id from sms gateway service.",
 			},
 			deleted_at: {
 				allowNull: true,

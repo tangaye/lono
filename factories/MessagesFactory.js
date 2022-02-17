@@ -113,14 +113,16 @@ exports.latestFive = async sender_ids => {
  * @returns {Promise}
  */
 exports.storeMessage = async (
-	msisdn_id,
-	text,
-	sender_id,
-	gateway_id,
-	ext_message_id = null,
-	user_id,
-	gateway_message_id = null,
-	id
+	{
+		msisdn_id,
+		text,
+		sender_id,
+		gateway_id,
+		ext_message_id= null,
+		user_id,
+		gateway_message_id= null,
+		id
+	}
 ) => {
 	try {
 
@@ -144,8 +146,16 @@ exports.storeMessage = async (
 	}
 };
 
+/**
+ * messages id query
+ * @return {string}
+ */
 const getIdQuery = () => ` AND id = :message_id`
 
+/**
+ * messages search query
+ * @return {string}
+ */
 const getSearchQuery = () => ` AND (
 	u.name iLike :search OR
 	m.id iLike :search OR
@@ -166,6 +176,13 @@ exports.buildReplacements = (senders, message_id, search, limit, offset) => {
 	return replacements
 }
 
+/**
+ * Setup query to query messages
+ * @param search - search
+ * @param message_id - message_id: for getting a messages
+ * @param order - order or messages returned, asc or desc
+ * @return {string}
+ */
 exports.buildQuery = (search, message_id, order) => {
 
 	order = order ? order.toUpperCase() : 'DESC'
@@ -176,16 +193,21 @@ exports.buildQuery = (search, message_id, order) => {
 					   msg.message,
 					   msg.credits,
 					   msg.status,
-					   json_build_object('id', u.id, 'name', u.name) as user,
-					   json_build_object('id', s.id, 'name', s.name) as sender,
-					   json_build_object('id', g.id, 'name', g.name) as gateway,
-					   json_build_object('id', m.id) as msisdn,
+					   json_build_object('id', u.id, 'name', u.name) AS user,
+					   json_build_object('id', s.id, 'name', s.name) AS sender,
+					   json_build_object('id', g.id, 'name', g.name) AS gateway,
+					   json_build_object('id', m.id) AS msisdn,
+					   (
+							SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits))
+							FROM message_parts mp
+							WHERE mp.message_id = msg.id
+					   ) AS parts,
 					   msg.created_at
 				FROM messages msg
-					INNER JOIN msisdns m on m.id = msg.msisdn_id
-					INNER JOIN gateways g on g.id = msg.gateway_id
-					INNER JOIN users u on msg.user_id = u.id
-					INNER JOIN senders s on msg.sender_id = s.id
+					INNER JOIN msisdns m ON m.id = msg.msisdn_id
+					INNER JOIN gateways g ON g.id = msg.gateway_id
+					INNER JOIN users u ON msg.user_id = u.id
+					INNER JOIN senders s ON msg.sender_id = s.id
 				WHERE msg.sender_id IN (:senders)`
 
 	if (search) query += getSearchQuery()
@@ -211,4 +233,44 @@ exports.getPagingData = (messages, totalItems, page, limit) => {
 	const totalPages = Math.ceil(totalItems / limit)
 
 	return {totalItems, messages, totalPages, currentPage}
+}
+
+
+/**
+ * @author @mrhumble
+ * Breaks a message into parts
+ * @param message
+ * @param limit
+ * @return {[]}
+ */
+exports.breakIntoParts = (message, limit) => {
+
+	const queue = message.split(' ');
+	const parts = [];
+
+	while (queue.length) {
+
+		const word = queue.shift();
+
+		if (word.length >= limit)
+		{
+			parts.push(word)
+		}
+		else {
+
+			let words = word;
+
+			while (true) {
+
+				if (!queue.length || words.length > limit || words.length + queue[0].length + 1 > limit) break
+
+				words += ' ' + queue.shift();
+			}
+
+			parts.push(words)
+		}
+	}
+
+	return parts
+
 }

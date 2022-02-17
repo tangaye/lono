@@ -8,6 +8,8 @@ const logger = require("../logger")
 const helper = require("../helpers")
 const database = require("../database/connection");
 const {Op, QueryTypes} = require("sequelize");
+const ContactFactory = require("../factories/ContactsFactory")
+const MessagePart = require("../models/MessagePart");
 
 
 /**
@@ -74,28 +76,47 @@ exports.send = async (request, response) => {
 		const { sender, messages, user, gateway } = request.body;
 		const queued_messages = []
 
-		for (message of messages) {
+		for (const item of messages) {
 
-			const payload = {
-				smsId: uuidv4(),
-				recipient: message.to,
-				message: message.body,
-				sender,
-				extMessageId: message.extMessageId,
-				status: constants.PENDING_STATUS
+			const message_id = uuidv4()
+			const contact = await ContactFactory.createContact({msisdns: [item.to], user})
+			const msisdn = contact ? contact.msisdns.find(msisdn => msisdn.id === item.to) : item.to
+			const parts = MessageFactory.breakIntoParts(item.body, 160)
+			const credits = constants.SMS_TARIFF * parts.length
+
+			const message = await Message.create({
+				id: message_id,
+				message: item.body,
+				msisdn_id: msisdn.id,
+				sender_id: sender.id,
+				gateway_id: gateway.id,
+				user_id: user.id,
+				credits
+			})
+
+			for (const text of parts)
+			{
+
+				await Queue.add(
+					{
+						body: text,
+						to: item.to,
+						sender: sender.name,
+						message_id: message.id,
+						user
+					},
+					helper.getGatewayQueue(gateway.slug)
+				)
 			}
 
-			await Queue.add({
-				body: payload.message,
-				to: payload.recipient,
-				sender: payload.sender,
-				extMessageId: payload.extMessageId,
-				gateway,
-				id: payload.smsId,
-				user
-			}, helper.getGatewayQueue(gateway.slug))
-
-			queued_messages.push(payload)
+			queued_messages.push({
+				smsId: message_id,
+				recipient: item.to,
+				message: item.body,
+				credits,
+				sender,
+				extMessageId: item.extMessageId
+			})
 		}
 
 		return response.send({
@@ -173,9 +194,10 @@ exports.statistics = async (request, response) => {
 
 exports.bulkGateUpdateStatus = async (request, response) => {
     try {
-        let {status, price, smsID} = request.query
 
-        let bulkgate_statuses = [
+        const {status, price, smsID} = request.query
+
+        const bulkgate_statuses = [
             {code: 1, name: "delivered"},
             {code: 2, name: "pending"},
             {code: 3, name: "failed"}
@@ -184,11 +206,11 @@ exports.bulkGateUpdateStatus = async (request, response) => {
         if (smsID) {
 
 
-            let message = await Message.findOne({where: {
+            const message = await MessagePart.findOne({where: {
                 gateway_message_id: smsID
             }})
 
-            let message_status = bulkgate_statuses.find(item => item.code === Number(status))
+            const message_status = bulkgate_statuses.find(item => item.code === Number(status))
 
             console.log({status, price, smsID, message_status})
 
@@ -221,8 +243,8 @@ exports.bulkGateUpdateStatus = async (request, response) => {
 
         if (message_sid && message_status) {
 
-            let [meta, updated_msg] = await Message.update({status},
-                { where: { alt_gateway_message_id: message_sid }, returning: true }
+            let [meta, updated_msg] = await MessagePart.update({status},
+                { where: { gateway_message_id: message_sid }, returning: true }
             )
 
             updated_msg = JSON.parse(JSON.stringify(updated_msg))
@@ -238,36 +260,4 @@ exports.bulkGateUpdateStatus = async (request, response) => {
 		return response.status(constants.SERVER_ERROR).send({ failure: constants.SERVER_ERROR });
 	}
 }
-
-/**
- * Updates message with twilio's sid
- * @param {String} status - message status from twilio
- * @param {String} twilio_message_sid - message sid from twilio
- * @param {UUID} id - api message id
- * @returns {Object} - updated message
- */
- exports.setTwilioIds = async (status, twilio_message_sid, id) => {
-	try {
-
-
-        const gateway = await Gateway.findOne({where: {slug: constants.TWILIO_GATEWAY}})
-
-		let [meta, updated_msg] = await Message.update(
-			{
-				alt_gateway_message_id: twilio_message_sid,
-                alt_gateway_id: gateway?.id
-			},
-			{ where: { id: id }, returning: true }
-		);
-
-		updated_msg = JSON.parse(JSON.stringify(updated_msg));
-
-		return updated_msg;
-
-	} catch (error) {
-
-		logger.error("error updating message: ", error);
-		return null;
-	}
-};
 

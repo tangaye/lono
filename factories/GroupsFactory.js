@@ -72,8 +72,6 @@ exports.queryGroups = (search, group_id, order) => {
 	query += helper.getOrderQuery(order)
 	query += helper.getLimitOffsetQuery()
 
-	console.log({query})
-
 	return query
 }
 

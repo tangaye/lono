@@ -64,7 +64,16 @@ exports.store = async (request, response) => {
 	try {
 
 		const {first_name, middle_name, last_name, metadata, msisdns, groups, user} = request.body
-		const contact = await ContactFactory.createContact(first_name, middle_name, last_name, metadata, msisdns, groups, user)
+
+		const contact = await ContactFactory.createContact({
+			first_name,
+			middle_name,
+			last_name,
+			metadata,
+			msisdns,
+			groups,
+			user
+		})
 
 		if (contact) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,

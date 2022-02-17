@@ -6,7 +6,7 @@ class MessagePart extends Model {}
 MessagePart.init({
 	id: {
 		type: DataTypes.UUID,
-		defaultValue: Sequelize.UUIDV4,
+		defaultValue: DataTypes.UUIDV4,
 		allowNull: false,
 		primaryKey: true,
 	},
@@ -19,10 +19,19 @@ MessagePart.init({
 			}
 		},
 	},
+	status: {
+		type: DataTypes.STRING,
+		defaultValue: "pending",
+	},
 	credits: {
 		type: DataTypes.INTEGER,
 		defaultValue: 1,
 		allowNull: true
+	},
+	gateway_message_id: {
+		type: DataTypes.STRING,
+		allowNull: true,
+		unique: true,
 	},
 	message_id: {
 		type: DataTypes.UUID,
