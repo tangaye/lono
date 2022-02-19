@@ -198,7 +198,7 @@ exports.buildQuery = (search, message_id, order) => {
 					   json_build_object('id', g.id, 'name', g.name) AS gateway,
 					   json_build_object('id', m.id) AS msisdn,
 					   (
-							SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits))
+							SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits, 'created_at', mp.created_at))
 							FROM message_parts mp
 							WHERE mp.message_id = msg.id
 					   ) AS parts,
