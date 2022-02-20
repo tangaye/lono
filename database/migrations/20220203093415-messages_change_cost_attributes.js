@@ -12,7 +12,7 @@ module.exports = {
 			// change recipient type
 			await queryInterface.changeColumn("messages", "cost", {
 			  type: Sequelize.INTEGER,
-			  allowNull: false,
+			  allowNull: true,
 			})
 	  },
 
