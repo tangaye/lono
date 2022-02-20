@@ -18,11 +18,23 @@ User.init(
 			validate: {
 				notNull: {
 					msg: "name is required",
-				},
+				}
+			}
+		},
+		role: {
+			type: DataTypes.ENUM('admin', 'client'),
+			allowNull: false,
+			defaultValue: 'client'
+		},
+		email: {
+			type: DataTypes.STRING,
+			allowNull: false,
+			validate: {
+				isEmail: true
 			},
 		},
         credits: {
-            type: DataTypes.DECIMAL,
+            type: DataTypes.INTEGER,
             defaultValue: 0,
 			allowNull: true
         },
@@ -43,8 +55,11 @@ User.init(
 		},
 	},
 	{
+		paranoid: true,
+		deletedAt: 'deleted_at',
 		underscored: true,
-		modelName: "users",
+		modelName: "user",
+		tableName: "users",
 		sequelize, // We need to pass the connection instance
 	}
 );

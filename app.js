@@ -4,21 +4,27 @@ const express = require("express")
 const helmet = require("helmet")
 const cors = require("cors")
 const app = express()
-const Queue = require("./services/Queue")
-const {NOTFOUND, SERVER_ERROR, FAILURE_CODE, MESSAGES_QUEUE} = require("./constants")
+const Queue = require("./Queue")
+const constants = require("./constants")
 const database = require("./database/connection")
 const logger = require('./logger')
-const cron = require('node-cron')
-const JobQueries = require('./services/JobsQueries')
 const PORT = process.env.PORT || 8080
 
 const User = require("./models/User")
+const Msisdn = require("./models/Msisdn")
+const Contact = require("./models/Contact")
 const Message = require("./models/Message")
 const Sender = require("./models/Sender")
+const Group = require("./models/Group")
+const ContactGroup = require("./models/ContactGroup")
+const ContactMsisdnUser = require("./models/ContactMsisdnUser")
 
 const docRoutes = require("./routes/api.docs.route")
 const messagesRoutes = require("./routes/messages")
 const userRoutes = require("./routes/users")
+const contactRoutes = require("./routes/contacts")
+const groupRoutes = require("./routes/groups")
+const helper = require("./helpers");
 
 // app.use(helmet())
 app.use(cors())
@@ -30,17 +36,27 @@ app.use(express.static(path.join(__dirname, "public")))
 app.use(docRoutes)
 app.use("/api/v1/", messagesRoutes)
 app.use("/api/v1/", userRoutes)
+app.use("/api/v1/", contactRoutes)
+app.use("/api/v1/", groupRoutes)
 
-// db tables associations
+// tables associations
 User.hasMany(Sender);
 Sender.belongsTo(User);
 Message.belongsTo(Sender);
 Sender.hasMany(Message);
+Contact.belongsToMany(User, {through: ContactMsisdnUser})
+User.belongsToMany(Contact, {through: ContactMsisdnUser})
+Msisdn.belongsToMany(Contact, {through: ContactMsisdnUser})
+Contact.belongsToMany(Msisdn, {through: ContactMsisdnUser})
+User.hasMany(Message)
+Message.belongsTo(User)
+Group.belongsToMany(Contact, {through: ContactGroup})
+Contact.belongsToMany(Group, {through: ContactGroup})
 
 //404 middleware, should be below routes
 app.use((request, response, next) =>
-	response.status(NOTFOUND).send({
-		errorCode: FAILURE_CODE,
+	response.status(constants.NOTFOUND).send({
+		errorCode: constants.FAILURE_CODE,
 		errorMessage: `${request.originalUrl} not found`,
 	})
 )
@@ -48,46 +64,35 @@ app.use((request, response, next) =>
 // 500 middleware
 app.use((error, request, response, next) => {
 	console.error(error.stack)
-	return response.status(SERVER_ERROR).send({
-		errorCode: FAILURE_CODE,
+	return response.status(constants.SERVER_ERROR).send({
+		errorCode: constants.FAILURE_CODE,
 		errorMessage: "An unexpected error occured.",
 	})
 });
 
 
 (async () => {
+
 	try {
 
+		helper.checkEnvVariables()
+
         await Promise.all([
-            database.authenticate(),
-            Queue.createQueue(MESSAGES_QUEUE)
-        ])
+			database.authenticate(),
+			Queue.createQueue(constants.BULKGATE_MESSAGES_QUEUE),
+			Queue.createQueue(constants.TWILIO_MESSAGES_QUEUE)
+		])
 
+		app.listen(PORT, () => logger.log(`app listening on localhost:${PORT}`))
 
-        require("./services/MessageQueueWorker").start()
+		require("./workers/BulkgateWorker").start()
+		require("./workers/TwilioWorker").start()
 
 		logger.log("database connection has been established successfully.")
 
-        app.listen(PORT, () => logger.log(`app listening on localhost:${PORT}`))
-        app.use(logger.rollbar.errorHandler())
-
-        // Run job every 10 minutes
-        // cron.schedule('*/10 * * * *', async () => {
-
-        //     let messages = await JobQueries.findPendingFailedMessages()
-
-        //     console.log('Messages to retry: ', {messages})
-
-        //     // add messages to queue
-        //     for (message of messages) {
-        //         Queue.add(message, MESSAGES_QUEUE)
-        //         await Message.update({retries: 1}, {where: {id: message.id}})
-        //     }
-
-        // })
-
 	} catch (error) {
-        console.log(error)
-        logger.error("Unable to connect to the database:", error)
+
+        logger.log("error starting app: ", error)
 	}
+
 })()

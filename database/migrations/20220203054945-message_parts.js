@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
@@ -8,45 +8,37 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
 		 */
-		await queryInterface.createTable("messages", {
+		await queryInterface.createTable("message_parts", {
 			id: {
 				allowNull: false,
 				primaryKey: true,
 				type: Sequelize.UUID,
 				defaultValue: Sequelize.UUIDV4,
 			},
-			recipient: {
-				type: Sequelize.STRING,
-				allowNull: false
-			},
-			message: {
-				type: Sequelize.TEXT,
-				allowNull: false
-			},
-			sender_id: {
+			message_id: {
 				type: Sequelize.UUID,
 				allowNull: false,
-				onDelete: "RESTRICT",
+				onDelete: "CASCADE",
+				onUpdate: "CASCADE",
 				references: {
-					model: "senders",
+					model: "messages",
 					key: "id",
-					as: "sender_id",
+					as: "message_id",
 				},
 			},
-            gateway_id: {
-				type: Sequelize.UUID,
-				allowNull: false,
-				onDelete: "RESTRICT",
-				references: {
-					model: "gateways",
-					key: "id",
-					as: "gateway_id",
-				},
+			part: {
+				type: Sequelize.STRING(160),
+				allowNull: false
 			},
-			ext_message_id: {
+			credits: {
+				type: Sequelize.INTEGER,
+				defaultValue: 1,
+				allowNull: false
+			},
+			status: {
 				type: Sequelize.STRING,
-				allowNull: true,
-				comment: "external message id from user's app",
+				allowNull: false,
+				defaultValue: "pending"
 			},
 			gateway_message_id: {
 				type: Sequelize.STRING,
@@ -54,15 +46,7 @@ module.exports = {
 				unique: true,
 				comment: "Message id from sms gateway service.",
 			},
-			status: {
-				type: Sequelize.STRING,
-				allowNull: false
-			},
-            cost: {
-                type: Sequelize.DECIMAL,
-				allowNull: true
-            },
-            deleted_at: {
+			deleted_at: {
 				allowNull: true,
 				type: Sequelize.DATE,
 			},
@@ -84,6 +68,6 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.dropTable('users');
 		 */
-		await queryInterface.dropTable("messages")
-	},
+		await queryInterface.dropTable("message_parts");
+	}
 };

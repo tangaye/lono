@@ -3,33 +3,21 @@ const path = require("path");
 
 module.exports = {
 	development: {
-		username: process.env.DB_USERNAME,
-		password: process.env.DB_PASSWORD,
-		database: process.env.DB_NAME,
-		host: process.env.DB_HOSTNAME,
-		port: process.env.DB_PORT,
+		url: process.env.DB_URL,
 		dialect: "postgres",
 		dialectOptions: {
 			bigNumberStrings: true,
 		},
 	},
     staging: {
-		username: process.env.DB_USERNAME,
-		password: process.env.DB_PASSWORD,
-		database: process.env.DB_NAME,
-		host: process.env.DB_HOSTNAME,
-		port: process.env.DB_PORT,
+		url: process.env.DB_URL,
 		dialect: "postgres",
 		dialectOptions: {
 			bigNumberStrings: true,
 		},
 	},
 	production: {
-		username: process.env.DB_USERNAME,
-		password: process.env.DB_PASSWORD,
-		database: process.env.DB_NAME,
-		host: process.env.DB_HOSTNAME,
-		port: process.env.DB_PORT,
+		url: process.env.DB_URL,
 		dialect: "postgres",
 		dialectOptions: {
 			bigNumberStrings: true,

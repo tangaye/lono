@@ -7,15 +7,9 @@ require("dotenv").config({
 const environment = process.env.NODE_ENV;
 const config = require("./config")[environment];
 
-
-const database = new sequelize(
-	config.database,
-	config.username,
-	config.password,
+const database = new sequelize(config.url,
 	{
-		host: config.host,
 		dialect: config.dialect,
-		port: config.port,
 		pool: {
 			max: 2,
 			min: 0,
@@ -29,7 +23,7 @@ const database = new sequelize(
 			updatedAt: "updated_at",
 		},
 		dialectOptions: config.dialectOptions,
-		logging: environment === "production" ? true : false,
+		logging: environment === "production",
 	}
 );
 

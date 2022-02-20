@@ -2,8 +2,8 @@
 
 const { v4: uuidv4 } = require("uuid");
 const helpers = require("../../helpers")
+const constants = require("../../constants")
 const User = require("../../models/User");
-const constants = require("../../constants");
 
 module.exports = {
 	up: async (queryInterface, Sequelize) => {
@@ -16,11 +16,13 @@ module.exports = {
 		 *   isBetaMember: false
 		 * }], {});
 		 */
-		let user_count = await User.count();
+		const admin_user_found = await User.findOne({
+			where: {role: constants.ADMIN_ROLE}
+		});
 
 		// Insert only when there are no records
-		if (user_count > 0) {
-			console.log("\x1b[36m", "users table is already seeded!", "\x1b[0m");
+		if (admin_user_found) {
+			console.log("\x1b[36m", "users table is already seeded with admin user!", "\x1b[0m");
 			return;
 		}
 
@@ -29,27 +31,17 @@ module.exports = {
 			[
 				{
 					id: uuidv4(),
-					name: "Lono Demo",
-					role: constants.CLIENT_ROLE,
-                    credits: 500,
-                    allow_overdraft: false,
+					name: "Admin",
+					role: constants.ADMIN_ROLE,
+					credits: 0,
+					allow_overdraft: false,
 					api_key: helpers.generateSecret(),
 					created_at: new Date(Date.now()).toISOString(),
 					updated_at: new Date(Date.now()).toISOString(),
-				},
-				{
-					id: uuidv4(),
-					name: "Kwagei Group",
-					role: constants.CLIENT_ROLE,
-                    credits: 1000,
-                    allow_overdraft: false,
-					api_key: helpers.generateSecret(),
-					created_at: new Date(Date.now()).toISOString(),
-					updated_at: new Date(Date.now()).toISOString(),
-				},
+				}
 			],
 			{}
-		);
+		)
 	},
 
 	down: async (queryInterface, Sequelize) => {
@@ -59,6 +51,6 @@ module.exports = {
 		 * Example:
 		 * await queryInterface.bulkDelete('People', null, {});
 		 */
-		await queryInterface.bulkDelete("users", null, {});
+		await queryInterface.bulkDelete('users', {role: constants.ADMIN_ROLE}, {})
 	},
 };

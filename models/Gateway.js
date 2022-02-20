@@ -37,8 +37,10 @@ Gateway.init(
 		},
 	},
 	{
+		paranoid: true,
+		deletedAt: 'deleted_at',
 		underscored: true,
-		modelName: "gateways",
+		tableName: "gateways",
 		sequelize, // We need to pass the connection instance
 	}
 );

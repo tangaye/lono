@@ -1,9 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../database/connection");
 
-class Sender extends Model {}
+class ContactGroup extends Model {}
 
-Sender.init(
+ContactGroup.init(
 	{
 		id: {
 			type: DataTypes.UUID,
@@ -11,22 +11,21 @@ Sender.init(
 			allowNull: false,
 			primaryKey: true,
 		},
-		name: {
-			type: DataTypes.STRING(11),
-			unique: true,
-			allowNull: false,
-			validate: {
-				notNull: {
-					msg: "name is required",
-				},
-			},
-		},
-		user_id: {
+		contact_id: {
 			type: DataTypes.UUID,
 			allowNull: false,
 			validate: {
 				notNull: {
-					msg: "user_id is required",
+					msg: "contact_id is required",
+				},
+			},
+		},
+		group_id: {
+			type: DataTypes.UUID,
+			allowNull: false,
+			validate: {
+				notNull: {
+					msg: "group_id is required",
 				},
 			},
 		},
@@ -35,9 +34,9 @@ Sender.init(
 		paranoid: true,
 		deletedAt: 'deleted_at',
 		underscored: true,
-		modelName: "senders",
+		tableName: "contact_groups",
 		sequelize, // We need to pass the connection instance
 	}
 );
 
-module.exports = Sender;
+module.exports = ContactGroup;
