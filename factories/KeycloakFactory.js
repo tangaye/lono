@@ -2,7 +2,7 @@ const logger = require("../logger")
 const KeycloakAdminClient = require('@keycloak/keycloak-admin-client').default
 
 const kcAdminClient = new KeycloakAdminClient({
-	baseUrl: `${process.env.KC_SERVER_URL}/`,
+	baseUrl: `${process.env.KC_SERVER_URL}`,
 	realmName: process.env.KC_REALM
 })
 
