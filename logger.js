@@ -20,7 +20,7 @@ exports.error = (message, err) => {
                 accessToken: process.env.ROLLBAR_ACCESS_TOKEN,
                 captureUncaught: true,
                 captureUnhandledRejections: true,
-                enabled: isDevelopment
+                enabled: true
             })
 
             if (err?.response) {

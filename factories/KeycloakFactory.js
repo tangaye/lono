@@ -41,6 +41,7 @@ exports.createUser = async (email, password, api_key) => {
 	}
 	catch (error)
 	{
+		console.log({error})
 		logger.error("error creating keycloak user: ", error?.response?.data ? error?.response?.data : error)
 		return null
 	}

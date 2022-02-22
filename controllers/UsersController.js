@@ -48,6 +48,8 @@ exports.store = async (request, response) => {
 
 		const result = await KeycloakFactory.createUser(email, password, api_key)
 
+		console.log({result})
+
 		if (result)
 		{
 			const user = await User.create({name, email, credits, api_key})
