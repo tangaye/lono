@@ -161,6 +161,7 @@ const getSearchQuery = () => ` WHERE (
 	result.msisdn ->> 'id' ilike :search OR
 	result.gateway ->> 'name' ilike :search OR
 	result.sender ->> 'name' ilike :search OR
+	result.parts::jsonb @? '$[*].status ? (@ like_regex "failed" flag "i")' OR
 	result.message iLike :search OR
 	result.status iLike :search
 )`
