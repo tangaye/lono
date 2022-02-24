@@ -2,6 +2,7 @@ const database = require("../database/connection")
 const Message = require("../models/Message")
 const {Op, QueryTypes} = require("sequelize")
 const Sender = require("../models/Sender")
+const MessagePart = require("../models/MessagePart")
 const constants = require("../constants")
 const logger = require("../logger")
 const helper = require("../helpers")
@@ -81,10 +82,15 @@ exports.latestFive = async sender_ids => {
 	try {
 		let messages = await Message.findAll({
 			attributes: constants.MESSAGES_ATTRIBUTES,
-			include: {
-				model: Sender,
-				attributes: ["name"],
-			},
+			include: [
+				{
+					model: Sender,
+					attributes: ['id', "name"],
+				},
+					{
+					model: MessagePart,
+						attributes: ['id', 'name', 'part', 'status']
+				}],
 			where: {sender_id: { [Op.in]: sender_ids }},
 			order: [['created_at', 'desc']],
 			limit: 5

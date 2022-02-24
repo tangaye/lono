@@ -16,6 +16,7 @@ const Contact = require("./models/Contact")
 const Message = require("./models/Message")
 const Sender = require("./models/Sender")
 const Group = require("./models/Group")
+const MessagePart = require("./models/MessagePart")
 const ContactGroup = require("./models/ContactGroup")
 const ContactMsisdnUser = require("./models/ContactMsisdnUser")
 
@@ -52,6 +53,8 @@ User.hasMany(Message)
 Message.belongsTo(User)
 Group.belongsToMany(Contact, {through: ContactGroup})
 Contact.belongsToMany(Group, {through: ContactGroup})
+Message.hasMany(MessagePart)
+MessagePart.belongsTo(Message)
 
 //404 middleware, should be below routes
 app.use((request, response, next) =>
