@@ -127,7 +127,7 @@ exports.send = async (request, response) => {
 
 	} catch (error) {
 
-		logger.error("error sending messages: ", error);
+		logger.error("error sending messages test: ", error);
 
 		return response.status(constants.SERVER_ERROR).send({
 			errorCode: constants.FAILURE_CODE,
