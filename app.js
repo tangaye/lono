@@ -43,7 +43,7 @@ app.use("/api/v1/", groupRoutes)
 // tables associations
 User.hasMany(Sender);
 Sender.belongsTo(User);
-Message.belongsTo(Sender);
+Message.belongsTo(Sender, {foreignKey: 'message_id'});
 Sender.hasMany(Message);
 Contact.belongsToMany(User, {through: ContactMsisdnUser})
 User.belongsToMany(Contact, {through: ContactMsisdnUser})

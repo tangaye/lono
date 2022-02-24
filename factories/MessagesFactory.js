@@ -80,21 +80,38 @@ exports.totalToday = async sender_ids => {
  */
 exports.latestFive = async sender_ids => {
 	try {
-		let messages = await Message.findAll({
-			attributes: constants.MESSAGES_ATTRIBUTES,
-			include: [
-				{
-					model: Sender,
-					attributes: ['id', "name"],
-				},
-					{
-					model: MessagePart,
-						attributes: ['id', 'name', 'part', 'status']
-				}],
-			where: {sender_id: { [Op.in]: sender_ids }},
-			order: [['created_at', 'desc']],
-			limit: 5
+		const messages = await database.query(`
+			SELECT 
+				   msg.id,
+				   msg.message,
+				   msg.credits,
+				   msg.status,
+				   json_build_object('id', s.id, 'name', s.name) AS sender,
+				   json_build_object('id', g.id, 'name', g.name) AS gateway,
+				   json_build_object('id', m.id) AS msisdn,
+				   (
+						SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits, 'created_at', mp.created_at))
+						FROM message_parts mp
+						WHERE mp.message_id = msg.id
+				   ) AS parts,
+				   (
+						SELECT json_build_object('id', u.id, 'name', u.name, 'created_at', u.created_at)
+						FROM users u
+						WHERE u.id = msg.user_id
+				   ) AS user,
+				   msg.created_at
+			FROM messages msg
+				INNER JOIN msisdns m ON m.id = msg.msisdn_id
+				INNER JOIN gateways g ON g.id = msg.gateway_id
+				INNER JOIN senders s ON msg.sender_id = s.id
+			WHERE msg.sender_id IN (:senders)
+			ORDER BY created_at DESC
+			LIMIT 5
+		`, {
+			replacements: {senders: sender_ids},
+			type: QueryTypes.SELECT
 		})
+
 
 		if (messages) return messages
 		return []
