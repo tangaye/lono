@@ -1,5 +1,4 @@
 const Message = require("../models/Message")
-const Gateway = require("../models/Gateway")
 const Queue = require("../Queue")
 const { v4: uuidv4 } = require("uuid")
 const constants = require("../constants")
