@@ -88,7 +88,7 @@ exports.latestFive = async sender_ids => {
 				   msg.status,
 				   json_build_object('id', s.id, 'name', s.name) AS sender,
 				   json_build_object('id', g.id, 'name', g.name) AS gateway,
-				   json_build_object('id', m.id) AS msisdn,
+				   json_build_object('recipient', m.id) AS msisdn,
 				   (
 						SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits, 'created_at', mp.created_at))
 						FROM message_parts mp
