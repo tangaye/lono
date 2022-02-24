@@ -82,9 +82,9 @@ exports.latestFive = async sender_ids => {
 	try {
 		const messages = await database.query(`
 			SELECT 
-				   msg.id,
+				   msg.id AS "smsId",
 				   msg.message,
-				   msg.credits,
+				   msg.credits AS cost,
 				   msg.status,
 				   json_build_object('id', s.id, 'name', s.name) AS sender,
 				   json_build_object('id', g.id, 'name', g.name) AS gateway,
@@ -99,13 +99,13 @@ exports.latestFive = async sender_ids => {
 						FROM users u
 						WHERE u.id = msg.user_id
 				   ) AS user,
-				   msg.created_at
+				   msg.created_at AS date
 			FROM messages msg
 				INNER JOIN msisdns m ON m.id = msg.msisdn_id
 				INNER JOIN gateways g ON g.id = msg.gateway_id
 				INNER JOIN senders s ON msg.sender_id = s.id
 			WHERE msg.sender_id IN (:senders)
-			ORDER BY created_at DESC
+			ORDER BY msg.created_at DESC
 			LIMIT 5
 		`, {
 			replacements: {senders: sender_ids},
