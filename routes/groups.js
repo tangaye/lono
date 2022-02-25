@@ -7,4 +7,6 @@ router.route('/groups')
 	.get([authenticate, validateAll], GroupsController.all)
 	.post([authenticate, validateStore], GroupsController.store)
 
+router.get('/groups/:id', authenticate, GroupsController.getContacts)
+
 module.exports = router;
