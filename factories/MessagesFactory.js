@@ -172,20 +172,21 @@ exports.storeMessage = async (
  * messages id query
  * @return {string}
  */
-const getIdQuery = search => search ? ` AND result.id = :message_id` : ` WHERE result.id = :message_id`
+const getIdQuery = () => ` AND msg.id = :message_id`
+
+const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, msg.id, s.id, g.id, m.id, u.id`
 
 /**
  * messages search query
  * @return {string}
  */
-const getSearchQuery = () => ` WHERE (
-	result.user ->> 'name' ilike :search OR
-	result.msisdn ->> 'id' ilike :search OR
-	result.gateway ->> 'name' ilike :search OR
-	result.sender ->> 'name' ilike :search OR
-	result.parts::jsonb @? '$[*].status ? (@ like_regex "failed" flag "i")' OR
-	result.message iLike :search OR
-	result.status iLike :search
+const getSearchQuery = () => ` AND (
+	u.name ilike :search OR
+	m.id ilike :search OR
+	g.name ilike :search OR
+	s.name ilike :search OR
+	msg.message ilike :search OR
+    mp.status ilike :search
 )`
 
 
@@ -212,37 +213,29 @@ exports.buildQuery = (search, message_id, order) => {
 	order = order ? order.toUpperCase() : 'DESC'
 
 	let query = `
-				SELECT *
-				FROM (
-					SELECT 
-						   msg.id,
-						   msg.message,
-						   msg.credits,
-						   msg.status,
-						   json_build_object('id', s.id, 'name', s.name) AS sender,
-						   json_build_object('id', g.id, 'name', g.name) AS gateway,
-						   json_build_object('id', m.id) AS msisdn,
-						   (
-								SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits, 'created_at', mp.created_at))
-								FROM message_parts mp
-								WHERE mp.message_id = msg.id
-						   ) AS parts,
-						   (
-								SELECT json_build_object('id', u.id, 'name', u.name, 'created_at', u.created_at)
-								FROM users u
-								WHERE u.id = msg.user_id
-						   ) AS user,
-						   msg.created_at
-					FROM messages msg
-						INNER JOIN msisdns m ON m.id = msg.msisdn_id
-						INNER JOIN gateways g ON g.id = msg.gateway_id
-						INNER JOIN senders s ON msg.sender_id = s.id
-					WHERE msg.sender_id IN (:senders)
-				) result`
+				SELECT
+						msg.id,
+						msg.message,
+						msg.credits,
+						msg.status,
+						json_build_object('id', s.id, 'name', s.name) AS sender,
+						json_build_object('id', g.id, 'name', g.name) AS gateway,
+						json_build_object('id', u.id, 'name', u.name) AS user,
+						json_build_object('id', m.id) AS msisdn,
+						json_agg(json_build_object('id', mp.id, 'part', mp.part, 'status', mp.status)) as parts,
+						msg.created_at
+				FROM messages msg
+					INNER JOIN message_parts mp on msg.id = mp.message_id
+					INNER JOIN msisdns m ON m.id = msg.msisdn_id
+					INNER JOIN gateways g ON g.id = msg.gateway_id
+					INNER JOIN senders s ON msg.sender_id = s.id
+					INNER JOIN users u on u.id = msg.user_id
+				WHERE msg.sender_id IN (:senders)`
 
 	if (search) query += getSearchQuery()
 	if (message_id) query += getIdQuery(search)
 
+	query += getGroupByQuery()
 	query += helper.getOrderQuery(order)
 	query += helper.getLimitOffsetQuery()
 
