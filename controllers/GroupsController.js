@@ -7,6 +7,7 @@ const database = require("../database/connection")
 const {QueryTypes} = require("sequelize")
 const Contact = require("../models/Contact");
 const Msisdn = require("../models/Msisdn");
+const ContactGroup = require("../models/ContactGroup");
 
 exports.all = async (request, response) => {
 
@@ -57,9 +58,27 @@ exports.store = async (request, response) => {
 
 	try
 	{
-		const {name, description, user} = request.body
+		const {name, description, user, contacts} = request.body
 
-		const group = await Group.create({name, description, user_id: user.id})
+		const [group, created] = await Group.findOrCreate({
+			defaults: {name, description, user_id: user.id},
+			where: {name, description, user_id: user.id}
+		})
+
+		// assign to contacts
+		if (contacts && contacts.length > 0) {
+
+			for (const id of contacts)
+			{
+				const contact = await Contact.findByPk(id)
+
+				if (contact) await ContactGroup.findOrCreate({
+					defaults: {contact_id: contact.id, group_id: group.id},
+					where: {contact_id: contact.id, group_id: group.id}
+				})
+			}
+
+		}
 
 		if (group) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
@@ -73,7 +92,7 @@ exports.store = async (request, response) => {
 	}
 	catch (error)
 	{
-		const message = "error fetching groups"
+		const message = "error creating groups"
 		logger.error(message, error)
 
 		return helper.respond(response, {
