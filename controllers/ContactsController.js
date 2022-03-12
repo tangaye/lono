@@ -1,10 +1,9 @@
 const ContactFactory = require("../factories/ContactsFactory")
 const database = require("../database/connection")
-const ContactMsisdnUser = require("../models/ContactMsisdnUser")
-const logger = require("../logger")
+const {QueryTypes} = require("sequelize")
 const constants = require("../constants")
 const helper = require("../helpers")
-const {QueryTypes} = require("sequelize")
+const logger = require("../logger")
 
 exports.all = async (request, response) => {
 
@@ -89,6 +88,66 @@ exports.store = async (request, response) => {
 	catch (error)
 	{
 		const message = "error creating contact"
+
+		logger.log(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
+		})
+	}
+}
+
+
+/**
+ * Returns all contacts for a user
+ * @param request
+ * @param response
+ * @return {Promise<*>}
+ */
+exports.allWithoutSearch = async (request, response) => {
+
+	try {
+
+		const user = request.body.user
+
+		const contacts = await database.query(`
+			SELECT
+				   contacts.id,
+				   first_name,
+				   middle_name,
+				   last_name,
+				   contacts.created_at,
+				   json_agg(json_build_object('id', cmu.msisdn_id)) as msisdns,
+				   (
+						SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
+						FROM contact_groups
+						LEFT JOIN groups g ON g.id = contact_groups.group_id
+						WHERE contact_groups.contact_id = contacts.id AND g.user_id = :user_id
+				   ) AS groups
+			FROM contacts
+			INNER JOIN contact_msisdns_users cmu on contacts.id = cmu.contact_id
+			WHERE cmu.user_id = :user_id
+			GROUP BY id
+		`, {
+			replacements: {user_id: user.id},
+			type: QueryTypes.SELECT
+		})
+
+		if (contacts) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			contacts
+		})
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error fetching contacts"
+		})
+
+	}
+	catch (error)
+	{
+		const message = "error fetching contacts"
 
 		logger.log(message, error)
 

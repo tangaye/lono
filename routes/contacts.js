@@ -7,4 +7,6 @@ router.route('/contacts')
 	.get([authenticate, validateAll], ContactsController.all)
 	.post([authenticate, validateStore], ContactsController.store)
 
+router.get('/contacts/all', authenticate, ContactsController.allWithoutSearch)
+
 module.exports = router;
