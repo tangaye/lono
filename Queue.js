@@ -107,6 +107,6 @@ redisClient
 		logger.log("connected to redis");
 	})
 	.on("error", function (error) {
-		logger.log("unable to connect to redis");
+		logger.error("unable to connect to redis");
 		// console.error(error);
 	});
