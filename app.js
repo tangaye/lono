@@ -91,6 +91,8 @@ app.use((error, request, response, next) => {
 		require("./workers/BulkgateWorker").start()
 		require("./workers/TwilioWorker").start()
 
+		require("./jobs/citimay").start()
+
 		logger.log("database connection has been established successfully.")
 
 	} catch (error) {

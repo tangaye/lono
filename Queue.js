@@ -46,7 +46,7 @@ exports.createQueue = async (queue) => {
 		if (error.name === "queueExists") {
 			logger.log(`Queue Exists: ${queue}`);
 		} else {
-			logger.log("error creating queue: ", error);
+			logger.error("error creating queue: ", error);
 		}
 		return 0
 	}
@@ -74,7 +74,7 @@ exports.add = async (data, queue) => {
 		return response
 
 	} catch (error) {
-		logger.log("error sending message to queue: ", error);
+		logger.error("error sending message to queue: ", error);
 	}
 };
 
@@ -97,7 +97,7 @@ exports.removeFromQueue = async (qname, id) => {
 
 		return response
 	} catch (error) {
-		logger.log("error removing message from queue: ", error);
+		logger.error("error removing message from queue: ", error);
 	}
 
 }

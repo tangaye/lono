@@ -27,6 +27,7 @@ worker.on("message", async function (msg, next, msgid) {
 			})
 
 			await UsersController.updateCredits(user.id)
+			console.log('message sent..')
 
 			await Queue.removeFromQueue(constants.BULKGATE_MESSAGES_QUEUE, msgid);
 		}

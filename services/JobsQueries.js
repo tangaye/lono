@@ -23,3 +23,28 @@ exports.findPendingFailedMessages = async () => {
         return []
     }
 }
+
+exports.citiMay = async () => {
+    try {
+
+        const sql = `
+            select messages.id, message, msisdn_id, sender_id, user_id, gateway_id, created_at
+            from messages
+            WHERE messages.created_at::date between '2022-04-28' and '2022-05-2'
+              and messages.id not in (select message_id from message_parts)
+            ORDER BY messages.created_at DESC
+            LIMIT 1
+        `
+        // AND (retries IS NULL OR retries <> 1)
+        const messages = await database.query(sql, {
+            nest: true,
+            type: QueryTypes.SELECT
+        })
+
+        if (messages) return messages
+        return []
+    } catch (error) {
+        logger.log('citiMay: ', error)
+        return []
+    }
+}

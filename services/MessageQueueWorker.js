@@ -15,7 +15,9 @@ worker.on("message", async function (msg, next, msgid) {
         let gateway_slug = constants.TWILIO_GATEWAY
         let message_stored = await Message.findByPk(id)
 
-        // If the message doesn't exists then it is being sent for the first time
+		console.log({message, message_stored})
+
+        // If the message doesn't exist then it is being sent for the first time
         if (!message_stored) {
 
             // save message
