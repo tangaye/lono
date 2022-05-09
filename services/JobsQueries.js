@@ -64,7 +64,7 @@ exports.failedMessagesToRetry = async () => {
                    mp.created_at
             from messages
             inner join message_parts mp on messages.id = mp.message_id
-            where mp.status = 'failed' and mp.created_at::date between '2022-05-06' and current_date
+            where mp.status = 'failed' and messages.retries IS NULL and mp.created_at::date between '2022-05-06' and current_date
             ORDER BY messages.created_at DESC
             LIMIT 1
         `

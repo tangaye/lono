@@ -22,6 +22,7 @@ exports.MESSAGES_ATTRIBUTES = [
 ]
 
 exports.BULKGATE_MESSAGES_QUEUE = 'bulkgate_messages_queue'
+exports.BULKGATE_MESSAGES_RETRY_QUEUE = 'bulkgate_messages_queue_retry'
 exports.TWILIO_MESSAGES_QUEUE = 'twilio_messages_queue'
 exports.ADMIN_ROLE = "admin"
 exports.CLIENT_ROLE = "client"

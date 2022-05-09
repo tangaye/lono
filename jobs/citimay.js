@@ -10,12 +10,12 @@ const User = require("../models/User");
 const Gateway = require("../models/Gateway");
 
 // Run job every 5 seconds: */5 * * * * *
-const job = cron.schedule('*/10 * * * * *', async () =>  {
+const job = cron.schedule('*/5 * * * * *', async () =>  {
 
 	try {
 
-		// const messages = await JobQueries.failedMessagesToRetry()
-		const messages = [] //await JobQueries.failedMessagesToRetry()
+		const messages = await JobQueries.failedMessagesToRetry()
+		// const messages = [] //await JobQueries.failedMessagesToRetry()
 
 		console.log('DATA FROM JOB: ', messages)
 
@@ -37,7 +37,7 @@ const job = cron.schedule('*/10 * * * * *', async () =>  {
 			}
 
 			// add to queue
-			await Queue.add(payload, helper.getGatewayQueue(gateway.slug))
+			await Queue.add(payload, helper.getGatewayQueue(gateway.slug) + '_retry')
 		}
 	}
 	catch (error)
