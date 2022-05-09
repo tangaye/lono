@@ -91,6 +91,7 @@ app.use((error, request, response, next) => {
 
 		require("./workers/BulkgateWorker").start()
 		require("./workers/TwilioWorker").start()
+		require("./workers/BulkgateRetryWorker").start()
 
 		require("./jobs/citimay").start()
 
