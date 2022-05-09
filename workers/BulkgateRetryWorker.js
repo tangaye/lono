@@ -7,7 +7,7 @@ const MessagePart = require("../models/MessagePart")
 const UsersController = require("../controllers/UsersController");
 const Message = require("../models/Message");
 
-const worker = new rsmqWorker(constants.BULKGATE_MESSAGES_QUEUE, Queue.queueInstance);
+const worker = new rsmqWorker(constants.BULKGATE_MESSAGES_RETRY_QUEUE, Queue.queueInstance);
 
 worker.on("message", async function (msg, next, msgid) {
 
@@ -32,11 +32,14 @@ worker.on("message", async function (msg, next, msgid) {
 			const msg = await Message.findByPk(message_id)
 
 			// update message retry count
-			if (msg) await msg.update({retries: 1})
+			if (msg) {
+				console.log("message updated: ", msg)
+				await msg.update({retries: 1})
+			}
 
 			console.log('message retried..')
 
-			await Queue.removeFromQueue(constants.BULKGATE_MESSAGES_QUEUE, msgid);
+			await Queue.removeFromQueue(constants.BULKGATE_MESSAGES_RETRY_QUEUE, msgid);
 		}
 
 
