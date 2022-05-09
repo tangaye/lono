@@ -83,7 +83,8 @@ app.use((error, request, response, next) => {
         await Promise.all([
 			database.authenticate(),
 			Queue.createQueue(constants.BULKGATE_MESSAGES_QUEUE),
-			Queue.createQueue(constants.TWILIO_MESSAGES_QUEUE)
+			Queue.createQueue(constants.TWILIO_MESSAGES_QUEUE),
+			Queue.createQueue(constants.BULKGATE_MESSAGES_RETRY_QUEUE)
 		])
 
 		app.listen(PORT, () => logger.log(`app listening on localhost:${PORT}`))
