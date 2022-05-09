@@ -10,12 +10,11 @@ const User = require("../models/User");
 const Gateway = require("../models/Gateway");
 
 // Run job every 5 seconds: */5 * * * * *
-
 const job = cron.schedule('*/10 * * * * *', async () =>  {
 
 	try {
 
-		const messages = await JobQueries.citiMay()
+		const messages = await JobQueries.failedMessagesToRetry()
 
 		console.log('DATA FROM JOB: ', messages)
 

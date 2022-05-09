@@ -48,3 +48,36 @@ exports.citiMay = async () => {
         return []
     }
 }
+
+exports.failedMessagesToRetry = async () => {
+    try {
+
+        const sql = `
+            select messages.id,
+                   message,
+                   sender_id,
+                   msisdn_id,
+                   mp.status,
+                   sender_id,
+                   user_id,
+                   gateway_id,
+                   mp.created_at
+            from messages
+            inner join message_parts mp on messages.id = mp.message_id
+            where mp.status = 'failed' and mp.created_at::date between '2022-05-06' and current_date
+            ORDER BY messages.created_at DESC
+            LIMIT 1
+        `
+        // AND (retries IS NULL OR retries <> 1)
+        const messages = await database.query(sql, {
+            nest: true,
+            type: QueryTypes.SELECT
+        })
+
+        if (messages) return messages
+        return []
+    } catch (error) {
+        logger.log('failedMessagesToRetry: ', error)
+        return []
+    }
+}
