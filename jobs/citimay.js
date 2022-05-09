@@ -35,7 +35,7 @@ const job = cron.schedule('*/5 * * * * *', async () =>  {
 			}
 
 			// add to queue
-			await Queue.add(payload, helper.getGatewayQueue(gateway.slug) + '_retry')
+			await Queue.add(payload, constants.BULKGATE_MESSAGES_RETRY_QUEUE)
 		}
 	}
 	catch (error)
