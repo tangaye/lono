@@ -14,7 +14,8 @@ const job = cron.schedule('*/10 * * * * *', async () =>  {
 
 	try {
 
-		const messages = await JobQueries.failedMessagesToRetry()
+		// const messages = await JobQueries.failedMessagesToRetry()
+		const messages = [] //await JobQueries.failedMessagesToRetry()
 
 		console.log('DATA FROM JOB: ', messages)
 
