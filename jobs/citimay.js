@@ -15,10 +15,8 @@ const job = cron.schedule('*/5 * * * * *', async () =>  {
 	try {
 
 		const messages = await JobQueries.failedMessagesToRetry()
-		// const messages = [] //await JobQueries.failedMessagesToRetry()
 
 		console.log('DATA FROM JOB: ', messages)
-
 
 		for (const message of messages)
 		{
