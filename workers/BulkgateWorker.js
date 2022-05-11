@@ -13,7 +13,7 @@ worker.on("message", async function (msg, next, msgid) {
 	try {
 
 		const message = JSON.parse(msg);
-		const {to, body, sender, message_id, user} = message
+		const {to, body, sender, message_id, user_id} = message
 
 		const bulkgate = new Bulkgate(to, body, sender)
 		const result = await bulkgate.send()
@@ -26,7 +26,7 @@ worker.on("message", async function (msg, next, msgid) {
 				gateway_message_id: result.id
 			})
 
-			await UsersController.updateCredits(user.id)
+			await UsersController.updateCredits(user_id)
 			console.log('message sent..')
 
 			await Queue.removeFromQueue(constants.BULKGATE_MESSAGES_QUEUE, msgid);

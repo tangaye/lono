@@ -24,6 +24,7 @@ exports.MESSAGES_ATTRIBUTES = [
 exports.BULKGATE_MESSAGES_QUEUE = 'bulkgate_messages_queue'
 exports.BULKGATE_MESSAGES_RETRY_QUEUE = 'bulkgate_messages_queue_retry'
 exports.TWILIO_MESSAGES_QUEUE = 'twilio_messages_queue'
+exports.TWILIO_MESSAGES_RETRY_QUEUE = 'twilio_messages_queue_retry'
 exports.ADMIN_ROLE = "admin"
 exports.CLIENT_ROLE = "client"
 
@@ -48,4 +49,6 @@ exports.ENV_VARIABLES = [
 	'KC_REALM',
 	'KC_SERVER_URL'
 ]
+
+exports.PORT = process.env.PORT || 8080
 

@@ -1,21 +1,22 @@
 const path = require("path")
-require("dotenv").config({path: path.join(__dirname, "./.env")})
 const express = require("express")
 const helmet = require("helmet")
 const cors = require("cors")
 const app = express()
+const jobs = require('./Jobs')
 const Queue = require("./Queue")
+const logger = require('./logger')
+const helper = require("./helpers")
 const constants = require("./constants")
 const database = require("./database/connection")
-const logger = require('./logger')
-const PORT = process.env.PORT || 8080
+require("dotenv").config({path: path.join(__dirname, "./.env")})
 
 const User = require("./models/User")
+const Group = require("./models/Group")
 const Msisdn = require("./models/Msisdn")
+const Sender = require("./models/Sender")
 const Contact = require("./models/Contact")
 const Message = require("./models/Message")
-const Sender = require("./models/Sender")
-const Group = require("./models/Group")
 const MessagePart = require("./models/MessagePart")
 const ContactGroup = require("./models/ContactGroup")
 const ContactMsisdnUser = require("./models/ContactMsisdnUser")
@@ -25,7 +26,6 @@ const messagesRoutes = require("./routes/messages")
 const userRoutes = require("./routes/users")
 const contactRoutes = require("./routes/contacts")
 const groupRoutes = require("./routes/groups")
-const helper = require("./helpers");
 
 // app.use(helmet())
 app.use(cors())
@@ -78,24 +78,28 @@ app.use((error, request, response, next) => {
 
 	try {
 
+		// check if envs are set
 		helper.checkEnvVariables()
 
-        await Promise.all([
-			database.authenticate(),
-			Queue.createQueue(constants.BULKGATE_MESSAGES_QUEUE),
-			Queue.createQueue(constants.TWILIO_MESSAGES_QUEUE),
-			Queue.createQueue(constants.BULKGATE_MESSAGES_RETRY_QUEUE)
-		])
+		// setup app on port
+		app.listen(constants.PORT, () => logger.log(`Running on port ${constants.PORT}`))
 
-		app.listen(PORT, () => logger.log(`app listening on localhost:${PORT}`))
+		// connect to db
+		await database.authenticate();
+
+		// setup queues
+		Queue.createQueue(constants.TWILIO_MESSAGES_QUEUE);
+		Queue.createQueue(constants.BULKGATE_MESSAGES_QUEUE);
+		Queue.createQueue(constants.TWILIO_MESSAGES_RETRY_QUEUE);
+		Queue.createQueue(constants.BULKGATE_MESSAGES_RETRY_QUEUE);
 
 		require("./workers/BulkgateWorker").start()
 		require("./workers/TwilioWorker").start()
 		require("./workers/BulkgateRetryWorker").start()
 
-		require("./jobs/citimay").start()
+		await jobs.startAll()
 
-		logger.log("database connection has been established successfully.")
+		console.log("database connection has been established successfully.")
 
 	} catch (error) {
 

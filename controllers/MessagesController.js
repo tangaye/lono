@@ -102,7 +102,7 @@ exports.send = async (request, response) => {
 						to: item.to,
 						sender: sender.name,
 						message_id: message.id,
-						user
+						user_id: user.id
 					},
 					helper.getGatewayQueue(gateway.slug)
 				)

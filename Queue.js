@@ -23,6 +23,7 @@ const redisClient = redis.createClient({
 		return Math.min(options.attempt * 100, 3000);
 	}
 });
+
 exports.queueInstance = new redisSMQ({ client: redisClient });
 
 /**

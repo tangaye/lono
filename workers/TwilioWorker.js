@@ -14,7 +14,7 @@ worker.on("message", async function (msg, next, msgid) {
 
 
 		const message = JSON.parse(msg);
-		const {to, body, sender, message_id, user} = message
+		const {to, body, sender, message_id, user_id} = message
 
 		// send sms
 		const twilio = new Twilio(to, body, sender)
@@ -28,7 +28,7 @@ worker.on("message", async function (msg, next, msgid) {
 				gateway_message_id: result.id
 			})
 
-			await UsersController.updateCredits(user.id)
+			await UsersController.updateCredits(user_id)
 
 			await Queue.removeFromQueue(constants.TWILIO_MESSAGES_QUEUE, msgid);
 		}

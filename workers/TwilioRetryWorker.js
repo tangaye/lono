@@ -1,23 +1,25 @@
 const rsmqWorker = require("rsmq-worker")
 const constants = require("../constants")
-const Bulkgate = require("../services/Bulkgate")
+const UsersController = require("../controllers/UsersController")
 const Queue = require("../Queue")
+const Twilio = require("../services/Twilio")
 const logger = require("../logger")
 const MessagePart = require("../models/MessagePart")
-const UsersController = require("../controllers/UsersController");
 const Message = require("../models/Message");
 
-const worker = new rsmqWorker(constants.BULKGATE_MESSAGES_RETRY_QUEUE, Queue.queueInstance);
+const worker = new rsmqWorker(constants.TWILIO_MESSAGES_RETRY_QUEUE, Queue.queueInstance);
 
 worker.on("message", async function (msg, next, msgid) {
 
 	try {
 
+
 		const message = JSON.parse(msg);
 		const {to, body, sender, message_id, user_id} = message
 
-		const bulkgate = new Bulkgate(to, body, sender)
-		const result = await bulkgate.send()
+		// send sms
+		const twilio = new Twilio(to, body, sender)
+		const result = await twilio.send()
 
 		if (result)
 		{
@@ -39,7 +41,7 @@ worker.on("message", async function (msg, next, msgid) {
 
 			console.log('message retried..')
 
-			await Queue.removeFromQueue(constants.BULKGATE_MESSAGES_RETRY_QUEUE, msgid);
+			await Queue.removeFromQueue(constants.TWILIO_MESSAGES_RETRY_QUEUE, msgid);
 		}
 
 

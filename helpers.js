@@ -78,10 +78,8 @@ exports.generateSecret = () => generateApiKey({
 })
 
 exports.getGatewayQueue = gateway_slug => {
-
 	if (gateway_slug === 'twilio') return constants.TWILIO_MESSAGES_QUEUE
 	if (gateway_slug === 'bulkgate') return constants.BULKGATE_MESSAGES_QUEUE
-
 }
 
 exports.getOrderQuery = order => ` ORDER BY created_at ${order} `
