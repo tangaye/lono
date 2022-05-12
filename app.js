@@ -97,7 +97,7 @@ app.use((error, request, response, next) => {
 		require("./workers/TwilioWorker").start()
 		require("./workers/BulkgateRetryWorker").start()
 
-		await jobs.startAll()
+		// await jobs.startAll()
 
 		console.log("database connection has been established successfully.")
 
