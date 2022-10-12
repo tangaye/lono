@@ -224,7 +224,7 @@ exports.bulkGateUpdateStatus = async (request, response) => {
 
             const message_status = bulkgate_statuses.find(item => item.code === Number(status))
 
-            console.log({status, price, smsID, message_status})
+            console.log({status, price, smsID, message_status, message})
 
             if (message) await message.update({status: message_status.name})
         }
