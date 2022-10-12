@@ -202,8 +202,6 @@ exports.statistics = async (request, response) => {
 
 }
 
-
-
 exports.bulkGateUpdateStatus = async (request, response) => {
     try {
 

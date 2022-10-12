@@ -5,6 +5,7 @@ const Queue = require("../Queue")
 const logger = require("../logger")
 const MessagePart = require("../models/MessagePart")
 const UsersController = require("../controllers/UsersController");
+const Message = require("../models/Message");
 
 const worker = new rsmqWorker(constants.BULKGATE_MESSAGES_QUEUE, Queue.queueInstance);
 
@@ -29,6 +30,10 @@ worker.on("message", async function (msg, next, msgid) {
 			}
 
 			await UsersController.updateCredits(user_id, credits)
+
+			await Message.update({
+				gateway_message_id: result.id
+			}, {where: {id: message_id}})
 
 			console.log('message sent..')
 
