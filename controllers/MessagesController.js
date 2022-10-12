@@ -93,20 +93,33 @@ exports.send = async (request, response) => {
 				credits
 			})
 
-			for (const text of parts)
-			{
+			await Queue.add(
+				{
+					body: item.body,
+					to: item.to,
+					sender: sender.name,
+					message_id: message.id,
+					user_id: user.id,
+					credits,
+					parts
+				},
+				helper.getGatewayQueue(gateway.slug)
+			)
 
-				await Queue.add(
-					{
-						body: text,
-						to: item.to,
-						sender: sender.name,
-						message_id: message.id,
-						user_id: user.id
-					},
-					helper.getGatewayQueue(gateway.slug)
-				)
-			}
+			// for (const text of parts)
+			// {
+			//
+			// 	await Queue.add(
+			// 		{
+			// 			body: text,
+			// 			to: item.to,
+			// 			sender: sender.name,
+			// 			message_id: message.id,
+			// 			user_id: user.id
+			// 		},
+			// 		helper.getGatewayQueue(gateway.slug)
+			// 	)
+			// }
 
 			queued_messages.push({
 				smsId: message_id,

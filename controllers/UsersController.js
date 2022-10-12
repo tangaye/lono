@@ -132,20 +132,16 @@ exports.details = async (request, response) => {
 /**
  * Updates the user credits
  * @param {UUID} id - user id
+ * @param credits - credits to update
  * @returns
  */
-exports.updateCredits = async id => {
+exports.updateCredits = async (id, credits) => {
 
     try {
 
         const user = await User.findByPk(id)
 
-        if (user) {
-
-            const credits = user.credits - constants.SMS_TARIFF;
-
-            return await user.update({credits})
-        }
+        if (user) return await user.update({credits: user.credits - credits})
 
     } catch (error) {
         logger.log("error updateCredits: ", error)
