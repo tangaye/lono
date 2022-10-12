@@ -218,7 +218,7 @@ exports.bulkGateUpdateStatus = async (request, response) => {
         if (smsID) {
 
 
-            const message = await MessagePart.findOne({where: {
+            const message = await Message.findOne({where: {
                 gateway_message_id: smsID
             }})
 
