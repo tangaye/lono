@@ -5,6 +5,7 @@ const Queue = require("../Queue")
 const Twilio = require("../services/Twilio")
 const logger = require("../logger")
 const MessagePart = require("../models/MessagePart")
+const Message = require("../models/Message");
 
 const worker = new rsmqWorker(constants.TWILIO_MESSAGES_QUEUE, Queue.queueInstance);
 
@@ -31,6 +32,10 @@ worker.on("message", async function (msg, next, msgid) {
 			}
 
 			await UsersController.updateCredits(user_id, credits)
+
+			await Message.update({
+				gateway_message_id: result.id
+			}, {where: {id: message_id}})
 
 			// await MessagePart.create({
 			// 	part: body,
