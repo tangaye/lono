@@ -253,7 +253,7 @@ exports.bulkGateUpdateStatus = async (request, response) => {
 
         if (message_sid && message_status) {
 
-            let [meta, updated_msg] = await MessagePart.update({status},
+            let [meta, updated_msg] = await Message.update({status},
                 { where: { gateway_message_id: message_sid }, returning: true }
             )
 
