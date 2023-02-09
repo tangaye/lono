@@ -237,12 +237,12 @@ exports.handleOrangeDR = async (request, response) =>
 				let status = constants.PENDING_STATUS
 
 				switch (message_status) {
-					case "DeliveredToNetwork":
 					case "DeliveryUncertain":
 					case "MessageWaiting": // still queued for delivery
 					default:
 						status = constants.PENDING_STATUS
 						break;
+					case "DeliveredToNetwork":
 					case "DeliveryImpossible": // recipient phone out of battery or not active
 					case "DeliveredToTerminal": // message delivered
 						status = constants.DELIVERED_STATUS
