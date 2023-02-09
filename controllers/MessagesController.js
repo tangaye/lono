@@ -230,16 +230,17 @@ exports.handleOrangeDR = async (request, response) =>
 		if (delivery_notification) 
 		{
 			const resource_id = delivery_notification?.callbackData
-			const message_status = delivery_notification?.deliveryInfo?.delivery?.deliveryStatus
+			const message_status = delivery_notification?.deliveryInfo?.deliveryStatus
 
 			if (resource_id && message_status)
 			{
+				console.log({resource_id, resource_id})
+
 				let status = constants.PENDING_STATUS
 
 				switch (message_status) {
 					case "DeliveryUncertain":
 					case "MessageWaiting": // still queued for delivery
-					default:
 						status = constants.PENDING_STATUS
 						break;
 					case "DeliveredToNetwork":
