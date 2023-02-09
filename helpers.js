@@ -77,9 +77,16 @@ exports.generateSecret = () => generateApiKey({
 	max: 64
 })
 
-exports.getGatewayQueue = gateway_slug => {
-	if (gateway_slug === 'twilio') return constants.TWILIO_MESSAGES_QUEUE
-	if (gateway_slug === 'bulkgate') return constants.BULKGATE_MESSAGES_QUEUE
+/**
+ * Returns the message queue to use based on the msisdn passed
+ * @param {string} msisdn 
+ * @returns 
+ */
+exports.getMessageQueue = msisdn => {
+
+	if (this.isLonestarMsisdn(msisdn)) return constants.BULKGATE_MESSAGES_QUEUE
+
+	return constants.ORANGE_MESSAGES_QUEUE
 }
 
 exports.getOrderQuery = order => ` ORDER BY created_at ${order} `
@@ -97,5 +104,18 @@ exports.getPagination = (page, size) => {
 
 	return { limit, offset };
 };
+
+
+/**
+ * Returns true if a number is a valid lonestar number
+ * @param {string} msisdn 
+ * @returns {Boolean|undefined}
+ */
+exports.isLonestarMsisdn = msisdn => {
+	if (msisdn && typeof msisdn === "string") {
+		const starting_digits = msisdn.substring(0, 5)
+		return ["23188", "23155"].includes(starting_digits)
+	}
+}
 
 

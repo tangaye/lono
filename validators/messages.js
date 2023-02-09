@@ -1,5 +1,4 @@
 const constants = require("../constants")
-const Gateway = require("../models/Gateway")
 const MsisdnsFactory = require("../factories/MsisdnsFactory")
 const logger = require("../logger")
 const helper = require("../helpers")
@@ -38,12 +37,7 @@ exports.validateStore = async (request, response, next) => {
 
             const result = await validate(messages, user)
 
-            if (result.valid) {
-
-                request.body.gateway = result.gateway
-
-                return next ()
-            }
+            if (result.valid) return next ()
 
             return helper.respond(response, {
                 code: constants.INVALID_DATA,
@@ -92,19 +86,6 @@ exports.validateStore = async (request, response, next) => {
 	return true;
 };
 
-/**
- * Checks if a sms gateway has been configured
- * @returns {Promise<Gateway | null>}
- */
-const gatewayConfigured = () => {
-
-    try {
-        return Gateway.findOne({where: {active: true}})
-    } catch (error) {
-        logger.error("error gatewayConfigured: ", error)
-        return null
-    }
-}
 
 /**
  * Send sms only when api user has credits >= sms tariff
@@ -137,11 +118,9 @@ const validate = async (data, user) => {
 
         const msisdns_valid = MsisdnsFactory.validate(msisdns)
         const messages_valid = validateMessages(messages)
-        const gateway = await gatewayConfigured()
         const valid_credits = validateUserCredits(user)
 
-        if (msisdns_valid && messages_valid && gateway && valid_credits) {
-            result.gateway = gateway
+        if (msisdns_valid && messages_valid && valid_credits) {
             result.user = user
             result.valid = true
         }
@@ -150,7 +129,6 @@ const validate = async (data, user) => {
         if (!msisdns_valid) result.message = "Invalid phone number(s). Phone number(s) should be of 12 characters. Ex: 213889998009 or 231778909890"
         if (!messages_valid) result.message = "Invalid message(s). A message to a phone number should be 1 - 160 characters."
         if (!valid_credits) result.message = "Insufficient credits"
-        if (!gateway) result.message = "Unable to send message(s)"
 
         return result
 

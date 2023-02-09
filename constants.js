@@ -25,6 +25,8 @@ exports.BULKGATE_MESSAGES_QUEUE = 'bulkgate_messages_queue'
 exports.BULKGATE_MESSAGES_RETRY_QUEUE = 'bulkgate_messages_queue_retry'
 exports.TWILIO_MESSAGES_QUEUE = 'twilio_messages_queue'
 exports.TWILIO_MESSAGES_RETRY_QUEUE = 'twilio_messages_queue_retry'
+exports.ORANGE_MESSAGES_QUEUE = 'orange_messages_queue'
+exports.ORANGE_MESSAGES_RETRY_QUEUE = 'orange_messages_queue_retry'
 exports.ADMIN_ROLE = "admin"
 exports.CLIENT_ROLE = "client"
 

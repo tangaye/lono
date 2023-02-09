@@ -9,6 +9,8 @@ const database = require("../database/connection");
 const {Op, QueryTypes} = require("sequelize");
 const ContactFactory = require("../factories/ContactsFactory")
 const MessagePart = require("../models/MessagePart");
+const { response } = require("express")
+const Gateway = require("../models/Gateway")
 
 
 /**
@@ -72,7 +74,7 @@ exports.all = async (request, response) => {
 exports.send = async (request, response) => {
 	try {
 
-		const { sender, messages, user, gateway } = request.body;
+		const { sender, messages, user } = request.body;
 		const queued_messages = []
 
 		for (const item of messages) {
@@ -82,6 +84,10 @@ exports.send = async (request, response) => {
 			const msisdn = contact ? contact.msisdns.find(msisdn => msisdn.id === item.to) : item.to
 			const parts = MessageFactory.breakIntoParts(item.body, 160)
 			const credits = constants.SMS_TARIFF * parts.length
+			const queue = helper.getMessageQueue(item.to)
+			const gateway = await Gateway.findOne({where: {slug: queue.split("_")[0]}})
+
+			console.log({gateway})
 
 			const message = await Message.create({
 				id: message_id,
@@ -93,33 +99,15 @@ exports.send = async (request, response) => {
 				credits
 			})
 
-			await Queue.add(
-				{
-					body: item.body,
-					to: item.to,
-					sender: sender.name,
-					message_id: message.id,
-					user_id: user.id,
-					credits,
-					parts
-				},
-				helper.getGatewayQueue(gateway.slug)
-			)
-
-			// for (const text of parts)
-			// {
-			//
-			// 	await Queue.add(
-			// 		{
-			// 			body: text,
-			// 			to: item.to,
-			// 			sender: sender.name,
-			// 			message_id: message.id,
-			// 			user_id: user.id
-			// 		},
-			// 		helper.getGatewayQueue(gateway.slug)
-			// 	)
-			// }
+			await Queue.add({
+				body: item.body,
+				to: item.to,
+				sender: sender.name,
+				message_id: message.id,
+				user_id: user.id,
+				credits,
+				parts
+			}, queue)
 
 			queued_messages.push({
 				smsId: message_id,
@@ -222,8 +210,6 @@ exports.bulkGateUpdateStatus = async (request, response) => {
 
             const message_status = bulkgate_statuses.find(item => item.code === Number(status))
 
-            console.log({status, price, smsID, message_status, message})
-
             if (message) await message.update({status: message_status.name})
         }
 
@@ -234,6 +220,53 @@ exports.bulkGateUpdateStatus = async (request, response) => {
     }
 }
 
+exports.handleOrangeDR = async (request, response) =>
+{
+	try {
+
+		console.log("request body: ", request.body)
+		const delivery_notification = request.body?.deliveryInfoNotification
+
+		if (delivery_notification) 
+		{
+			const resource_id = delivery_notification?.callbackData
+			const message_status = delivery_notification?.deliveryInfo?.delivery?.deliveryStatus
+
+			if (resource_id && message_status)
+			{
+				let status = constants.PENDING_STATUS
+
+				switch (message_status) {
+					case "DeliveredToNetwork":
+					case "DeliveryUncertain":
+					case "MessageWaiting": // still queued for delivery
+					default:
+						status = constants.PENDING_STATUS
+						break;
+					case "DeliveryImpossible": // recipient phone out of battery or not active
+					case "DeliveredToTerminal": // message delivered
+						status = constants.DELIVERED_STATUS
+						break;
+				}
+
+				const result = await Message.update({status},
+					{ where: { gateway_message_id: resource_id }, returning: true }
+				)
+	
+				console.log('Orange message status updated', result[1])
+			}
+
+		}
+
+		return response.send({ ok: 200 })
+
+	} catch (error) {
+
+		logger.error("error updating orange message status: ", error);
+		return response.status(constants.SERVER_ERROR).send({ failure: constants.SERVER_ERROR });
+	}
+}
+
 /**
  * Twilio's method to update messages status
  * @param {*} request
@@ -242,6 +275,7 @@ exports.bulkGateUpdateStatus = async (request, response) => {
  */
  exports.twilioUpdateStatus = async (request, response) => {
 	try {
+
 
         const message_sid = request.body.MessageSid
         const message_status = request.body.MessageStatus

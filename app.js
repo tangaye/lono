@@ -88,11 +88,13 @@ app.use((error, request, response, next) => {
 		await database.authenticate();
 
 		// setup queues
+		Queue.createQueue(constants.ORANGE_MESSAGES_QUEUE);
 		Queue.createQueue(constants.TWILIO_MESSAGES_QUEUE);
 		Queue.createQueue(constants.BULKGATE_MESSAGES_QUEUE);
 		Queue.createQueue(constants.TWILIO_MESSAGES_RETRY_QUEUE);
 		Queue.createQueue(constants.BULKGATE_MESSAGES_RETRY_QUEUE);
 
+		require("./workers/OrangeWorker").start()
 		require("./workers/BulkgateWorker").start()
 		require("./workers/TwilioWorker").start()
 		require("./workers/BulkgateRetryWorker").start()

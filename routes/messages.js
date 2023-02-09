@@ -11,6 +11,6 @@ router.get("/sms/stats", authenticate, MessagesController.statistics)
 
 router.route("/sms/status")
 	.get(MessagesController.bulkGateUpdateStatus) // for bulkgate
-	.post(MessagesController.twilioUpdateStatus) // for twilio
+	.post(MessagesController.handleOrangeDR) // for orange
 
 module.exports = router;
