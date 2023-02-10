@@ -19,6 +19,7 @@ worker.on("message", async function (msg, next, msgid) {
 
 		// send sms
 		const result = await Orange.send(to, body, sender)
+		console.log("result from orange sms service: ", {result})
 
 		if (result)
 		{
@@ -36,7 +37,7 @@ worker.on("message", async function (msg, next, msgid) {
 				gateway_message_id: result.id
 			}, {where: {id: message_id}})
 
-			console.log("Updated message from queue: ", gateway_message_id)
+			console.log("Updated message from queue: ", update)
 
 			await Queue.removeFromQueue(constants.ORANGE_MESSAGES_QUEUE, msgid);
 		}

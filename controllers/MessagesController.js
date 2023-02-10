@@ -85,8 +85,6 @@ exports.send = async (request, response) => {
 			const queue = helper.getMessageQueue(item.to)
 			const gateway = await Gateway.findOne({where: {slug: queue.split("_")[0]}})
 
-			console.log({gateway})
-
 			const message = await Message.create({
 				id: message_id,
 				message: item.body,
