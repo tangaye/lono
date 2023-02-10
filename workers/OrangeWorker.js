@@ -32,9 +32,11 @@ worker.on("message", async function (msg, next, msgid) {
 
 			await UsersController.updateCredits(user_id, credits)
 
-			await Message.update({
+			const update = await Message.update({
 				gateway_message_id: result.id
 			}, {where: {id: message_id}})
+
+			console.log("Updated message from queue: ", gateway_message_id)
 
 			await Queue.removeFromQueue(constants.ORANGE_MESSAGES_QUEUE, msgid);
 		}

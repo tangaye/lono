@@ -8,8 +8,6 @@ const helper = require("../helpers")
 const database = require("../database/connection");
 const {Op, QueryTypes} = require("sequelize");
 const ContactFactory = require("../factories/ContactsFactory")
-const MessagePart = require("../models/MessagePart");
-const { response } = require("express")
 const Gateway = require("../models/Gateway")
 
 
@@ -234,7 +232,7 @@ exports.handleOrangeDR = async (request, response) =>
 
 			if (resource_id && message_status)
 			{
-				console.log({resource_id, resource_id})
+				console.log({resource_id, message_status})
 
 				let status = constants.PENDING_STATUS
 

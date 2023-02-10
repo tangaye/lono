@@ -7,8 +7,8 @@ class Orange
     
     constructor()
     {
-        this.devPhoneNumber = process.env.ORANGE_DEV_PHONE_NUMBER
         this.baseUrl = process.env.ORANGE_BASEURL
+        this.devPhoneNumber = process.env.ORANGE_DEV_PHONE_NUMBER
         this.authorizationHeader = process.env.ORANGE_AUTHORIZATION_HEADER
     }
 
@@ -72,7 +72,11 @@ class Orange
     
                 if (result.data) {
                     const resource_url = result.data.outboundSMSMessageRequest.resourceURL
-                    return {id: resource_url.split("/").pop()}
+                    const id = resource_url.split("/").pop()
+
+                    console.log("resource url array: ", resource_url.split("/"))
+                    console.log("resource url id: ", id)
+                    return {id}
                 }
 
             }
