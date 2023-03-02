@@ -34,7 +34,6 @@ class Bulkgate {
 
 	senderId = "gText"
 
-	tag = ""
 
 	/**
 	 * message recipient number
@@ -77,11 +76,15 @@ class Bulkgate {
 				application_id: this.applicationId,
 				application_token: this.applicationToken,
 				number: this.number,
-				text: this.text,
-				sender_id: this.senderId,
-				sender_id_value: this.sender_id_value,
-				tag: this.tag,
-				country: this.country
+				country: this.country,
+				channel: {
+					sms: {
+						sender_id: this.senderId,
+						sender_id_value: this.sender_id_value,
+					  	unicode: true,
+					  	text: this.text
+					}
+				}
 			})
 
 			if (result.data) return {
@@ -93,8 +96,25 @@ class Bulkgate {
 		}
 		catch (error)
 		{
-			logger.log("error bulkGateSend: ", error)
+			logger.error("error bulkGateSend: ", error)
 			return null
+		}
+	}
+
+	async getBalance ()
+	{
+		try
+		{
+			const result = await this.axiosInstance.post('/info', {
+				application_id: this.applicationId,
+				application_token: this.applicationToken
+			})
+
+			if (result) return {credits: result.data?.data?.credit}
+		}
+		catch(error)
+		{
+			logger.error("error bulkGateSend: ", error)
 		}
 	}
 
