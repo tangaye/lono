@@ -1,74 +1,74 @@
-const JobQueries = require("./factories/JobsFactory")
-const constants = require("./constants")
 const logger = require("./logger")
-const helper = require("./helpers")
-const Queue = require("./Queue")
 const cron = require('node-cron')
+const Orange = require("./services/Orange")
+const Bulkgate = require("./services/Bulkgate")
+const Mattermost = require("./services/Mattermost")
 
-// Run job every 5 seconds: */5 * * * * *
-const failedMessages = cron.schedule('*/10 * * * * *', async () =>  {
-
-	try {
-
-		const payload = await JobQueries.failedMessageToRetry()
-
-		if (payload) {
-
-			console.log('data from failedMessages job: ', payload)
-			// add to queue
-			await Queue.add(payload, helper.getGatewayQueue(payload?.gateway?.slug) + '_retry')
-		}
-		else {
-
-			console.log("LOG failedMessages job: ", "Payload is null. No data to queue")
-		}
-
-	}
-	catch (error)
-	{
-		logger.error("error from job: ", error)
-	}
-
-}, {
-	scheduled: false
-})
-
-
-// Run job every 5 seconds: */5 * * * * *
-const pendingMessages = cron.schedule('*/10 * * * * *', async () =>  {
+// Every day at 6:30 pm
+const dailyCreditsReport = cron.schedule('30 18 * * *', async () => {
 
 	try {
 
-		const payload = await JobQueries.messageNotAddedToQueue()
+		console.log('---------------------');
+  		console.log('Running Credits Balance Cron Job');
 
-		if (payload) {
+		const orange = new Orange()
+		const bulkgate = new Bulkgate()
+		const mattermost = new Mattermost()
 
-			console.log('data from pendingMessages job: ', payload)
+		const orangeResult = await orange.getBalance() 
+		const bulkgateResult = await bulkgate.getBalance() 
 
-			// add to queue
-			await Queue.add(payload, helper.getGatewayQueue(payload?.gateway?.slug))
-		}
-		else {
+		const message = `#### Lono Daily Credits Summary [TEST]\n\n| Gateway | Available Credits | Expiry Date |\n|:------------------ |:------------------ |: --------------- |\n| Orange  | ${orangeResult.credits} |  ${orangeResult.expiryDate} |\n| BulkGate | ${bulkgateResult.credits} | not applicable |`
 
-			console.log("LOG pendingMessages job: ", "Payload is null. No data to queue")
-			console.log("[]:", "......................................................")
-		}
+		console.log({orangeResult, bulkgateResult})
 
+		await mattermost.sendMessage(message)
+
+
+	} catch (error) {
+		
+		logger.error("error from check credits balance job: ", error)
 	}
-	catch (error)
-	{
-		logger.error("error from job: ", error)
-	}
+	
+}, {scheduled: false})
 
-}, {
-	scheduled: false
-})
+
+// Runs every 10 minutes */10 * * * *
+const bulkgateBalanceCheck = cron.schedule('*/30 * * * *', async () => {
+
+	try {
+
+		console.log('---------------------');
+  		console.log('Running bulkgate credits balance cron job');
+
+		const bulkgate = new Bulkgate()
+		const mattermost = new Mattermost()
+		const CREDITS_THRESHOLD = 200
+
+		const result = await bulkgate.getBalance() 
+
+		console.log({result})
+
+		if (result.credits <= CREDITS_THRESHOLD)
+		{
+			const message = `#### 🚩🚩ALERT! ALERT! 🚩🚩\nBulkgate credits is running low, currently down to **${result.credits}**`
+			await mattermost.sendMessage(message)
+		} 
+
+
+	} catch (error) {
+		logger.error("error from check credits balance job: ", error)
+	}
+	
+}, {scheduled: false})
+
 
 /**
  * Starts all jobs
  * @return {Promise<void>}
  */
-exports.startAll = async () => {
-	await failedMessages.start();
-	await pendingMessages.start();
+exports.startAll = () => {
+	dailyCreditsReport.start()
+	bulkgateBalanceCheck.start()
 }

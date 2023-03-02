@@ -18,7 +18,8 @@ worker.on("message", async function (msg, next, msgid) {
 		const {to, body, sender, message_id, user_id, credits, parts} = message
 
 		// send sms
-		const result = await Orange.send(to, body, sender)
+		const orange = new Orange()
+		const result = await orange.send(to, body, sender)
 		console.log("result from orange sms service: ", {result})
 
 		if (result)

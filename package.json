@@ -31,7 +31,7 @@
         "express": "^4.17.1",
         "generate-api-key": "^1.0.0",
         "helmet": "^4.6.0",
-        "node-cron": "^3.0.0",
+        "node-cron": "^3.0.2",
         "pg": "^8.6.0",
         "redis": "^3.1.2",
         "rollbar": "^2.24.0",

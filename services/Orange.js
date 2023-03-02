@@ -36,8 +36,8 @@ class Orange
             if (result?.data) return result.data?.access_token
             
         } catch (error) {
-
-            logger.log("Error getting token for orange gateway: ", {error})
+           
+            logger.error("Error getting token for orange gateway: ", {error})
         }
     }
 
@@ -84,10 +84,48 @@ class Orange
             
         } catch (error) {
             
-            logger.log("Error sending message from orange gateway: ", error.response.data.requestError)
+            logger.error("Error sending message from orange gateway: ", error.response.data.requestError)
+        }
+    }
+
+    async getBalance ()
+    {
+        try
+        {
+            const token = await this.getToken()
+
+            if (token) {
+
+                const result = await axios.get(`${this.baseUrl}/sms/admin/v1/contracts`, {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                })
+    
+                if (result.data) {
+
+                    const data = result.data[0]
+                    const credits = data.availableUnits
+
+                    const expiryDate = new Intl.DateTimeFormat("default", {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "numeric"
+                    }).format(new Date(data.expirationDate))
+
+                    return {credits, expiryDate}
+                }
+            }
+        }
+        catch(error)
+        {
+            logger.error("Error checking balance: ", error.response.data.requestError)
         }
     }
 
 }
 
-module.exports = new Orange()
+module.exports = Orange
