@@ -34,8 +34,8 @@ const dailyCreditsReport = cron.schedule('30 18 * * *', async () => {
 }, {scheduled: false})
 
 
-// Runs every 10 minutes */10 * * * *
-const bulkgateBalanceCheck = cron.schedule('*/30 * * * *', async () => {
+// Run every 30 mins b/w 6:30 am - 10 pm
+const bulkgateBalanceCheck = cron.schedule('30/30 6-21,22 * * *', async () => {
 
 	try {
 
