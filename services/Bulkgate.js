@@ -77,14 +77,10 @@ class Bulkgate {
 				application_token: this.applicationToken,
 				number: this.number,
 				country: this.country,
-				channel: {
-					sms: {
-						sender_id: this.senderId,
-						sender_id_value: this.sender_id_value,
-					  	unicode: true,
-					  	text: this.text
-					}
-				}
+				sender_id: this.senderId,
+				sender_id_value: this.sender_id_value,
+				unicode: true,
+				text: this.text
 			})
 
 			if (result.data) return {
