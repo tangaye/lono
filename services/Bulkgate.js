@@ -79,7 +79,6 @@ class Bulkgate {
 				country: this.country,
 				sender_id: this.senderId,
 				sender_id_value: this.sender_id_value,
-				unicode: true,
 				text: this.text
 			})
 
