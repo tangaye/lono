@@ -1,8 +1,6 @@
 const database = require("../database/connection")
 const Message = require("../models/Message")
 const {Op, QueryTypes} = require("sequelize")
-const Sender = require("../models/Sender")
-const MessagePart = require("../models/MessagePart")
 const constants = require("../constants")
 const logger = require("../logger")
 const helper = require("../helpers")
@@ -88,7 +86,6 @@ exports.latestFive = async sender_ids => {
 				   msg.credits AS cost,
 				   msg.status,
 				   json_build_object('id', s.id, 'name', s.name) AS sender,
-				   json_build_object('id', g.id, 'name', g.name) AS gateway,
 				   (
 						SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits, 'created_at', mp.created_at))
 						FROM message_parts mp
@@ -101,7 +98,6 @@ exports.latestFive = async sender_ids => {
 				   ) AS user,
 				   msg.created_at AS date
 			FROM messages msg
-				INNER JOIN gateways g ON g.id = msg.gateway_id
 				INNER JOIN senders s ON msg.sender_id = s.id
 			WHERE msg.sender_id IN (:senders)
 			ORDER BY msg.created_at DESC
@@ -174,7 +170,7 @@ exports.storeMessage = async (
  */
 const getIdQuery = () => ` AND msg.id = :message_id`
 
-const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, msg.id, s.id, g.id, m.id, u.id`
+const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, s.id, m.id, u.id`
 
 /**
  * messages search query
@@ -183,7 +179,6 @@ const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, msg.id, s.id, g
 const getSearchQuery = () => ` AND (
 	u.name ilike :search OR
 	m.id ilike :search OR
-	g.name ilike :search OR
 	s.name ilike :search OR
 	msg.message ilike :search OR
     mp.status ilike :search
@@ -219,7 +214,6 @@ exports.buildQuery = (search, message_id, order) => {
 						msg.credits,
 						msg.status,
 						json_build_object('id', s.id, 'name', s.name) AS sender,
-						json_build_object('id', g.id, 'name', g.name) AS gateway,
 						json_build_object('id', u.id, 'name', u.name) AS user,
 						json_build_object('id', m.id) AS msisdn,
 						json_agg(json_build_object('id', mp.id, 'part', mp.part, 'status', mp.status)) as parts,
@@ -227,7 +221,6 @@ exports.buildQuery = (search, message_id, order) => {
 				FROM messages msg
 					INNER JOIN message_parts mp on msg.id = mp.message_id
 					INNER JOIN msisdns m ON m.id = msg.msisdn_id
-					INNER JOIN gateways g ON g.id = msg.gateway_id
 					INNER JOIN senders s ON msg.sender_id = s.id
 					INNER JOIN users u on u.id = msg.user_id
 				WHERE msg.sender_id IN (:senders)`
