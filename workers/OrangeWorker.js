@@ -30,7 +30,7 @@ worker.on("message", async function (msg, next, msgid) {
 				gateway_message_id: result.id
 			})
 
-			await UsersController.updateCredits(user_id, 1)
+			const [, update] = await UsersController.updateCredits(user_id, 1)
 
 			console.log("Updated message from queue: ", update)
 
