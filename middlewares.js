@@ -47,6 +47,10 @@ exports.authenticate = async (request, response, next) => {
     // request headers and case-insensitive
 	try {
 
+		console.log({
+			requestBody: request.body,
+			requestHeaders: request.headers
+		})
         const api_key = request.headers.apikey
 
         if (api_key) {
