@@ -15,28 +15,22 @@ worker.on("message", async function (msg, next, msgid) {
 
 
 		const message = JSON.parse(msg);
-		const {to, body, sender, message_id, user_id, credits, parts} = message
+		const {to, body, sender, message_id, user_id, credits} = message
 
 		// send sms
 		const orange = new Orange()
 		const result = await orange.send(to, body, sender)
-		console.log("result from orange sms service: ", {result})
 
 		if (result)
 		{
-			for (const part of parts)
-			{
-				await MessagePart.create({
-					part: part,
-					message_id
-				})
-			}
 
-			await UsersController.updateCredits(user_id, credits)
-
-			const update = await Message.update({
+			await MessagePart.create({
+				part: body,
+				message_id,
 				gateway_message_id: result.id
-			}, {where: {id: message_id}})
+			})
+
+			await UsersController.updateCredits(user_id, 1)
 
 			console.log("Updated message from queue: ", update)
 

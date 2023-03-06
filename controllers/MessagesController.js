@@ -9,6 +9,7 @@ const database = require("../database/connection");
 const {Op, QueryTypes} = require("sequelize");
 const ContactFactory = require("../factories/ContactsFactory")
 const Gateway = require("../models/Gateway")
+const MessagePart = require("../models/MessagePart")
 
 
 /**
@@ -95,15 +96,33 @@ exports.send = async (request, response) => {
 				credits
 			})
 
-			await Queue.add({
-				body: item.body,
-				to: item.to,
-				sender: sender.name,
-				message_id: message.id,
-				user_id: user.id,
-				credits,
-				parts
-			}, queue)
+			if (queue === constants.ORANGE_MESSAGES_QUEUE)
+			{
+				for (const text of parts)
+				{
+
+					Queue.add({
+						body: text,
+						to: item.to,
+						sender: sender.name,
+						message_id: message.id,
+						user_id: user.id,
+						credits
+					}, queue)
+				}
+			}
+			else 
+			{
+				Queue.add({
+					body: item.body,
+					to: item.to,
+					sender: sender.name,
+					message_id: message.id,
+					user_id: user.id,
+					credits,
+					parts
+				}, queue)
+			}
 
 			queued_messages.push({
 				smsId: message_id,
@@ -220,7 +239,6 @@ exports.handleOrangeDR = async (request, response) =>
 {
 	try {
 
-		console.log("request body: ", request.body)
 		const delivery_notification = request.body?.deliveryInfoNotification
 
 		if (delivery_notification) 
@@ -230,7 +248,6 @@ exports.handleOrangeDR = async (request, response) =>
 
 			if (resource_id && message_status)
 			{
-				console.log({resource_id, message_status})
 
 				let status = constants.PENDING_STATUS
 
@@ -246,11 +263,17 @@ exports.handleOrangeDR = async (request, response) =>
 						break;
 				}
 
-				const result = await Message.update({status},
-					{ where: { gateway_message_id: resource_id }, returning: true }
+				const [, result] = await MessagePart.update(
+					{status},
+					{ where: 
+						{ 
+							gateway_message_id: resource_id
+						}, 
+						returning: true 
+					}
 				)
 	
-				console.log('Orange message status updated', result[1])
+				console.log('Orange message status updated: ', result)
 			}
 
 		}
