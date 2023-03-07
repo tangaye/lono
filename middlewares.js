@@ -1,8 +1,8 @@
-const User = require("./models/User")
-const Sender = require("./models/Sender")
-const constants = require("./constants")
-const logger = require("./logger")
-const helper = require("./helpers")
+const User = require("./models/User");
+const Sender = require("./models/Sender");
+const constants = require("./constants");
+const logger = require("./logger");
+const helper = require("./helpers");
 
 /**
  * Only admins
@@ -12,29 +12,32 @@ const helper = require("./helpers")
  * @returns
  */
 exports.isAdmin = async (request, response, next) => {
+	try {
+		const user = request.body.user;
 
-    try {
+		if (user.role === constants.ADMIN_ROLE) return next();
 
-        const user = request.body.user
+		return helper.respond(
+			response,
+			{
+				code: constants.FAILURE_CODE,
+				message: "Unauthorized!",
+			},
+			constants.UNAUTHORIZED
+		);
+	} catch (error) {
+		logger.error("error isAdmin: ", error);
 
-        if (user.role === constants.ADMIN_ROLE) return next()
-
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "Unauthorized!"
-		}, constants.UNAUTHORIZED)
-
-
-    } catch (error) {
-
-        logger.error("error isAdmin: ", error)
-
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "Unauthorized!"
-		}, constants.UNAUTHORIZED)
-    }
-}
+		return helper.respond(
+			response,
+			{
+				code: constants.FAILURE_CODE,
+				message: "Unauthorized!",
+			},
+			constants.UNAUTHORIZED
+		);
+	}
+};
 
 /**
  * Only users with a valid api key
@@ -43,42 +46,81 @@ exports.isAdmin = async (request, response, next) => {
  * @param {*} next
  */
 exports.authenticate = async (request, response, next) => {
-
-    // request headers and case-insensitive
+	// request headers and case-insensitive
 	try {
+		const api_key = request.headers.apikey;
 
-        const api_key = request.headers.apikey
+		if (api_key) {
+			const user = await User.findOne({
+				where: { api_key },
+				include: { model: Sender, attributes: ["id", "name"] },
+			});
 
-        if (api_key) {
+			if (user) {
+				request.body.user = user;
+				return next();
+			}
+		}
 
-            const user = await User.findOne({
-                where: {api_key},
-                include: {model: Sender, attributes: ['id', 'name']}
-            })
-
-            if (user) {
-                request.body.user = user
-                return next()
-            }
-
-        }
-
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "Unauthorized!"
-		}, constants.UNAUTHORIZED)
-
-
+		return helper.respond(
+			response,
+			{
+				code: constants.FAILURE_CODE,
+				message: "Unauthorized!",
+			},
+			constants.UNAUTHORIZED
+		);
 	} catch (error) {
-
 		logger.error("error authentication request: ", error);
 
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "An unexpected error occurred."
-		}, constants.UNAUTHORIZED)
+		return helper.respond(
+			response,
+			{
+				code: constants.FAILURE_CODE,
+				message: "An unexpected error occurred.",
+			},
+			constants.UNAUTHORIZED
+		);
 	}
-}
+};
+
+/**
+ * Only users with a valid api key
+ * @param {*} request
+ * @param {*} response
+ * @param {*} next
+ */
+exports.authenticateInterchange = async (request, response, next) => {
+	// request headers and case-insensitive
+	try {
+		const api_key = request.body.secret;
+
+		if (api_key) {
+			const user = await User.findOne({ where: { api_key } });
+
+			if (user) {
+				request.body.user = user;
+				return next();
+			}
+		}
+
+		return response.json({
+			payload: {
+				success: false,
+				error: "error authenticating interchange requests",
+			},
+		});
+	} catch (error) {
+		logger.error("error authenticating interchange requests: ", error);
+
+		return response.json({
+			payload: {
+				success: false,
+				error: "error authenticating interchange requests",
+			},
+		});
+	}
+};
 
 /**
  * API user sender name is valid
@@ -89,13 +131,7 @@ exports.authenticate = async (request, response, next) => {
  */
 exports.senderIsValid = async (request, response, next) => {
 	try {
-
-		console.log({
-			requestBody: request.body,
-			requestHeaders: request.headers
-		})
-		
-		const {user, senderName} = request.body
+		const { user, senderName } = request.body;
 		const sender = user.senders.find((item) => item.name === senderName);
 
 		if (sender) {
@@ -106,15 +142,17 @@ exports.senderIsValid = async (request, response, next) => {
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
 			message: `Invalid senderName: '${senderName}'.`,
-		})
-
+		});
 	} catch (error) {
+		logger.error("error senderIsValid", error);
 
-		logger.error("error senderIsValid", error)
-
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "An unexpected error occurred."
-		}, constants.UNAUTHORIZED)
+		return helper.respond(
+			response,
+			{
+				code: constants.FAILURE_CODE,
+				message: "An unexpected error occurred.",
+			},
+			constants.UNAUTHORIZED
+		);
 	}
 };
