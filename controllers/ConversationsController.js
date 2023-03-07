@@ -108,9 +108,18 @@ exports.handleIncoming = async (request, response) => {
 						(conversation) => conversation.id
 					);
 
+					console.log({ uuids });
+
 					// update conversations so they are not sent again
 					for (const conversation of conversations) {
-						await conversation.update({ status: "delivered" });
+						const [, updated] = await Conversation.update(
+							{
+								status: "delivered",
+							},
+							{ where: { id: conversation.id } }
+						);
+
+						console.log({ updated });
 					}
 
 					return response.json({
@@ -165,12 +174,10 @@ exports.handleOutgoing = async (request, response) => {
 		if (task === "send") {
 			// 1.a find messages  with status 'queued' and return them
 			const conversations = await Conversation.findAll({
-				attributes: ["id", "from", "message", "status"],
+				attributes: ["id", "from", "message", "status", ""],
 				where: { status: "queued" },
 				order: [["created_at", "desc"]],
 			});
-
-			console.log({ conversations });
 
 			if (conversations.length > 0) {
 				const messages = conversations.map((conversation) => {
