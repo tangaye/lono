@@ -22,11 +22,12 @@ exports.all = async (request, response) => {
 			order: [["created_at", "desc"]],
 		});
 
-		if (conversations)
+		if (conversations) {
 			return helper.respond(response, {
 				code: constants.SUCCESS_CODE,
 				conversations,
 			});
+		}
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
@@ -46,15 +47,21 @@ exports.create = async (request, response) => {
 	try {
 		const { to, message, user } = request.body;
 
+		const parts = MessageFactory.breakIntoParts(message, 140);
+		const credits = constants.SMS_TARIFF * parts.length;
+
 		const conversation = await createConversation({
 			from: process.env.CONVERSATION_BUSINESS_NUMBER,
 			to: to,
+			credits,
 			message,
 			direction: "outgoing",
 			user_id: user.id,
 		});
 
-		if (conversation)
+		if (conversation) {
+			await UsersController.updateCredits(user.id, credits);
+
 			return helper.respond(response, {
 				code: constants.SUCCESS_CODE,
 				conversation: {
@@ -68,6 +75,7 @@ exports.create = async (request, response) => {
 					direction: conversation.direction,
 				},
 			});
+		}
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
@@ -108,15 +116,13 @@ exports.handleIncoming = async (request, response) => {
 						(conversation) => conversation.id
 					);
 
-					console.log({ uuids });
-
 					// update conversations so they are not sent again
 					for (const conversation of conversations) {
 						const [, updated] = await Conversation.update(
 							{
 								status: "delivered",
 							},
-							{ where: { id: conversation.id } }
+							{ where: { id: conversation.id }, returning: true }
 						);
 
 						console.log({ updated });
@@ -210,13 +216,11 @@ const createConversation = async ({
 	to,
 	message,
 	direction,
+	credits = 0,
 	status,
 	user_id,
 }) => {
 	try {
-		const parts = MessageFactory.breakIntoParts(message, 140);
-		const credits = constants.SMS_TARIFF * parts.length;
-
 		const conversation = await Conversation.create({
 			from,
 			to,
