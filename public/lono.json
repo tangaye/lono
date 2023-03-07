@@ -2,7 +2,7 @@
 	"openapi": "3.0.0",
 	"info": {
 		"title": "Lono SMS API",
-		"description": "API to send sms and view sms that have been sent. To get a key or get support, kindly contact API Support. \n\n Example: curl -i -H 'Accept:application/json' -H 'apiKey:API_KEY' \\ https://developer.lonotalk.com/api/v1/sms",
+		"description": "API to send SMS and view SMS that have been sent. To get a key or get support, kindly contact API Support. \n\n Example: curl -i -H 'Accept:application/json' -H 'apiKey:API_KEY' \\ https://developer.lonotalk.com/api/v1/sms",
 		"version": "1.0",
 		"contact": {
 			"name": "API Support",
@@ -13,18 +13,18 @@
 	"servers": [
 		{
 			"url": "https://developer.lonotalk.com/api/v1",
-			"description": "Base url"
+			"description": "Base URL"
 		}
 	],
 	"paths": {
 		"/sms": {
 			"get": {
-				"summary": "All sms",
-				"description": "Returns sms that have been sent.",
+				"summary": "All SMS",
+				"description": "Returns SMS that have been sent.",
 				"operationId": "sms",
 				"responses": {
 					"200": {
-						"description": "An array of sms",
+						"description": "An array of SMS",
 						"headers": {},
 						"content": {
 							"application/json": {
@@ -83,8 +83,8 @@
 				}
 			},
 			"post": {
-				"summary": "Send sms",
-				"description": "Makes a POST request to send sms. **senderName** must be preconfigured to work. To configured senderName please contact API Support. \n\n Returns sms sent if successful.",
+				"summary": "Send SMS",
+				"description": "Makes a POST request to send SMS. **senderName** must be preconfigured to work. To configure senderName please contact API Support. \n\n Returns SMS sent if successful.",
 				"operationId": "sendsms",
 				"requestBody": {
 					"description": "",
@@ -116,7 +116,7 @@
 				},
 				"responses": {
 					"200": {
-						"description": "An array of sms sent",
+						"description": "An array of SMS sent",
 						"headers": {},
 						"content": {
 							"application/json": {
@@ -192,12 +192,12 @@
 		},
 		"/conversations": {
 			"get": {
-				"summary": "All Conversations",
-				"description": "Returns all conversations.",
+				"summary": "All Two-way SMS",
+				"description": "Returns all two-way messages.",
 				"operationId": "conversations",
 				"responses": {
 					"200": {
-						"description": "An array of conversations",
+						"description": "An array of two-way messages",
 						"headers": {},
 						"content": {
 							"application/json": {
@@ -266,7 +266,7 @@
 			},
 			"post": {
 				"summary": "Send Two-way message.",
-				"description": "Makes a POST request to send a two-way SMS. \n\n Returns sms sent if successful.",
+				"description": "Makes a POST request to send a two-way SMS. \n\n Returns the SMS sent if successful.",
 				"operationId": "sendConversation",
 				"requestBody": {
 					"description": "",
@@ -286,7 +286,7 @@
 				},
 				"responses": {
 					"200": {
-						"description": "An array of sms sent",
+						"description": "An array of messages sent",
 						"headers": {},
 						"content": {
 							"application/json": {
@@ -346,7 +346,7 @@
 		"/users/account": {
 			"get": {
 				"summary": "Get API user account details",
-				"description": "Returns configured sender names, api key, and available sms credits.",
+				"description": "Returns configured sender names, api key, and available SMS credits.",
 				"operationId": "user",
 				"responses": {
 					"200": {
