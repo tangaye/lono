@@ -170,6 +170,8 @@ exports.handleOutgoing = async (request, response) => {
 				order: [["created_at", "desc"]],
 			});
 
+			console.log({ conversations });
+
 			if (conversations.length > 0) {
 				const messages = conversations.map((conversation) => {
 					return {
