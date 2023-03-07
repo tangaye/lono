@@ -210,6 +210,7 @@ const createConversation = async ({
 	to,
 	message,
 	direction,
+	status,
 	user_id,
 }) => {
 	try {
@@ -220,6 +221,7 @@ const createConversation = async ({
 			from,
 			to,
 			message,
+			status,
 			credits,
 			direction,
 			user_id,
