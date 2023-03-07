@@ -33,7 +33,7 @@ exports.all = async (request, response) => {
 			message: "error fetching conversations",
 		});
 	} catch (error) {
-		logger.log("error fetching conversations", error);
+		logger.error("error fetching conversations", error);
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
@@ -74,7 +74,7 @@ exports.create = async (request, response) => {
 			message: "error creation conversation",
 		});
 	} catch (error) {
-		logger.log("error creating conversation", error);
+		logger.error("error creating conversation", error);
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
@@ -174,7 +174,7 @@ exports.handleOutgoing = async (request, response) => {
 		if (task === "send") {
 			// 1.a find messages  with status 'queued' and return them
 			const conversations = await Conversation.findAll({
-				attributes: ["id", "from", "message", "status", ""],
+				attributes: ["id", "from", "message", "status"],
 				where: { status: "queued" },
 				order: [["created_at", "desc"]],
 			});
@@ -200,7 +200,7 @@ exports.handleOutgoing = async (request, response) => {
 
 		return response.json(200);
 	} catch (error) {
-		logger.log("error handling outgoing conversations", error);
+		logger.error("error handling outgoing conversations", error);
 		return response.status(400).json({ message: "bad request" });
 	}
 };
@@ -227,6 +227,6 @@ const createConversation = async ({
 
 		if (conversation) return conversation;
 	} catch (error) {
-		logger.log("error creating conversation", error);
+		logger.error("error creating conversation", error);
 	}
 };
