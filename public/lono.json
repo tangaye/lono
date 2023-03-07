@@ -265,7 +265,7 @@
 				}
 			},
 			"post": {
-				"summary": "Send Two-way message.",
+				"summary": "Send Two-way SMS.",
 				"description": "Makes a POST request to send a two-way SMS. \n\n Returns the SMS sent if successful.",
 				"operationId": "sendConversation",
 				"requestBody": {

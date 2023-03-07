@@ -16,6 +16,7 @@ exports.all = async (request, response) => {
 				"message",
 				"status",
 				"credits",
+				["direction", "message_type"],
 				"user_id",
 				"created_at",
 			],
@@ -73,7 +74,7 @@ exports.create = async (request, response) => {
 					status: conversation.status,
 					created_at: conversation.created_at,
 					credits: conversation.credits,
-					direction: conversation.direction,
+					message_type: conversation.direction,
 				},
 			});
 		}
