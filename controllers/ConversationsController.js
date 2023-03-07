@@ -49,7 +49,7 @@ exports.create = async (request, response) => {
 	try {
 		const { to, message, user } = request.body;
 
-		const parts = MessageFactory.breakIntoParts(message, 140);
+		const parts = MessageFactory.breakIntoParts(message, 160);
 		const credits = constants.SMS_TARIFF * parts.length;
 
 		const conversation = await createConversation({
