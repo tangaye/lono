@@ -174,15 +174,15 @@ exports.handleOutgoing = async (request, response) => {
 		if (task === "send") {
 			// 1.a find messages  with status 'queued' and return them
 			const conversations = await Conversation.findAll({
-				attributes: ["id", "from", "message", "status"],
-				where: { status: "queued" },
+				attributes: ["id", "to", "direction", "message", "status"],
+				where: { status: "queued", direction: "outgoing" },
 				order: [["created_at", "desc"]],
 			});
 
 			if (conversations.length > 0) {
 				const messages = conversations.map((conversation) => {
 					return {
-						to: `+${conversation.from}`,
+						to: `+${conversation.to}`,
 						message: conversation.message,
 						uuid: conversation.id,
 					};
