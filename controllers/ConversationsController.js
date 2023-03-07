@@ -4,6 +4,7 @@ const constants = require("../constants");
 const User = require("../models/User");
 const Conversation = require("../models/Conversation");
 const MessageFactory = require("../factories/MessagesFactory");
+const UsersController = require("../controllers/UsersController");
 
 exports.all = async (request, response) => {
 	try {
