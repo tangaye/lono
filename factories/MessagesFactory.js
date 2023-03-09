@@ -98,6 +98,7 @@ exports.latestFive = async (sender_ids) => {
 				INNER JOIN msisdns m ON m.id = msg.msisdn_id
 				INNER JOIN senders s ON msg.sender_id = s.id
 			WHERE msg.sender_id IN (:senders)
+			GROUP BY msg.id, msg.created_at, s.id, m.id
 			ORDER BY msg.created_at DESC
 			LIMIT 5
 		`,
