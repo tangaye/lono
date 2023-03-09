@@ -1,122 +1,119 @@
-const database = require("../database/connection")
-const Message = require("../models/Message")
-const {Op, QueryTypes} = require("sequelize")
-const constants = require("../constants")
-const logger = require("../logger")
-const helper = require("../helpers")
+const database = require("../database/connection");
+const Message = require("../models/Message");
+const { Op, QueryTypes } = require("sequelize");
+const constants = require("../constants");
+const logger = require("../logger");
+const helper = require("../helpers");
 
 /**
  * Returns all messages in the last seven days for sender
  * @param {Array|Required} sender_ids
  * @returns {Promise<*[]|*>}
  */
-exports.lastSevenDaysCount = async sender_ids => {
+exports.lastSevenDaysCount = async (sender_ids) => {
 	try {
-
-		 const messages = await database.query(`
+		const messages = await database.query(
+			`
 				select date, cast(count(id) as int)
 				from (select generate_series((current_date + 1) - interval '7 days', (current_date + 1) - interval '1 days', interval '1 days')::date as date) series
 				left join messages
 				on messages.created_at::date = date
 				and messages.sender_id IN(:ids)
 				group by date
-				order by date desc`, {
-			replacements: { ids: sender_ids },
-			type: QueryTypes.SELECT
-		});
+				order by date desc`,
+			{
+				replacements: { ids: sender_ids },
+				type: QueryTypes.SELECT,
+			}
+		);
 
 		if (messages) return messages;
 		return [];
 	} catch (error) {
-		console.log('error querying for lastSevenDaysCount: ', error);
+		console.log("error querying for lastSevenDaysCount: ", error);
 		return [];
 	}
-}
+};
 
 /**
  * Returns the total number of messages sent
  * @param {Array|Required} sender_ids
  * @returns {Promise<number>}
  */
-exports.total = async sender_ids => {
+exports.total = async (sender_ids) => {
 	try {
-
-		return await Message.count({where: {sender_id: { [Op.in]: sender_ids }}})
-	}
-	catch (error) {
-		console.log('error querying for total: ', error);
+		return await Message.count({
+			where: { sender_id: { [Op.in]: sender_ids } },
+		});
+	} catch (error) {
+		console.log("error querying for total: ", error);
 		return null;
 	}
-}
+};
 
 /**
  * Returns the total number of messages sent for sender on current date
  * @param {Array|Required} sender_ids
  * @returns {Promise<number|*>}
  */
-exports.totalToday = async sender_ids => {
+exports.totalToday = async (sender_ids) => {
 	try {
-		return await database.query(`
+		return await database.query(
+			`
 				select cast(count(id) as int) 
 				from messages 
 				where created_at::date = CURRENT_DATE 
-				and sender_id IN(:ids) `, {
-			replacements: { ids: sender_ids },
-			type: QueryTypes.SELECT
-		})
-	}
-	catch (error) {
-		console.log('error querying for totalToday: ', error);
+				and sender_id IN(:ids) `,
+			{
+				replacements: { ids: sender_ids },
+				type: QueryTypes.SELECT,
+			}
+		);
+	} catch (error) {
+		console.log("error querying for totalToday: ", error);
 		return 0;
 	}
-}
+};
 
 /**
  * Returns the latest 5 messages for a sender
  * @param {Array|Required} sender_ids
  * @returns {Promise<Message[]|*[]>}
  */
-exports.latestFive = async sender_ids => {
+exports.latestFive = async (sender_ids) => {
 	try {
-		const messages = await database.query(`
-			SELECT 
-				   msg.id AS "smsId",
-				   msg.msisdn_id AS recipient,
-				   msg.message,
-				   msg.credits AS cost,
-				   msg.status,
-				   json_build_object('id', s.id, 'name', s.name) AS sender,
-				   (
-						SELECT json_agg(json_build_object('id', mp.id, 'status', mp.status, 'part', mp.part, 'credits', mp.credits, 'created_at', mp.created_at))
-						FROM message_parts mp
-						WHERE mp.message_id = msg.id
-				   ) AS parts,
-				   (
-						SELECT json_build_object('id', u.id, 'name', u.name, 'created_at', u.created_at)
-						FROM users u
-						WHERE u.id = msg.user_id
-				   ) AS user,
-				   msg.created_at AS date
+		const messages = await database.query(
+			`
+			SELECT
+				msg.id,
+				msg.message,
+				msg.credits,
+				msg.status,
+				s.name AS sender,
+				m.id AS msisdn,
+				json_agg(json_build_object('part', mp.part, 'status', mp.status)) as parts,
+				msg.created_at
 			FROM messages msg
+				INNER JOIN message_parts mp on msg.id = mp.message_id
+				INNER JOIN msisdns m ON m.id = msg.msisdn_id
 				INNER JOIN senders s ON msg.sender_id = s.id
 			WHERE msg.sender_id IN (:senders)
 			ORDER BY msg.created_at DESC
 			LIMIT 5
-		`, {
-			replacements: {senders: sender_ids},
-			type: QueryTypes.SELECT
-		})
+		`,
+			{
+				replacements: { senders: sender_ids },
+				type: QueryTypes.SELECT,
+			}
+		);
 
-
-		if (messages) return messages
-		return []
-	}
-	catch (error)
-	{
-		console.log('error querying for latestFive: ', error);
+		if (messages) return messages;
+		return [];
+	} catch (error) {
+		console.log("error querying for latestFive: ", error);
 		return [];
 	}
-}
+};
 
 /**
  * Stores a message in the database
@@ -130,20 +127,17 @@ exports.latestFive = async sender_ids => {
  * @param {string|required} id - message id
  * @returns {Promise}
  */
-exports.storeMessage = async (
-	{
-		msisdn_id,
-		text,
-		sender_id,
-		gateway_id,
-		ext_message_id= null,
-		user_id,
-		gateway_message_id= null,
-		id
-	}
-) => {
+exports.storeMessage = async ({
+	msisdn_id,
+	text,
+	sender_id,
+	gateway_id,
+	ext_message_id = null,
+	user_id,
+	gateway_message_id = null,
+	id,
+}) => {
 	try {
-
 		return await Message.create({
 			id,
 			msisdn_id,
@@ -153,11 +147,9 @@ exports.storeMessage = async (
 			user_id,
 			gateway_message_id,
 			ext_message_id,
-			credits: constants.SMS_TARIFF
-		})
-
+			credits: constants.SMS_TARIFF,
+		});
 	} catch (error) {
-
 		logger.log("error creating message: ", error);
 
 		return null;
@@ -168,33 +160,33 @@ exports.storeMessage = async (
  * messages id query
  * @return {string}
  */
-const getIdQuery = () => ` AND msg.id = :message_id`
+const getIdQuery = () => ` AND msg.id = :message_id`;
 
-const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, s.id, m.id, u.id`
+const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, s.id, m.id`;
 
 /**
  * messages search query
  * @return {string}
  */
+
 const getSearchQuery = () => ` AND (
-	u.name ilike :search OR
 	m.id ilike :search OR
 	s.name ilike :search OR
 	msg.message ilike :search OR
+	msg.status ilike :search OR
     mp.status ilike :search
-)`
-
+)`;
 
 exports.buildReplacements = (senders, message_id, search, limit, offset) => {
+	const replacements = { senders, limit, offset, search: `%${search}%` };
 
-	const replacements = {senders, limit, offset, search: `%${search}%`}
+	if (search && Number(search[0]) === 0)
+		replacements.search = `%${search.substring(1)}%`;
 
-	if (search && Number(search[0]) === 0) replacements.search = `%${search.substring(1)}%`
+	if (message_id) replacements.message_id = message_id;
 
-	if (message_id) replacements.message_id = message_id
-
-	return replacements
-}
+	return replacements;
+};
 
 /**
  * Setup query to query messages
@@ -204,36 +196,33 @@ exports.buildReplacements = (senders, message_id, search, limit, offset) => {
  * @return {string}
  */
 exports.buildQuery = (search, message_id, order) => {
-
-	order = order ? order.toUpperCase() : 'DESC'
+	order = order ? order.toUpperCase() : "DESC";
 
 	let query = `
 				SELECT
-						msg.id,
-						msg.message,
-						msg.credits,
-						msg.status,
-						json_build_object('id', s.id, 'name', s.name) AS sender,
-						json_build_object('id', u.id, 'name', u.name) AS user,
-						json_build_object('id', m.id) AS msisdn,
-						json_agg(json_build_object('id', mp.id, 'part', mp.part, 'status', mp.status)) as parts,
-						msg.created_at
+					msg.id,
+					msg.message,
+					msg.credits,
+					msg.status,
+					s.name AS sender,
+					m.id AS msisdn,
+					json_agg(json_build_object('part', mp.part, 'status', mp.status)) as parts,
+					msg.created_at
 				FROM messages msg
 					INNER JOIN message_parts mp on msg.id = mp.message_id
 					INNER JOIN msisdns m ON m.id = msg.msisdn_id
 					INNER JOIN senders s ON msg.sender_id = s.id
-					INNER JOIN users u on u.id = msg.user_id
-				WHERE msg.sender_id IN (:senders)`
+				WHERE msg.sender_id IN (:senders)`;
 
-	if (search) query += getSearchQuery()
-	if (message_id) query += getIdQuery(search)
+	if (search) query += getSearchQuery();
+	if (message_id) query += getIdQuery(search);
 
-	query += getGroupByQuery()
-	query += helper.getOrderQuery(order)
-	query += helper.getLimitOffsetQuery()
+	query += getGroupByQuery();
+	query += helper.getOrderQuery(order);
+	query += helper.getLimitOffsetQuery();
 
-	return query
-}
+	return query;
+};
 
 /**
  * Returns pagination data
@@ -244,13 +233,11 @@ exports.buildQuery = (search, message_id, order) => {
  * @return {{totalItems, totalPages: number, messages, currentPage: number}}
  */
 exports.getPagingData = (messages, totalItems, page, limit) => {
-
 	const currentPage = page ? +page : 0;
-	const totalPages = Math.ceil(totalItems / limit)
+	const totalPages = Math.ceil(totalItems / limit);
 
-	return {totalItems, messages, totalPages, currentPage}
-}
-
+	return { totalItems, messages, totalPages, currentPage };
+};
 
 /**
  * @author @mrhumble
@@ -260,33 +247,31 @@ exports.getPagingData = (messages, totalItems, page, limit) => {
  * @return {[]}
  */
 exports.breakIntoParts = (message, limit) => {
-
-	const queue = message.split(' ');
+	const queue = message.split(" ");
 	const parts = [];
 
 	while (queue.length) {
-
 		const word = queue.shift();
 
-		if (word.length >= limit)
-		{
-			parts.push(word)
-		}
-		else {
-
+		if (word.length >= limit) {
+			parts.push(word);
+		} else {
 			let words = word;
 
 			while (true) {
+				if (
+					!queue.length ||
+					words.length > limit ||
+					words.length + queue[0].length + 1 > limit
+				)
+					break;
 
-				if (!queue.length || words.length > limit || words.length + queue[0].length + 1 > limit) break
-
-				words += ' ' + queue.shift();
+				words += " " + queue.shift();
 			}
 
-			parts.push(words)
+			parts.push(words);
 		}
 	}
 
-	return parts
-
-}
+	return parts;
+};
