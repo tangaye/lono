@@ -297,13 +297,13 @@
 									"errorCode": 0,
 									"conversation": {
 										"id": "<conversation_id>",
-										"to": "231777123456",
+										"to": "231555123456",
 										"message": "Two-way TEST",
 										"user_id": "<user_id>",
 										"status": "queued",
 										"created_at": "2023-03-07T19:58:49.109Z",
 										"credits": 1,
-										"direction": "outgoing"
+										"message_type": "outgoing"
 									}
 								}
 							}
