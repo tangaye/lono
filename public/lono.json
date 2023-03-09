@@ -213,6 +213,7 @@
 											"to": "231886123456",
 											"message": "TEST 1",
 											"status": "queued",
+											"message_type": "incoming",
 											"credits": 1,
 											"user_id": "<user_id>",
 											"created_at": "2023-03-07T18:47:59.753Z"
@@ -222,6 +223,7 @@
 											"from": "231888123456",
 											"to": "231777123456",
 											"message": "TEST 2",
+											"message_type": "outgoing",
 											"status": "delivered",
 											"credits": 3,
 											"user_id": "<user_id>",
