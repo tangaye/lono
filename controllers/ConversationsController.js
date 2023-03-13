@@ -47,9 +47,16 @@ exports.all = async (request, response) => {
 	}
 };
 
+/**
+ * Should return latest messages sent by users
+ * @param {*} request
+ * @param {*} response
+ * @returns
+ */
 exports.latest = async (request, response) => {
 	try {
-		const user = request.body;
+		const { user } = request.body;
+
 		const conversations = await Conversation.findAll({
 			attributes: [
 				"id",
@@ -62,7 +69,11 @@ exports.latest = async (request, response) => {
 			],
 			limit: 100,
 			order: [["created_at", "desc"]],
-			where: { message_type: constants.QUEUED_STATUS, user_id: user.id },
+			where: {
+				direction: "incoming",
+				status: "queued",
+				user_id: user.id,
+			},
 		});
 
 		if (conversations) {
@@ -77,6 +88,7 @@ exports.latest = async (request, response) => {
 			message: "error fetching conversations",
 		});
 	} catch (error) {
+		console.log({ error });
 		logger.error("error polling conversations", error);
 
 		return helper.respond(response, {
@@ -90,20 +102,55 @@ exports.updateLatest = async (request, response) => {
 	try {
 		const { conversation_ids, user } = request.body;
 
-		const conversations = await Conversation.findAll({
-			where: {
-				user_id: user.id,
-				id: conversation_ids,
-			},
-		});
+		if (conversation_ids) {
+			const conversations = await Conversation.findAll({
+				where: {
+					user_id: user.id,
+					id: conversation_ids,
+					direction: "incoming",
+					status: "queued",
+				},
+			});
 
-		if (conversations) {
-			for (const conversation of conversations) {
-				await conversation.update({
-					status: constants.DELIVERED_STATUS,
+			if (conversations) {
+				const updated_conversations = [];
+
+				for (const conversation of conversations) {
+					const updated = await conversation.update(
+						{
+							status: constants.DELIVERED_STATUS,
+						},
+						{ returning: true }
+					);
+
+					updated_conversations.push({
+						id: updated.id,
+						to: updated.to,
+						from: updated.from,
+						message: updated.message,
+						status: updated.status,
+						created_at: updated.created_at,
+						credits: updated.credits,
+						message_type: updated.direction,
+					});
+				}
+
+				return helper.respond(response, {
+					code: constants.SUCCESS_CODE,
+					conversations: updated_conversations,
 				});
 			}
+
+			return helper.respond(response, {
+				code: constants.FAILURE_CODE,
+				message: "conversations not found",
+			});
 		}
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "conversation_ids required",
+		});
 	} catch (error) {
 		logger.error("error polled conversations", error);
 

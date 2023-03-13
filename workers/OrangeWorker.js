@@ -5,7 +5,6 @@ const Queue = require("../Queue");
 const Orange = require("../services/Orange");
 const logger = require("../logger");
 const MessagePart = require("../models/MessagePart");
-const Message = require("../models/Message");
 
 const worker = new rsmqWorker(
 	constants.ORANGE_MESSAGES_QUEUE,
