@@ -11,6 +11,7 @@ exports.SMS_TARIFF = 1;
 exports.PENDING_STATUS = "pending";
 exports.FAILED_STATUS = "failed";
 exports.DELIVERED_STATUS = "delivered";
+exports.QUEUED_STATUS = "delivered";
 exports.MESSAGES_ATTRIBUTES = [
 	["id", "smsId"],
 	["msisdn_id", "recipient"],

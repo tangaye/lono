@@ -85,44 +85,6 @@ exports.authenticate = async (request, response, next) => {
 };
 
 /**
- * Only users with a valid api key
- * @param {*} request
- * @param {*} response
- * @param {*} next
- */
-exports.authenticateInterchange = async (request, response, next) => {
-	// request headers and case-insensitive
-	try {
-		const api_key = request.body.secret;
-
-		if (api_key) {
-			const user = await User.findOne({ where: { api_key } });
-
-			if (user) {
-				request.body.user = user;
-				return next();
-			}
-		}
-
-		return response.json({
-			payload: {
-				success: false,
-				error: "error authenticating interchange requests",
-			},
-		});
-	} catch (error) {
-		logger.error("error authenticating interchange requests: ", error);
-
-		return response.json({
-			payload: {
-				success: false,
-				error: "error authenticating interchange requests",
-			},
-		});
-	}
-};
-
-/**
  * API user sender name is valid
  * @param {*} request
  * @param {*} response

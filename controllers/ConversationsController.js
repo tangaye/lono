@@ -8,6 +8,7 @@ const UsersController = require("../controllers/UsersController");
 
 exports.all = async (request, response) => {
 	try {
+		const { user } = request.body;
 		const conversations = await Conversation.findAll({
 			attributes: [
 				"id",
@@ -22,6 +23,7 @@ exports.all = async (request, response) => {
 			],
 			limit: 100,
 			order: [["created_at", "desc"]],
+			where: { user_id: user.id },
 		});
 
 		if (conversations) {
@@ -37,6 +39,73 @@ exports.all = async (request, response) => {
 		});
 	} catch (error) {
 		logger.error("error fetching conversations", error);
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message,
+		});
+	}
+};
+
+exports.latest = async (request, response) => {
+	try {
+		const user = request.body;
+		const conversations = await Conversation.findAll({
+			attributes: [
+				"id",
+				"from",
+				"to",
+				"message",
+				"status",
+				["direction", "message_type"],
+				"created_at",
+			],
+			limit: 100,
+			order: [["created_at", "desc"]],
+			where: { message_type: constants.QUEUED_STATUS, user_id: user.id },
+		});
+
+		if (conversations) {
+			return helper.respond(response, {
+				code: constants.SUCCESS_CODE,
+				conversations,
+			});
+		}
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error fetching conversations",
+		});
+	} catch (error) {
+		logger.error("error polling conversations", error);
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message,
+		});
+	}
+};
+
+exports.updateLatest = async (request, response) => {
+	try {
+		const { conversation_ids, user } = request.body;
+
+		const conversations = await Conversation.findAll({
+			where: {
+				user_id: user.id,
+				id: conversation_ids,
+			},
+		});
+
+		if (conversations) {
+			for (const conversation of conversations) {
+				await conversation.update({
+					status: constants.DELIVERED_STATUS,
+				});
+			}
+		}
+	} catch (error) {
+		logger.error("error polled conversations", error);
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
