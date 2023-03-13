@@ -15,7 +15,8 @@ const worker = new rsmqWorker(
 worker.on("message", async function (msg, next, msgid) {
 	try {
 		const message = JSON.parse(msg);
-		const { to, body, sender, message_id, user_id, credits } = message;
+		const { to, body, sender, message_id, user_id } = message;
+		console.log("message to queue: ", { message });
 
 		// send sms
 		const orange = new Orange();
