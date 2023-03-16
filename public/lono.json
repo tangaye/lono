@@ -20,7 +20,7 @@
 		"/sms": {
 			"get": {
 				"summary": "One-Way SMS: Fetch All",
-				"description": "Returns SMS that have been sent.",
+				"description": "Returns all SMS that have been sent.",
 				"operationId": "sms",
 				"responses": {
 					"200": {
@@ -192,7 +192,7 @@
 		},
 		"/conversations": {
 			"get": {
-				"summary": "Two-Way SMS: Get All",
+				"summary": "Two-Way SMS: Fetch All",
 				"description": "Returns all two-way messages including messages sent and received.",
 				"operationId": "conversations",
 				"responses": {
@@ -267,7 +267,7 @@
 				}
 			},
 			"post": {
-				"summary": "Send Two-way SMS",
+				"summary": "Two-Way SMS: Send SMS",
 				"description": "Makes a POST request to send a two-way SMS using the pre-defined phone number. \n\n Returns the SMS sent if successful.",
 				"operationId": "sendConversation",
 				"requestBody": {
@@ -347,7 +347,7 @@
 		},
 		"/conversations/latest": {
 			"get": {
-				"summary": "Two-Way SMS: Get Latest Incoming Messages",
+				"summary": "Two-Way SMS: Get Latest",
 				"description": "Returns all the most recent incoming two-way messages that have not yet been acknowledged.",
 				"operationId": "latestConversations",
 				"responses": {
