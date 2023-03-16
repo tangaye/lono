@@ -19,7 +19,7 @@
 	"paths": {
 		"/sms": {
 			"get": {
-				"summary": "All SMS",
+				"summary": "One-Way SMS: Fetch All",
 				"description": "Returns SMS that have been sent.",
 				"operationId": "sms",
 				"responses": {
@@ -83,7 +83,7 @@
 				}
 			},
 			"post": {
-				"summary": "Send SMS",
+				"summary": "One-Way SMS: Send SMS",
 				"description": "Makes a POST request to send SMS. **senderName** must be preconfigured to work. To configure senderName please contact API Support. \n\n Returns SMS sent if successful.",
 				"operationId": "sendsms",
 				"requestBody": {
@@ -192,8 +192,8 @@
 		},
 		"/conversations": {
 			"get": {
-				"summary": "All Two-way SMS",
-				"description": "Returns all two-way messages.",
+				"summary": "Two-Way SMS: Get All",
+				"description": "Returns all two-way messages including messages sent and received.",
 				"operationId": "conversations",
 				"responses": {
 					"200": {
@@ -267,8 +267,8 @@
 				}
 			},
 			"post": {
-				"summary": "Send Two-way SMS.",
-				"description": "Makes a POST request to send a two-way SMS. \n\n Returns the SMS sent if successful.",
+				"summary": "Send Two-way SMS",
+				"description": "Makes a POST request to send a two-way SMS using the pre-defined phone number. \n\n Returns the SMS sent if successful.",
 				"operationId": "sendConversation",
 				"requestBody": {
 					"description": "",
@@ -307,6 +307,151 @@
 										"credits": 1,
 										"message_type": "outgoing"
 									}
+								}
+							}
+						}
+					},
+
+					"403": {
+						"description": "Unauthorized. Invalid API key",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "Unauthorized!"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "An unexpected error occured."
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/conversations/latest": {
+			"get": {
+				"summary": "Two-Way SMS: Get Latest Incoming Messages",
+				"description": "Returns all the most recent incoming two-way messages that have not yet been acknowledged.",
+				"operationId": "latestConversations",
+				"responses": {
+					"200": {
+						"description": "An array of latest received two-way messages",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 0,
+									"conversations": [
+										{
+											"id": "<conversation_id>",
+											"from": "231777123456",
+											"to": "231886123456",
+											"message": "TEST 1",
+											"status": "queued",
+											"message_type": "incoming",
+											"credits": 1,
+											"user_id": "<user_id>",
+											"created_at": "2023-03-07T18:47:59.753Z"
+										},
+										{
+											"id": "<conversation_id>",
+											"from": "231555123456",
+											"to": "231886123456",
+											"message": "TEST 2",
+											"status": "queued",
+											"message_type": "incoming",
+											"credits": 1,
+											"user_id": "<user_id>",
+											"created_at": "2023-03-07T18:47:59.753Z"
+										}
+									]
+								}
+							}
+						}
+					},
+					"403": {
+						"description": "Unauthorized. Invalid API key",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "Unauthorized!"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Unexpected error",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 1,
+									"errorMessage": "An unexpected error occurred."
+								}
+							}
+						}
+					}
+				}
+			},
+			"post": {
+				"summary": "Two-Way SMS: Acknowledge Receipt",
+				"description": "Makes a POST request to send acknowledgement of fetched incoming messages. \n\n Returns the message ids of the SMS received if successful and removes those messages from the next conversations/latest response",
+				"operationId": "acknowledgeReceipt",
+				"requestBody": {
+					"description": "",
+
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/latestConversations"
+							},
+							"example": {
+								"conversation_ids": ["7fbdfc74-cd40-4a6b-8bdd-027acacc210e","384538e7-a810-40f5-afe6-ceb6e6ebf03d"]
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"description": "An array of acknowledged conversation ids",
+						"headers": {},
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object"
+								},
+								"example": {
+									"errorCode": 0,
+									"conversation_ids": ["<conversation_id1>","<conversation_id2>"]
 								}
 							}
 						}
@@ -413,6 +558,20 @@
 	},
 	"components": {
 		"schemas": {
+			"latestConversations": {
+				"title": "latestConversations",
+				"required": ["conversation_ids"],
+				"type": "object",
+				"properties": {
+					"conversation_ids": {
+						"type": "array",
+						"description": "array of conversation ids"
+					}
+				},
+				"example": {
+					"conversation_ids": ["7fbdfc74-cd40-4a6b-8bdd-027acacc210e","384538e7-a810-40f5-afe6-ceb6e6ebf03d"]
+				}
+			},
 			"sendConversationRequest": {
 				"title": "sendConversationRequest",
 				"required": ["senderName", "messages"],
