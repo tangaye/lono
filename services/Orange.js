@@ -4,7 +4,7 @@ const querystring = require("querystring")
 
 class Orange
 {
-    
+
     constructor()
     {
         this.baseUrl = process.env.ORANGE_BASEURL
@@ -34,23 +34,23 @@ class Orange
             })
 
             if (result?.data) return result.data?.access_token
-            
+
         } catch (error) {
-           
+
             logger.error("Error getting token for orange gateway: ", {error})
         }
     }
 
     /**
-     * 
-     * @param {string} recipient 
-     * @param {string} message 
+     *
+     * @param {string} recipient
+     * @param {string} message
      * @param {string} senderName
      */
     async send(recipient, message, senderName)
     {
         try {
-            
+
             const token = await this.getToken()
 
             if (token) {
@@ -69,21 +69,20 @@ class Orange
                         "Authorization": `Bearer ${token}`
                     }
                 })
-    
+
                 if (result.data) {
                     const resource_url = result.data.outboundSMSMessageRequest.resourceURL
                     const id = resource_url.split("/").pop()
 
-                    console.log("resource url array: ", resource_url.split("/"))
-                    console.log("resource url id: ", id)
+
                     return {id}
                 }
 
             }
 
-            
+
         } catch (error) {
-            
+
             logger.error("Error sending message from orange gateway: ", error.response.data.requestError)
         }
     }
@@ -101,7 +100,7 @@ class Orange
                         "Authorization": `Bearer ${token}`
                     }
                 })
-    
+
                 if (result.data) {
 
                     const data = result.data[0]
