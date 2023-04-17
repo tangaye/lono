@@ -211,7 +211,7 @@ exports.buildQuery = (user_id, search, message_id, order) => {
             msg.credits,
             msg.status,
             (SELECT s.name FROM senders s WHERE s.id = msg.sender_id) AS sender,
-            msg.msisdn_id,
+            msg.msisdn_id as msisdn,
             CASE WHEN COUNT(mp.id) = 0 THEN NULL ELSE json_agg(json_build_object('part', mp.part, 'status', mp.status)) END AS parts,
             msg.created_at
         FROM messages msg
