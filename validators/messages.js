@@ -21,6 +21,46 @@ exports.validateAll = (request, response, next) => {
 }
 
 /**
+ * Validates export
+ * @param {Request} request
+ * @param {Response} response
+ * @param {next} next
+ * @returns
+ */
+exports.validateExport = (request, response, next) => {
+
+    let {msisdns, start_date, end_date} = request.body
+
+    if (
+        (start_date && !helper.isValidDate(start_date)) || (end_date && !helper.isValidDate(end_date))
+        )
+    {
+        return helper.respond(response, {
+            code: constants.INVALID_DATA,
+            message: "Invalid date"
+        }, 400)
+    }
+
+    if (start_date) start_date = new Date(start_date).toISOString().slice(0, 10)
+
+    if (end_date) end_date = new Date(end_date).toISOString().slice(0, 10)
+
+    if (start_date && end_date)
+    {
+        if (end_date < start_date) return helper.respond(response, {
+            code: constants.INVALID_DATA,
+            message: "Invalid date range"
+        }, 400)
+    }
+
+    request.body.msisdns = msisdns?.length > 0 ? msisdns : null;
+    request.body.end_date = end_date || null;
+    request.body.start_date = start_date || null;
+
+    return next()
+}
+
+/**
  * Validates and prepares requests to store apps
  * @param {Request} request
  * @param {Response} response

@@ -6,11 +6,11 @@ const logger = require("../logger");
 const helper = require("../helpers");
 
 /**
- * Returns all messages in the last seven days for sender
- * @param {Array|Required} sender_ids
+ * Returns all messages in the last seven days for user
+ * @param {String|Required} user_id
  * @returns {Promise<*[]|*>}
  */
-exports.lastSevenDaysCount = async (sender_ids) => {
+exports.lastSevenDaysCount = async (user_id) => {
 	try {
 		const messages = await database.query(
 			`
@@ -18,11 +18,11 @@ exports.lastSevenDaysCount = async (sender_ids) => {
 				from (select generate_series((current_date + 1) - interval '7 days', (current_date + 1) - interval '1 days', interval '1 days')::date as date) series
 				left join messages
 				on messages.created_at::date = date
-				and messages.sender_id IN(:ids)
+				and messages.user_id = :user_id
 				group by date
 				order by date desc`,
 			{
-				replacements: { ids: sender_ids },
+				replacements: { user_id: user_id },
 				type: QueryTypes.SELECT,
 			}
 		);
@@ -37,13 +37,13 @@ exports.lastSevenDaysCount = async (sender_ids) => {
 
 /**
  * Returns the total number of messages sent
- * @param {Array|Required} sender_ids
+ * @param {String|Required} user_id
  * @returns {Promise<number>}
  */
-exports.total = async (sender_ids) => {
+exports.total = async (user_id) => {
 	try {
 		return await Message.count({
-			where: { sender_id: { [Op.in]: sender_ids } },
+			where: { id: user_id },
 		});
 	} catch (error) {
 		console.log("error querying for total: ", error);
@@ -53,19 +53,19 @@ exports.total = async (sender_ids) => {
 
 /**
  * Returns the total number of messages sent for sender on current date
- * @param {Array|Required} sender_ids
+ * @param {String|Required} user_id
  * @returns {Promise<number|*>}
  */
-exports.totalToday = async (sender_ids) => {
+exports.totalToday = async (user_id) => {
 	try {
 		return await database.query(
 			`
-				select cast(count(id) as int) 
-				from messages 
-				where created_at::date = CURRENT_DATE 
-				and sender_id IN(:ids) `,
+				select cast(count(id) as int)
+				from messages
+				where created_at::date = CURRENT_DATE
+				and messages.user_id = :user_id `,
 			{
-				replacements: { ids: sender_ids },
+				replacements: { user_id: user_id },
 				type: QueryTypes.SELECT,
 			}
 		);
@@ -77,33 +77,31 @@ exports.totalToday = async (sender_ids) => {
 
 /**
  * Returns the latest 5 messages for a sender
- * @param {Array|Required} sender_ids
+ * @param {String|Required} user_id
  * @returns {Promise<Message[]|*[]>}
  */
-exports.latestFive = async (sender_ids) => {
+exports.latestFive = async (user_id) => {
 	try {
 		const messages = await database.query(
 			`
-			SELECT
-				msg.id,
-				msg.message,
-				msg.credits,
-				msg.status,
-				s.name AS sender,
-				m.id AS msisdn,
-				json_agg(json_build_object('part', mp.part, 'status', mp.status)) as parts,
-				msg.created_at
-			FROM messages msg
-				INNER JOIN message_parts mp on msg.id = mp.message_id
-				INNER JOIN msisdns m ON m.id = msg.msisdn_id
-				INNER JOIN senders s ON msg.sender_id = s.id
-			WHERE msg.sender_id IN (:senders)
-			GROUP BY msg.id, msg.created_at, s.id, m.id
+            SELECT
+                msg.id,
+                msg.message,
+                msg.credits,
+                msg.status,
+                (SELECT s.name FROM senders s WHERE s.id = msg.sender_id) AS sender,
+                msg.msisdn_id,
+                CASE WHEN COUNT(mp.id) = 0 THEN NULL ELSE json_agg(json_build_object('part', mp.part, 'status', mp.status)) END AS parts,
+                msg.created_at
+            FROM messages msg
+                LEFT JOIN message_parts mp on msg.id = mp.message_id
+            WHERE msg.user_id = :user_id
+			GROUP BY msg.id, msg.created_at
 			ORDER BY msg.created_at DESC
 			LIMIT 5
 		`,
 			{
-				replacements: { senders: sender_ids },
+				replacements: { user_id: user_id },
 				type: QueryTypes.SELECT,
 			}
 		);
@@ -163,7 +161,7 @@ exports.storeMessage = async ({
  */
 const getIdQuery = () => ` AND msg.id = :message_id`;
 
-const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, s.id, m.id`;
+const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at`;
 
 /**
  * messages search query
@@ -171,15 +169,14 @@ const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at, s.id, m.id`;
  */
 
 const getSearchQuery = () => ` AND (
-	m.id ilike :search OR
-	s.name ilike :search OR
-	msg.message ilike :search OR
-	msg.status ilike :search OR
-    mp.status ilike :search
+    msg.msisdn_id like :search OR
+	msg.message like :search OR
+	msg.status like :search OR
+    mp.status like :search
 )`;
 
-exports.buildReplacements = (senders, message_id, search, limit, offset) => {
-	const replacements = { senders, limit, offset, search: `%${search}%` };
+exports.buildReplacements = (user_id, message_id, search, limit, offset) => {
+	const replacements = { user_id, limit, offset, search: `%${search}%` };
 
 	if (search && Number(search[0]) === 0)
 		replacements.search = `%${search.substring(1)}%`;
@@ -189,6 +186,14 @@ exports.buildReplacements = (senders, message_id, search, limit, offset) => {
 	return replacements;
 };
 
+exports.buildExportReplacements = (user_id, msisdns, start_date, end_date) => {
+
+	const replacements = { user_id, msisdns, start_date, end_date};
+
+	return replacements;
+};
+
+
 /**
  * Setup query to query messages
  * @param search - search
@@ -196,24 +201,22 @@ exports.buildReplacements = (senders, message_id, search, limit, offset) => {
  * @param order - order or messages returned, asc or desc
  * @return {string}
  */
-exports.buildQuery = (search, message_id, order) => {
+exports.buildQuery = (user_id, search, message_id, order) => {
 	order = order ? order.toUpperCase() : "DESC";
 
 	let query = `
-				SELECT
-					msg.id,
-					msg.message,
-					msg.credits,
-					msg.status,
-					s.name AS sender,
-					m.id AS msisdn,
-					json_agg(json_build_object('part', mp.part, 'status', mp.status)) as parts,
-					msg.created_at
-				FROM messages msg
-					INNER JOIN message_parts mp on msg.id = mp.message_id
-					INNER JOIN msisdns m ON m.id = msg.msisdn_id
-					INNER JOIN senders s ON msg.sender_id = s.id
-				WHERE msg.sender_id IN (:senders)`;
+        SELECT
+            msg.id,
+            msg.message,
+            msg.credits,
+            msg.status,
+            (SELECT s.name FROM senders s WHERE s.id = msg.sender_id) AS sender,
+            msg.msisdn_id,
+            CASE WHEN COUNT(mp.id) = 0 THEN NULL ELSE json_agg(json_build_object('part', mp.part, 'status', mp.status)) END AS parts,
+            msg.created_at
+        FROM messages msg
+            LEFT JOIN message_parts mp on msg.id = mp.message_id
+        WHERE msg.user_id = :user_id`;
 
 	if (search) query += getSearchQuery();
 	if (message_id) query += getIdQuery(search);
@@ -221,6 +224,39 @@ exports.buildQuery = (search, message_id, order) => {
 	query += getGroupByQuery();
 	query += helper.getOrderQuery(order);
 	query += helper.getLimitOffsetQuery();
+
+	return query;
+};
+
+/**
+ * Setup query to export messages
+ * @param search - search
+ * @param message_id - message_id: for getting a messages
+ * @param order - order or messages returned, asc or desc
+ * @return {string}
+ */
+exports.buildExportQuery = () => {
+
+	const query = `
+        SELECT
+            msg.id,
+            msg.message,
+            msg.credits,
+            msg.status,
+            (SELECT s.name FROM senders s WHERE s.id = msg.sender_id) AS sender,
+            msg.msisdn_id,
+            msg.created_at
+        FROM messages msg
+        WHERE msg.user_id = :user_id
+        AND (
+            (msg.created_at::date BETWEEN :start_date AND :end_date)
+            OR (msg.created_at::date >= :start_date AND :end_date IS NULL)
+            OR (msg.created_at::date <= :end_date AND :start_date IS NULL)
+            OR (:start_date IS NULL AND :end_date IS NULL)
+        )
+        AND (:msisdns IS NULL OR msg.msisdn_id IN (:msisdns))
+        GROUP BY msg.id, msg.created_at
+        ORDER BY created_at ASC`;
 
 	return query;
 };
