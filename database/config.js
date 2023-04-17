@@ -7,7 +7,7 @@ module.exports = {
 		dialect: "postgres",
 		dialectOptions: {
 			bigNumberStrings: true,
-		},
+		}
 	},
     staging: {
 		url: process.env.DB_URL,

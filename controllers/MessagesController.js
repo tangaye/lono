@@ -22,16 +22,15 @@ exports.all = async (request, response) => {
 	try {
 
 		const user = request.body.user
-		const senders = user.senders.map((sender) => sender.id)
 
 		const { page, size, search, order, id } = request.query
 		const { limit, offset} = helper.getPagination(page, size)
 
-		const replacements = MessageFactory.buildReplacements(senders, id, search, limit, offset)
-		const query_string = MessageFactory.buildQuery(search, id, order)
+		const replacements = MessageFactory.buildReplacements(user.id, id, search, limit, offset)
+		const query_string = MessageFactory.buildQuery(user.id, search, id, order)
 
 		const count = await Message.count({
-			where: {sender_id: {[Op.in]: senders}},
+			where: {user_id: user.id},
 			distinct: true
 		})
 
@@ -63,6 +62,44 @@ exports.all = async (request, response) => {
 		})
 	}
 };
+
+exports.export = async(request, response) => {
+    try {
+
+        const user = request.body.user
+
+        const { msisdns, start_date, end_date} = request.body
+
+        const replacements = MessageFactory.buildExportReplacements(user.id, msisdns, start_date, end_date);
+
+        const query_string = MessageFactory.buildExportQuery()
+
+        const results = await database.query(query_string, {
+			replacements,
+			type: QueryTypes.SELECT
+		})
+
+		if (results) return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			messages: results
+		})
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error exporting messages"
+		})
+
+    } catch (error) {
+        const message = "error getting data for export"
+
+		logger.log(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
+		})
+    }
+},
 
 /**
  * Stores and sends a message
@@ -111,7 +148,7 @@ exports.send = async (request, response) => {
 					}, queue)
 				}
 			}
-			else 
+			else
 			{
 				Queue.add({
 					body: item.body,
@@ -158,9 +195,8 @@ exports.statistics = async (request, response) => {
 	try {
 
 		const user = request.body.user
-		const sender_ids = user.senders.map((sender) => sender.id)
 
-		if (sender_ids.length <= 0) return helper.respond(response, {
+		if (!user) return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
 			statistics: {
 				total: 0,
@@ -170,10 +206,10 @@ exports.statistics = async (request, response) => {
 			},
 		})
 
-		const last_seven_counts = await MessageFactory.lastSevenDaysCount(sender_ids)
-		const total_today = await MessageFactory.totalToday(sender_ids)
-		const total = await MessageFactory.total(sender_ids)
-		const latest_five = await MessageFactory.latestFive(sender_ids)
+		const last_seven_counts = await MessageFactory.lastSevenDaysCount(user.id)
+		const total_today = await MessageFactory.totalToday(user.id)
+		const total = await MessageFactory.total(user.id)
+		const latest_five = await MessageFactory.latestFive(user.id)
 
 		if (last_seven_counts && total_today && total !== null) return helper.respond(response, {
 				code: constants.SUCCESS_CODE,
@@ -187,7 +223,7 @@ exports.statistics = async (request, response) => {
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
-			message: "error fetching data"
+			message: "error fetching stats"
 		})
 	}
 	catch (error)
@@ -241,7 +277,7 @@ exports.handleOrangeDR = async (request, response) =>
 
 		const delivery_notification = request.body?.deliveryInfoNotification
 
-		if (delivery_notification) 
+		if (delivery_notification)
 		{
 			const resource_id = delivery_notification?.callbackData
 			const message_status = delivery_notification?.deliveryInfo?.deliveryStatus
@@ -265,14 +301,14 @@ exports.handleOrangeDR = async (request, response) =>
 
 				const [, result] = await MessagePart.update(
 					{status},
-					{ where: 
-						{ 
+					{ where:
+						{
 							gateway_message_id: resource_id
-						}, 
-						returning: true 
+						},
+						returning: true
 					}
 				)
-	
+
 				console.log('Orange message status updated: ', result)
 			}
 

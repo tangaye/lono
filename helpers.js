@@ -3,6 +3,8 @@ const validator = require("validator")
 const constants = require("./constants")
 const generateApiKey = require('generate-api-key')
 
+exports.isValidDate = date => validator.isDate(date)
+
 /**
  * Checks if url is valid
  * @param {String} url
@@ -79,8 +81,8 @@ exports.generateSecret = () => generateApiKey({
 
 /**
  * Returns the message queue to use based on the msisdn passed
- * @param {string} msisdn 
- * @returns 
+ * @param {string} msisdn
+ * @returns
  */
 exports.getMessageQueue = msisdn => {
 
@@ -108,7 +110,7 @@ exports.getPagination = (page, size) => {
 
 /**
  * Returns true if a number is a valid lonestar number
- * @param {string} msisdn 
+ * @param {string} msisdn
  * @returns {Boolean|undefined}
  */
 exports.isLonestarMsisdn = msisdn => {
