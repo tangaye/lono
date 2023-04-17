@@ -43,7 +43,7 @@ exports.lastSevenDaysCount = async (user_id) => {
 exports.total = async (user_id) => {
 	try {
 		return await Message.count({
-			where: { id: user_id },
+			where: { user_id: user_id },
 		});
 	} catch (error) {
 		console.log("error querying for total: ", error);
