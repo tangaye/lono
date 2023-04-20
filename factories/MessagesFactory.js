@@ -254,7 +254,7 @@ exports.buildExportQuery = () => {
             OR (msg.created_at::date <= :end_date AND :start_date IS NULL)
             OR (:start_date IS NULL AND :end_date IS NULL)
         )
-        AND (:msisdns IS NULL OR msg.msisdn_id IN (:msisdns))
+        AND ((:msisdns) IS NULL OR msg.msisdn_id IN (:msisdns))
         GROUP BY msg.id, msg.created_at
         ORDER BY created_at ASC`;
 
