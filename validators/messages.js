@@ -29,6 +29,7 @@ exports.validateAll = (request, response, next) => {
  */
 exports.validateExport = (request, response, next) => {
 
+
     let {msisdns, start_date, end_date} = request.body
 
     if (

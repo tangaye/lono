@@ -31,7 +31,22 @@ const conversationRoutes = require("./routes/conversations");
 
 // app.use(helmet())
 app.use(cors());
-app.use(express.json({ limit: "200mb" }));
+app.use(express.json({
+    limit: "200mb",
+    verify : (req, res, buf, encoding) => {
+        try {
+            JSON.parse(buf)
+        } catch(e) {
+
+            res.status(404).send({
+                errorCode: constants.FAILURE_CODE,
+                errorMessage: `Invalid data`,
+            })
+            logger.log("invalid JSON passed to API")
+            throw Error('invalid JSON');
+        }
+    }
+}));
 app.use(express.urlencoded({ extended: true, limit: "200mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -42,6 +57,24 @@ app.use("/api/v1/", userRoutes);
 app.use("/api/v1/", contactRoutes);
 app.use("/api/v1/", groupRoutes);
 app.use("/api/v1", conversationRoutes);
+
+
+//404 middleware, should be below routes
+app.use((request, response, next) =>
+	response.status(constants.NOTFOUND).send({
+		errorCode: constants.FAILURE_CODE,
+		errorMessage: `${request.originalUrl} not found`,
+	})
+);
+
+// 500 middleware
+app.use((error, request, response, next) => {
+	console.error(error.stack);
+	return response.status(constants.SERVER_ERROR).send({
+		errorCode: constants.FAILURE_CODE,
+		errorMessage: "An unexpected error occured.",
+	});
+});
 
 // tables associations
 User.hasMany(Sender);
@@ -61,22 +94,6 @@ MessagePart.belongsTo(Message);
 Conversation.belongsTo(User);
 User.hasMany(Conversation);
 
-//404 middleware, should be below routes
-app.use((request, response, next) =>
-	response.status(constants.NOTFOUND).send({
-		errorCode: constants.FAILURE_CODE,
-		errorMessage: `${request.originalUrl} not found`,
-	})
-);
-
-// 500 middleware
-app.use((error, request, response, next) => {
-	console.error(error.stack);
-	return response.status(constants.SERVER_ERROR).send({
-		errorCode: constants.FAILURE_CODE,
-		errorMessage: "An unexpected error occured.",
-	});
-});
 
 (async () => {
 	try {
