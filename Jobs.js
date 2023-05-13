@@ -1,7 +1,7 @@
 const logger = require("./logger")
 const cron = require('node-cron')
 const Orange = require("./services/Orange")
-const DSeven = require("./services/Dseven")
+const DSeven = require("./services/DSeven")
 const Bulkgate = require("./services/Bulkgate")
 const Mattermost = require("./services/Mattermost")
 
