@@ -1,4 +1,5 @@
 const axios = require("axios")
+const logger = require("../logger")
 
 class Mattermost
 {
@@ -10,16 +11,16 @@ class Mattermost
 
     async sendMessage(message)
     {
-        try 
+        try
         {
             const data = {text: message}
 
             await axios.post(this.baseUrl, data)
 
-            
-        } catch (error) 
+
+        } catch (error)
         {
-            logger.log("Error sending message to mattermost: ", error.response.data.requestError)
+            logger.log("Error sending message to mattermost: ", error)
         }
     }
 }

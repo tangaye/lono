@@ -2,6 +2,8 @@ const colors = require('colors')
 const validator = require("validator")
 const constants = require("./constants")
 const generateApiKey = require('generate-api-key')
+const MessageFlow = require("./models/Carrier")
+const Gateway = require('./models/Gateway')
 
 exports.isValidDate = date => validator.isDate(date)
 
@@ -87,6 +89,7 @@ exports.generateSecret = () => generateApiKey({
 exports.getMessageQueue = msisdn => {
 
 	if (this.isLonestarMsisdn(msisdn)) return constants.BULKGATE_MESSAGES_QUEUE
+    if (this.isLonestarMsisdn(msisdn)) return constants.BULKGATE_MESSAGES_QUEUE
 
 	return constants.ORANGE_MESSAGES_QUEUE
 }
@@ -117,6 +120,18 @@ exports.isLonestarMsisdn = msisdn => {
 	if (msisdn && typeof msisdn === "string") {
 		const starting_digits = msisdn.substring(0, 5)
 		return ["23188", "23155"].includes(starting_digits)
+	}
+}
+
+/**
+ * Returns true if a number is a valid orange number
+ * @param {string} msisdn
+ * @returns {Boolean|undefined}
+ */
+exports.isOrangeMsisdn = msisdn => {
+	if (msisdn && typeof msisdn === "string") {
+		const starting_digits = msisdn.substring(0, 5)
+		return ["23177"].includes(starting_digits)
 	}
 }
 

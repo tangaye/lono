@@ -16,7 +16,7 @@ module.exports = {
 		 *   isBetaMember: false
 		 * }], {});
 		 */
-		let user_count = await User.count();
+		const user_count = await User.count();
 
 		// Insert only when there are no records
 		if (user_count > 0) {

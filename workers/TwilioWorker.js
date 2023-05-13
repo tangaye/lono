@@ -21,32 +21,22 @@ worker.on("message", async function (msg, next, msgid) {
 		const twilio = new Twilio(to, body, sender)
 		const result = await twilio.send()
 
-		if (result)
-		{
-			for (const part of parts)
-			{
-				await MessagePart.create({
-					part: part,
-					message_id
-				})
-			}
+        if (!result) throw Error("Unable to send message from TwilioWorker")
 
-			await UsersController.updateCredits(user_id, credits)
+		await Promise.all([
+            MessagePart.create({
+                part: part,
+                message_id
+            }),
 
-			await Message.update({
+			UsersController.updateCredits(user_id, 1),
+
+			Message.update({
 				gateway_message_id: result.id
-			}, {where: {id: message_id}})
+			}, {where: {id: message_id}}),
 
-			// await MessagePart.create({
-			// 	part: body,
-			// 	message_id,
-			// 	gateway_message_id: result.id
-			// })
-			//
-			// await UsersController.updateCredits(user_id)
-
-			await Queue.removeFromQueue(constants.TWILIO_MESSAGES_QUEUE, msgid);
-		}
+			Queue.removeFromQueue(constants.TWILIO_MESSAGES_QUEUE, msgid)
+        ])
 
 
 	} catch (error) {

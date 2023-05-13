@@ -37,7 +37,8 @@ class Orange
 
         } catch (error) {
 
-            logger.error("Error getting token for orange gateway: ", {error})
+            console.log(error)
+            logger.error("Error getting token for orange gateway: ", error)
         }
     }
 
@@ -121,7 +122,7 @@ class Orange
         }
         catch(error)
         {
-            logger.error("Error checking balance: ", error.response.data.requestError)
+            logger.error("Error checking balance: ", error)
         }
     }
 

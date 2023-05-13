@@ -120,62 +120,49 @@ exports.send = async (request, response) => {
 			const msisdn = contact ? contact.msisdns.find(msisdn => msisdn.id === item.to) : item.to
 			const parts = MessageFactory.breakIntoParts(item.body, 160)
 			const credits = constants.SMS_TARIFF * parts.length
-			const queue = helper.getMessageQueue(item.to)
-			const gateway = await Gateway.findOne({where: {slug: queue.split("_")[0]}})
 
-			const message = await Message.create({
-				id: message_id,
-				message: item.body,
-				msisdn_id: msisdn.id,
-				sender_id: sender.id,
-				gateway_id: gateway.id,
-				user_id: user.id,
-				credits
-			})
+            const gateway = await MessageFactory.getGateway(item.to)
 
-			if (queue === constants.ORANGE_MESSAGES_QUEUE)
-			{
-				for (const text of parts)
-				{
+            if (!gateway) throw Error ('gateway not found')
 
-					Queue.add({
-						body: text,
-						to: item.to,
-						sender: sender.name,
-						message_id: message.id,
-						user_id: user.id,
-						credits
-					}, queue)
-				}
-			}
-			else
-			{
-				Queue.add({
-					body: item.body,
-					to: item.to,
-					sender: sender.name,
-					message_id: message.id,
-					user_id: user.id,
-					credits,
-					parts
-				}, queue)
-			}
+            const message = await Message.create({
+                id: message_id,
+                message: item.body,
+                msisdn_id: msisdn.id,
+                sender_id: sender.id,
+                gateway_id: gateway.id,
+                user_id: user.id,
+                credits
+            })
 
-			queued_messages.push({
-				smsId: message_id,
-				recipient: item.to,
-				message: item.body,
-				credits,
-				sender,
-				extMessageId: item.extMessageId
-			})
+            queued_messages.push({
+                smsId: message_id,
+                recipient: item.to,
+                message: item.body,
+                credits,
+                sender,
+                extMessageId: item.extMessageId
+            })
+
+            for (const text of parts)
+            {
+
+                Queue.add({
+                    body: text,
+                    to: item.to,
+                    sender: sender.name,
+                    message_id: message.id,
+                    user_id: user.id,
+                    credits
+                }, gateway.queue)
+            }
+
 		}
 
-		return response.send({
-			errorCode: constants.SUCCESS_CODE,
-			messages: queued_messages,
-		});
-
+        return response.send({
+            errorCode: constants.SUCCESS_CODE,
+            messages: queued_messages,
+        });
 
 
 	} catch (error) {
@@ -230,7 +217,7 @@ exports.statistics = async (request, response) => {
 	{
 		const message = "error fetching data"
 
-		logger.log(message, error)
+		logger.error(message, error)
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
@@ -241,10 +228,10 @@ exports.statistics = async (request, response) => {
 
 }
 
-exports.bulkGateUpdateStatus = async (request, response) => {
+exports.bulkgateDR = async (request, response) => {
     try {
 
-        const {status, price, smsID} = request.query
+        const {status, smsID} = request.query
 
         const bulkgate_statuses = [
             {code: 1, name: "delivered"},
@@ -252,75 +239,115 @@ exports.bulkGateUpdateStatus = async (request, response) => {
             {code: 3, name: "failed"}
         ]
 
-        if (smsID) {
+        if (!(status && smsID)) throw Error("status, smsID not present in request")
 
+        const part = await MessagePart.findOne({
+            where: {gateway_message_id: smsID}
+        })
 
-            const message = await Message.findOne({where: {
-                gateway_message_id: smsID
-            }})
+        const message = await Message.findByPk(part.message_id)
 
-            const message_status = bulkgate_statuses.find(item => item.code === Number(status))
+        const message_status = bulkgate_statuses.find(item => item.code === Number(status))
 
-            if (message) await message.update({status: message_status.name})
-        }
+        await Promise.all([
+            message.update({status: message_status.name}),
+            part.update({status: message_status.name})
+        ])
 
-        return response.send({ ok: 200 })
+        return response.sendStatus(200)
     } catch (error) {
+
         logger.error("error updating bulkgate message status: ", error);
-		return response.status(constants.SERVER_ERROR).send({ failure: constants.SERVER_ERROR });
+
+		return response.sendStatus(500)
     }
 }
 
-exports.handleOrangeDR = async (request, response) =>
+exports.orangeDR = async (request, response) =>
 {
 	try {
 
-		const delivery_notification = request.body?.deliveryInfoNotification
+		const {deliveryInfoNotification} = request.body
 
-		if (delivery_notification)
-		{
-			const resource_id = delivery_notification?.callbackData
-			const message_status = delivery_notification?.deliveryInfo?.deliveryStatus
+        if (!deliveryInfoNotification) throw Error("Key 'delivery_notification' not found in request body")
 
-			if (resource_id && message_status)
-			{
+		const {callbackData, deliveryInfo} = deliveryInfoNotification
+        const {deliveryStatus} = deliveryInfo
 
-				let status = constants.PENDING_STATUS
+        if (!(callbackData)) throw Error("Key 'callbackData' not found in request body")
 
-				switch (message_status) {
-					case "DeliveryUncertain":
-					case "MessageWaiting": // still queued for delivery
-						status = constants.PENDING_STATUS
-						break;
-					case "DeliveredToNetwork":
-					case "DeliveryImpossible": // recipient phone out of battery or not active
-					case "DeliveredToTerminal": // message delivered
-						status = constants.DELIVERED_STATUS
-						break;
-				}
+        const part = await MessagePart.findOne({
+            where: {gateway_message_id: callbackData}
+        })
 
-				const [, result] = await MessagePart.update(
-					{status},
-					{ where:
-						{
-							gateway_message_id: resource_id
-						},
-						returning: true
-					}
-				)
 
-				console.log('Orange message status updated: ', result)
-			}
+        if (!part) throw Error("message not found")
 
-		}
+        const message = await Message.findByPk(part.message_id)
 
-		return response.send({ ok: 200 })
+
+        let status = constants.PENDING_STATUS
+
+        switch (deliveryStatus) {
+            case "DeliveredToNetwork":
+            case "DeliveryImpossible": // recipient phone out of battery or not active
+            case "DeliveredToTerminal": // message delivered
+                status = constants.DELIVERED_STATUS
+                break;
+        }
+
+        await Promise.all([
+            message.update({status}),
+            part.update({status})
+        ])
+
+		return response.sendStatus(200)
 
 	} catch (error) {
 
 		logger.error("error updating orange message status: ", error);
-		return response.status(constants.SERVER_ERROR).send({ failure: constants.SERVER_ERROR });
+
+		return response.sendStatus(constants.SERVER_ERROR);
 	}
+}
+
+exports.dsevenDR = async (request, response) =>
+{
+    try {
+
+        const {request_id, status} = request.body
+
+        if (!(request_id && status)) return response.sendStatus(400)
+
+        const part = await MessagePart.findOne({where: {gateway_message_id: request_id
+        }})
+
+        if (!part) throw Error(`No message found for ${request_id} with status ${status}`)
+
+        const message = await Message.findByPk(part.message_id)
+
+        let message_status = constants.PENDING_STATUS
+        switch (status) {
+            case "undelivered":
+                message_status = constants.FAILED_STATUS
+                break;
+            case "delivered":
+                message_status = constants.DELIVERED_STATUS
+                break;
+        }
+
+        await Promise.all([
+            message.update({status: message_status}), part.update({status: message_status})
+        ])
+
+        return response.sendStatus(200)
+
+    } catch (error) {
+
+        logger.error("error handling dseven delivery report message status: ", error);
+
+		return response.sendStatus(constants.SERVER_ERROR);
+    }
 }
 
 /**
@@ -329,7 +356,7 @@ exports.handleOrangeDR = async (request, response) =>
  * @param {*} response
  * @returns {*} response
  */
- exports.twilioUpdateStatus = async (request, response) => {
+ exports.twilioDR = async (request, response) => {
 	try {
 
 

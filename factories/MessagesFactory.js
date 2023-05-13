@@ -4,6 +4,8 @@ const { Op, QueryTypes } = require("sequelize");
 const constants = require("../constants");
 const logger = require("../logger");
 const helper = require("../helpers");
+const Gateway = require("../models/Gateway");
+const Carrier = require("../models/Carrier");
 
 /**
  * Returns all messages in the last seven days for user
@@ -312,3 +314,30 @@ exports.breakIntoParts = (message, limit) => {
 
 	return parts;
 };
+
+exports.getGateway = async msisdn => {
+
+    try {
+
+        const starting_digits = msisdn.substring(0, 5)
+
+        const gateway = await Gateway.findOne({
+            attributes: ['id', 'name', 'queue'],
+            include: {
+                model: Carrier,
+                attributes: ['id', 'name', 'msisdn_prefix'],
+                where: {
+                    msisdn_prefix: {
+                        [Op.contains]: [starting_digits]
+                    }
+                },
+                through: {attributes: []}
+            }
+        })
+
+        return gateway
+
+    } catch (error) {
+        logger.error("Error gateway for message", error)
+    }
+}

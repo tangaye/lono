@@ -12,7 +12,9 @@ router.get("/sms/stats", authenticate, MessagesController.statistics)
 router.post("/sms/export", [authenticate, validateExport], MessagesController.export)
 
 router.route("/sms/status")
-	.get(MessagesController.bulkGateUpdateStatus) // for bulkgate
-	.post(MessagesController.handleOrangeDR) // for orange
+	.get(MessagesController.bulkgateDR) // for bulkgate
+	.post(MessagesController.orangeDR) // for orange
+
+router.post("/sms/dseven/dr", MessagesController.dsevenDR)
 
 module.exports = router;

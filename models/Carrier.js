@@ -1,9 +1,9 @@
 const { DataTypes, Sequelize, Model } = require("sequelize");
 const sequelize = require("../database/connection");
 
-class Gateway extends Model {}
+class Carrier extends Model {}
 
-Gateway.init(
+Carrier.init(
 	{
 		id: {
 			type: DataTypes.UUID,
@@ -21,32 +21,18 @@ Gateway.init(
 				},
 			},
 		},
-        slug: {
-			type: DataTypes.STRING,
-			unique: true,
-			allowNull: false,
-			validate: {
-				notNull: {
-					msg: "slug is required",
-				},
-			},
-		},
-		active: {
-			type: DataTypes.BOOLEAN,
-			allowNull: false
-		},
-        queue: {
-			type: DataTypes.STRING,
-			allowNull: true
-		},
+        msisdn_prefix: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            allowNull: false,
+        },
 	},
 	{
 		paranoid: true,
 		deletedAt: 'deleted_at',
 		underscored: true,
-		tableName: "gateways",
+		tableName: "carriers",
 		sequelize, // We need to pass the connection instance
 	}
 );
 
-module.exports = Gateway;
+module.exports = Carrier;
