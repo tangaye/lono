@@ -21,6 +21,8 @@ const MessagePart = require("./models/MessagePart");
 const Conversation = require("./models/Conversation");
 const ContactGroup = require("./models/ContactGroup");
 const ContactMsisdnUser = require("./models/ContactMsisdnUser");
+const Carrier = require("./models/Carrier")
+const GatewayCarrier = require("./models/GatewayCarrier")
 
 const docRoutes = require("./routes/api.docs.route");
 const messagesRoutes = require("./routes/messages");
@@ -28,6 +30,7 @@ const userRoutes = require("./routes/users");
 const contactRoutes = require("./routes/contacts");
 const groupRoutes = require("./routes/groups");
 const conversationRoutes = require("./routes/conversations");
+const Gateway = require("./models/Gateway");
 
 // app.use(helmet())
 app.use(cors());
@@ -94,6 +97,9 @@ MessagePart.belongsTo(Message);
 Conversation.belongsTo(User);
 User.hasMany(Conversation);
 
+Gateway.belongsToMany(Carrier, { through: GatewayCarrier });
+Carrier.belongsToMany(Gateway, { through: GatewayCarrier });
+
 
 (async () => {
 	try {
@@ -112,13 +118,12 @@ User.hasMany(Conversation);
 		Queue.createQueue(constants.ORANGE_MESSAGES_QUEUE);
 		Queue.createQueue(constants.TWILIO_MESSAGES_QUEUE);
 		Queue.createQueue(constants.BULKGATE_MESSAGES_QUEUE);
-		Queue.createQueue(constants.TWILIO_MESSAGES_RETRY_QUEUE);
-		Queue.createQueue(constants.BULKGATE_MESSAGES_RETRY_QUEUE);
+		Queue.createQueue(constants.DSEVEN_MESSAGES_QUEUE);
 
 		require("./workers/OrangeWorker").start();
 		require("./workers/BulkgateWorker").start();
 		require("./workers/TwilioWorker").start();
-		require("./workers/BulkgateRetryWorker").start();
+		require("./workers/DsevenWorker").start();
 
 		await jobs.startAll();
 

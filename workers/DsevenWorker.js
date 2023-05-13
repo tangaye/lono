@@ -2,13 +2,14 @@ const rsmqWorker = require("rsmq-worker");
 const constants = require("../constants");
 const UsersController = require("../controllers/UsersController");
 const Queue = require("../Queue");
-const Orange = require("../services/Orange");
+const Dseven = require("../services/DSeven");
 const logger = require("../logger");
 const MessagePart = require("../models/MessagePart");
+const DSeven = require("../services/DSeven");
 const Message = require("../models/Message");
 
 const worker = new rsmqWorker(
-	constants.ORANGE_MESSAGES_QUEUE,
+	constants.DSEVEN_MESSAGES_QUEUE,
 	Queue.queueInstance
 );
 
@@ -18,29 +19,34 @@ worker.on("message", async function (msg, next, msgid) {
 		const { to, body, sender, message_id, user_id } = message;
 
 		// send sms
-		const orange = new Orange();
-		const result = await orange.send(to, body, sender);
+		const dseven = new DSeven();
+		const result = await dseven.send(to, body, sender);
 
-		if (!result) throw Error("Unable to send message from OrangeWorker")
+		if (!result) throw Error("Unable to send message from DsevenWorker")
+
+        console.log({result})
 
         await Promise.all([
 
             MessagePart.create({
-				part: body,
-				message_id,
-				gateway_message_id: result.id,
-			}),
+                part: body,
+                message_id,
+                gateway_message_id: result.id,
+            }),
 
-			UsersController.updateCredits(user_id, 1),
+            UsersController.updateCredits(user_id, 1),
 
             Message.update({
                 gateway_message_id: result.id
             }, {where: {id: message_id}}),
 
-			Queue.removeFromQueue(constants.ORANGE_MESSAGES_QUEUE, msgid),
+            Queue.removeFromQueue(constants.DSEVEN_MESSAGES_QUEUE, msgid)
+
         ])
 
+
 	} catch (error) {
+
 		logger.error("error sending message from queue: ", error);
 	}
 	next();

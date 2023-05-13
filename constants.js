@@ -22,12 +22,10 @@ exports.MESSAGES_ATTRIBUTES = [
 	["created_at", "date"],
 ];
 
-exports.BULKGATE_MESSAGES_QUEUE = "bulkgate_messages_queue";
-exports.BULKGATE_MESSAGES_RETRY_QUEUE = "bulkgate_messages_queue_retry";
 exports.TWILIO_MESSAGES_QUEUE = "twilio_messages_queue";
-exports.TWILIO_MESSAGES_RETRY_QUEUE = "twilio_messages_queue_retry";
 exports.ORANGE_MESSAGES_QUEUE = "orange_messages_queue";
-exports.ORANGE_MESSAGES_RETRY_QUEUE = "orange_messages_queue_retry";
+exports.BULKGATE_MESSAGES_QUEUE = "bulkgate_messages_queue";
+exports.DSEVEN_MESSAGES_QUEUE = "dseven_messages_queue";
 exports.ADMIN_ROLE = "admin";
 exports.CLIENT_ROLE = "client";
 
@@ -37,6 +35,12 @@ exports.REQUIRED_ENV_VARIABLES = [
 	"NODE_ENV",
 	"REDIS_URL",
 	"CONVERSATION_BUSINESS_NUMBER",
+    "MATTERMOST_WEBHOOK",
+    "DSEVEN_BASEURL",
+    "DSEVEN_TOKEN",
+    "ORANGE_BASEURL",
+    "ORANGE_AUTHORIZATION_HEADER",
+    "ORANGE_DEV_PHONE_NUMBER"
 ];
 
 /**Environment variables needed but not required to run the app*/

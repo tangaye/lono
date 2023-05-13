@@ -9,7 +9,7 @@ module.exports = {
 		 * Add seed commands here.
 		 *
 		 * Example:
-		 * 
+		 *
 		 * await queryInterface.bulkInsert('People', [{
 		 *   name: 'John Doe',
 		 *   isBetaMember: false
@@ -32,6 +32,7 @@ module.exports = {
 					id: uuidv4(),
 					name: "Orange",
 					slug: "orange",
+                    queue: "orange_messages_queue",
 					active: false,
 					created_at: new Date(Date.now()).toISOString(),
 					updated_at: new Date(Date.now()).toISOString(),
