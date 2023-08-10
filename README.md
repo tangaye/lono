@@ -16,4 +16,4 @@ Lono SMS API service
 -   run `docker build -t lonosms-dev .`
 -   run `docker run --env-file ./.env --name lonosms-dev --net=host -d lonosms-dev`
 
-Power to the people
+Power to the people!
