@@ -118,6 +118,9 @@ exports.send = async (request, response) => {
 			const message_id = uuidv4()
 			const contact = await ContactFactory.createContact({msisdns: [item.to], user})
 			const msisdn = contact ? contact.msisdns.find(msisdn => msisdn.id === item.to) : item.to
+
+            console.log({msisdn});
+
 			const parts = MessageFactory.breakIntoParts(item.body, 160)
 			const credits = constants.SMS_TARIFF * parts.length
 
@@ -134,6 +137,7 @@ exports.send = async (request, response) => {
                 user_id: user.id,
                 credits
             })
+
 
             queued_messages.push({
                 smsId: message_id,
