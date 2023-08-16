@@ -16,34 +16,30 @@ const worker = new rsmqWorker(
 worker.on("message", async function (msg, next, msgid) {
 	try {
 		const message = JSON.parse(msg);
-		const { to, body, sender, message_id, user_id } = message;
+		const { to, body, parts, credits, sender, message_id, user_id } = message;
 
 		// send sms
 		const dseven = new DSeven();
 		const result = await dseven.send(to, body, sender);
 
-		if (!result) throw Error("Unable to send message from DsevenWorker")
+		if (!result) throw Error("Unable to send message from DsevenWorker");
 
-        console.log({result})
 
-        await Promise.all([
-
+        for (const text of parts)
+        {
             MessagePart.create({
-                part: body,
-                message_id,
-                gateway_message_id: result.id,
-            }),
+                part: text,
+                message_id
+            });
+        }
 
-            UsersController.updateCredits(user_id, 1),
+        UsersController.updateCredits(user_id, credits),
 
-            Message.update({
-                gateway_message_id: result.id
-            }, {where: {id: message_id}}),
+        Message.update({
+            gateway_message_id: result.id
+        }, {where: {id: message_id}}),
 
-            Queue.removeFromQueue(constants.DSEVEN_MESSAGES_QUEUE, msgid)
-
-        ])
-
+        Queue.removeFromQueue(constants.DSEVEN_MESSAGES_QUEUE, msgid)
 
 	} catch (error) {
 

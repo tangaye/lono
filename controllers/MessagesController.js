@@ -119,8 +119,6 @@ exports.send = async (request, response) => {
 			const contact = await ContactFactory.createContact({msisdns: [item.to], user})
 			const msisdn = contact ? contact.msisdns.find(msisdn => msisdn.id === item.to) : item.to
 
-            console.log({msisdn});
-
 			const parts = MessageFactory.breakIntoParts(item.body, 160)
 			const credits = constants.SMS_TARIFF * parts.length
 
@@ -138,7 +136,6 @@ exports.send = async (request, response) => {
                 credits
             })
 
-
             queued_messages.push({
                 smsId: message_id,
                 recipient: item.to,
@@ -148,18 +145,30 @@ exports.send = async (request, response) => {
                 extMessageId: item.extMessageId
             })
 
-            for (const text of parts)
-            {
+            Queue.add({
+                body: item.body,
+                to: msisdn.id,
+                sender: sender.name,
+                message_id: message.id,
+                user_id: user.id,
+                credits,
+                parts
+            }, gateway.queue)
 
-                Queue.add({
-                    body: text,
-                    to: item.to,
-                    sender: sender.name,
-                    message_id: message.id,
-                    user_id: user.id,
-                    credits
-                }, gateway.queue)
-            }
+            // Temporary fix for pausing sending messages as parts
+
+            // for (const text of parts)
+            // {
+
+            //     Queue.add({
+            //         body: text,
+            //         to: item.to,
+            //         sender: sender.name,
+            //         message_id: message.id,
+            //         user_id: user.id,
+            //         credits
+            //     }, gateway.queue)
+            // }
 
 		}
 
@@ -323,14 +332,19 @@ exports.dsevenDR = async (request, response) =>
 
         if (!(request_id && status)) return response.sendStatus(400)
 
-        const part = await MessagePart.findOne({where: {gateway_message_id: request_id
-        }})
+        // const part = await MessagePart.findOne({where: {gateway_message_id: request_id
+        // }})
 
-        if (!part) throw Error(`No message found for ${request_id} with status ${status}`)
+        // if (!part) throw Error(`No message found for ${request_id} with status ${status}`)
 
-        const message = await Message.findByPk(part.message_id)
+        const message = await Message.findOne({where: {gateway_message_id: request_id}})
+
+        if (!message) throw Error(`No message found for ${request_id} with status ${status}`)
+
+        const parts = await MessagePart.findAll({where: {message_id: message.id}})
 
         let message_status = constants.PENDING_STATUS
+
         switch (status) {
             case "undelivered":
                 message_status = constants.FAILED_STATUS
@@ -340,9 +354,15 @@ exports.dsevenDR = async (request, response) =>
                 break;
         }
 
-        await Promise.all([
-            message.update({status: message_status}), part.update({status: message_status})
-        ])
+        message.update({status: message_status})
+
+        for (const part of parts)
+        {
+            part.update({status: message_status})
+        }
+        // await Promise.all([
+        //     message.update({status: message_status}), part.update({status: message_status})
+        // ])
 
         return response.sendStatus(200)
 
