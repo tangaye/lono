@@ -254,18 +254,31 @@ exports.bulkgateDR = async (request, response) => {
 
         if (!(status && smsID)) throw Error("status, smsID not present in request")
 
-        const part = await MessagePart.findOne({
-            where: {gateway_message_id: smsID}
-        })
+        // const part = await MessagePart.findOne({
+        //     where: {gateway_message_id: smsID}
+        // })
 
-        const message = await Message.findByPk(part.message_id)
+        // const message = await Message.findByPk(part.message_id)
+
+        const message = await Message.findOne({where: {gateway_message_id: smsID}})
+
+        if (!message) throw Error(`No message found for ${smsID} with status ${status}`)
+
+        const parts = await MessagePart.findAll({where: {message_id: message.id}})
 
         const message_status = bulkgate_statuses.find(item => item.code === Number(status))
 
-        await Promise.all([
-            message.update({status: message_status.name}),
-            part.update({status: message_status.name})
-        ])
+        message.update({message_status})
+
+        for (const part of parts)
+        {
+            part.update({message_status})
+        }
+
+        // await Promise.all([
+        //     message.update({status: message_status.name}),
+        //     part.update({status: message_status.name})
+        // ])
 
         return response.sendStatus(200)
     } catch (error) {
@@ -289,14 +302,11 @@ exports.orangeDR = async (request, response) =>
 
         if (!(callbackData)) throw Error("Key 'callbackData' not found in request body")
 
-        const part = await MessagePart.findOne({
-            where: {gateway_message_id: callbackData}
-        })
+        const message = await Message.findOne({where: {gateway_message_id: callbackData}})
 
+        if (!message) throw Error(`No message found for ${callbackData} with status ${deliveryStatus}`)
 
-        if (!part) throw Error("message not found")
-
-        const message = await Message.findByPk(part.message_id)
+        const parts = await MessagePart.findAll({where: {message_id: message.id}})
 
 
         let status = constants.PENDING_STATUS
@@ -309,10 +319,17 @@ exports.orangeDR = async (request, response) =>
                 break;
         }
 
-        await Promise.all([
-            message.update({status}),
+        message.update({status})
+
+        for (const part of parts)
+        {
             part.update({status})
-        ])
+        }
+
+        // await Promise.all([
+        //     message.update({status}),
+        //     part.update({status})
+        // ])
 
 		return response.sendStatus(200)
 

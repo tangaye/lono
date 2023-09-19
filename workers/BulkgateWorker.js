@@ -19,25 +19,23 @@ worker.on("message", async function (msg, next, msgid) {
 		const bulkgate = new Bulkgate(to, body, sender)
 		const result = await bulkgate.send()
 
-		if (!result) throw Error("Unable to send message from BulkgateWorker")
+		if (!result) throw Error("Unable to send message from BulkgateWorker");
 
-        await Promise.all([
-
+        for (const text of parts)
+        {
             MessagePart.create({
-                part: body,
-                message_id,
-                gateway_message_id: result.id,
-            }),
+                part: text,
+                message_id
+            });
+        }
 
-            UsersController.updateCredits(user_id, credits),
+        UsersController.updateCredits(user_id, credits);
 
-            Message.update({
-                gateway_message_id: result.id
-            }, {where: {id: message_id}}),
+        Message.update({
+            gateway_message_id: result.id
+        }, {where: {id: message_id}});
 
-            Queue.removeFromQueue(constants.BULKGATE_MESSAGES_QUEUE, msgid)
-
-        ]);
+        Queue.removeFromQueue(constants.BULKGATE_MESSAGES_QUEUE, msgid);
 
 	} catch (error) {
 		logger.error("error sending message from queue: ", error);

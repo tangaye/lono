@@ -14,8 +14,9 @@ const worker = new rsmqWorker(
 
 worker.on("message", async function (msg, next, msgid) {
 	try {
+
 		const message = JSON.parse(msg);
-		const { to, body, sender, message_id, user_id } = message;
+        const { to, body, parts, credits, sender, message_id, user_id } = message;
 
 		// send sms
 		const orange = new Orange();
@@ -23,22 +24,22 @@ worker.on("message", async function (msg, next, msgid) {
 
 		if (!result) throw Error("Unable to send message from OrangeWorker")
 
-        await Promise.all([
-
+        for (const text of parts)
+        {
             MessagePart.create({
-				part: body,
-				message_id,
-				gateway_message_id: result.id,
-			}),
+                part: text,
+                message_id
+            });
+        }
 
-			UsersController.updateCredits(user_id, 1),
+        UsersController.updateCredits(user_id, credits);
 
-            Message.update({
-                gateway_message_id: result.id
-            }, {where: {id: message_id}}),
+        Message.update({
+            gateway_message_id: result.id
+        }, {where: {id: message_id}});
 
-			Queue.removeFromQueue(constants.ORANGE_MESSAGES_QUEUE, msgid),
-        ])
+        Queue.removeFromQueue(constants.ORANGE_MESSAGES_QUEUE, msgid);
+
 
 	} catch (error) {
 		logger.error("error sending message from queue: ", error);

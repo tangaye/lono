@@ -33,13 +33,13 @@ worker.on("message", async function (msg, next, msgid) {
             });
         }
 
-        UsersController.updateCredits(user_id, credits),
+        UsersController.updateCredits(user_id, credits);
 
         Message.update({
             gateway_message_id: result.id
-        }, {where: {id: message_id}}),
+        }, {where: {id: message_id}});
 
-        Queue.removeFromQueue(constants.DSEVEN_MESSAGES_QUEUE, msgid)
+        Queue.removeFromQueue(constants.DSEVEN_MESSAGES_QUEUE, msgid);
 
 	} catch (error) {
 
