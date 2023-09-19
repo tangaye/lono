@@ -14,7 +14,7 @@ worker.on("message", async function (msg, next, msgid) {
 	try {
 
 		const message = JSON.parse(msg);
-		const {to, body, sender, message_id, user_id, credits, parts} = message
+		const { to, body, parts, credits, sender, message_id, user_id } = message;
 
 		const bulkgate = new Bulkgate(to, body, sender)
 		const result = await bulkgate.send()
