@@ -32,9 +32,9 @@ worker.on("message", async function (msg, next, msgid) {
             });
         }
 
-        UsersController.updateCredits(user_id, credits);
+        await UsersController.updateCredits(user_id, credits);
 
-        Message.update({
+        await Message.update({
             gateway_message_id: result.id
         }, {where: {id: message_id}});
 
