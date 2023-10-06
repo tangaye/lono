@@ -136,6 +136,38 @@ exports.validateCreate = async (request, response, next) => {
 	}
 }
 
+exports.validateImport = async (request, response, next) =>
+{
+    try {
+
+        const {contacts} = request.body
+
+
+        // user and msisdn required
+        if (!contacts) {
+
+            return helper.respond(response, {
+                code: constants.INVALID_DATA,
+                message: "'contacts' is required"
+            })
+        }
+
+        return next();
+
+
+    } catch (error) {
+
+        const message = "error validating data to import contact: ";
+
+		logger.error(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message
+		})
+
+    }
+}
 
 /**
  * Validates and prepares requests to store apps

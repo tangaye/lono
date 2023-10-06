@@ -296,19 +296,21 @@ exports.bulkImport = async (request, response) => {
             }, {transaction: t})
 
             // loop through groups
-            for (const id of groups)
+            for (const name of groups)
             {
                 // find or create group
                 const [group, created] = await Group.findOrCreate({
-                    where: {name},
-                    defaults: {name}
-                }, {transaction: t})
+                    where: {name: name, user_id: user.id},
+                    defaults: {name: name, user_id: user.id},
+                    transaction: t
+                })
 
                 // add group to contact
                 if (group) await ContactGroup.findOrCreate({
-                    where: {contact_id: created_contact.id, group_id: id},
-                    defaults: {contact_id: created_contact.id, group_id: id}
-                }, {transaction: t})
+                    where: {contact_id: created_contact.id, group_id: group.id},
+                    defaults: {contact_id: created_contact.id, group_id: group.id},
+                    transaction: t
+                })
             }
 
             // loop through msisdns
@@ -317,8 +319,9 @@ exports.bulkImport = async (request, response) => {
                 // find or create msisdns
                 await Msisdn.findOrCreate({
                     where: {id},
-                    defaults: {id, user_id: user.id}
-                }, {transaction: t})
+                    defaults: {id, user_id: user.id},
+                    transaction: t
+                })
             }
         }
 
