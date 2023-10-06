@@ -17,7 +17,16 @@ Msisdn.init({
 				msg: "msisdn should be 12 characters. ex: 213889998009"
 			}
 		}
-	}
+	},
+    user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        validate: {
+            notNull: {
+                msg: "user_id is required",
+            },
+        },
+    }
 }, {
 	paranoid: true,
 	deletedAt: 'deleted_at',
