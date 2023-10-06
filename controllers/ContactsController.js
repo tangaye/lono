@@ -274,62 +274,63 @@ exports.remove = async (request, response) => {
 
 exports.bulkImport = async (request, response) => {
 
+    // start transaction
+    const t = await database.transaction();
+
 	try {
 
 		const {contacts, user} = request.body
 
+        // loop through contacts
         for (const contact of contacts)
         {
 
             const {first_name, middle_name, last_name, groups, msisdns} = contact;
 
+            // create contact
+            const created_contact = await  Contact.create({
+                first_name,
+                middle_name,
+                last_name,
+                user_id: user.id
+            }, {transaction: t})
+
+            // loop through groups
             for (const id of groups)
             {
+                // find or create group
+                const [group, created] = await Group.findOrCreate({
+                    where: {name},
+                    defaults: {name}
+                }, {transaction: t})
 
+                // add group to contact
+                if (group) await ContactGroup.findOrCreate({
+                    where: {contact_id: created_contact.id, group_id: id},
+                    defaults: {contact_id: created_contact.id, group_id: id}
+                }, {transaction: t})
             }
 
+            // loop through msisdns
             for (const id of msisdns)
             {
-
+                // find or create msisdns
+                await Msisdn.findOrCreate({
+                    where: {id},
+                    defaults: {id, user_id: user.id}
+                }, {transaction: t})
             }
         }
 
-        // for (const name of groups) {
+        // If the execution reaches this line, no errors were thrown.
+        // We commit the transaction.
+        await t.commit();
 
-        //     // find or create groups
-        //     const [group, created] = await Group.findOrCreate({
-        //         where: {name, user_id: user.id},
-        //         defaults: {name, user_id: user.id},
-        //         transaction: t
-        //     })
+        return helper.respond(response, {
+			code: constants.SUCCESS_CODE,
+			contacts
+		})
 
-        //     // assign contact to groups
-        //     if (group) await ContactGroup.findOrCreate({
-        //         where: {contact_id: group_contact.id, group_id: group.id},
-        //         defaults: {contact_id: group_contact.id, group_id: group.id},
-        //         transaction: t
-        //     })
-        // }
-
-		// const contact = await ContactFactory.createContact({
-		// 	first_name,
-		// 	middle_name,
-		// 	last_name,
-		// 	metadata,
-		// 	msisdns,
-		// 	groups,
-		// 	user
-		// })
-
-		// if (contact) return helper.respond(response, {
-		// 	code: constants.SUCCESS_CODE,
-		// 	contact
-		// })
-
-		// return helper.respond(response, {
-		// 	code: constants.FAILURE_CODE,
-		// 	message: "error creating contact"
-		// })
 
 	}
 	catch (error)

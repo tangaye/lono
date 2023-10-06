@@ -56,7 +56,7 @@ exports.queryGroups = (search, order) => {
 					   g.created_at,
 					   count(contact_id) AS contacts
 				FROM groups g
-				INNER JOIN contact_groups cg on g.id = cg.group_id
+				left JOIN contact_groups cg on g.id = cg.group_id
 				WHERE g.user_id = :user_id`
 
 	if (search) query += getSearchQuery()

@@ -133,6 +133,11 @@ exports.get = async (request, response) => {
 					model: Contact,
 					through: {attributes: []},
 					attributes: ['id', 'first_name', 'middle_name', 'last_name'],
+                    include: {
+                        model: Msisdn,
+                        attributes: ['id'],
+                        through: {attributes: []},
+                    }
 				},
                 where: {user_id: user.id}
 			})

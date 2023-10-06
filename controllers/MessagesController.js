@@ -123,8 +123,6 @@ exports.send = async (request, response) => {
 				defaults: {id: item.to, user_id: user.id}
             })
 
-            console.log({msisdn, created})
-
 			const parts = MessageFactory.breakIntoParts(item.body, 160)
 			const credits = constants.SMS_TARIFF * parts.length
 
