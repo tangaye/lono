@@ -272,53 +272,69 @@ exports.remove = async (request, response) => {
 	}
 }
 
-exports.store = async (request, response) => {
+exports.bulkImport = async (request, response) => {
 
 	try {
 
-		const {first_name, middle_name, last_name, metadata, msisdns, groups, user} = request.body
+		const {contacts, user} = request.body
 
-        for (const name of groups) {
+        for (const contact of contacts)
+        {
 
-            // find or create groups
-            const [group, created] = await Group.findOrCreate({
-                where: {name, user_id: user.id},
-                defaults: {name, user_id: user.id},
-                transaction: t
-            })
+            const {first_name, middle_name, last_name, groups, msisdns} = contact;
 
-            // assign contact to groups
-            if (group) await ContactGroup.findOrCreate({
-                where: {contact_id: group_contact.id, group_id: group.id},
-                defaults: {contact_id: group_contact.id, group_id: group.id},
-                transaction: t
-            })
+            for (const id of groups)
+            {
+
+            }
+
+            for (const id of msisdns)
+            {
+
+            }
         }
 
-		const contact = await ContactFactory.createContact({
-			first_name,
-			middle_name,
-			last_name,
-			metadata,
-			msisdns,
-			groups,
-			user
-		})
+        // for (const name of groups) {
 
-		if (contact) return helper.respond(response, {
-			code: constants.SUCCESS_CODE,
-			contact
-		})
+        //     // find or create groups
+        //     const [group, created] = await Group.findOrCreate({
+        //         where: {name, user_id: user.id},
+        //         defaults: {name, user_id: user.id},
+        //         transaction: t
+        //     })
 
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "error creating contact"
-		})
+        //     // assign contact to groups
+        //     if (group) await ContactGroup.findOrCreate({
+        //         where: {contact_id: group_contact.id, group_id: group.id},
+        //         defaults: {contact_id: group_contact.id, group_id: group.id},
+        //         transaction: t
+        //     })
+        // }
+
+		// const contact = await ContactFactory.createContact({
+		// 	first_name,
+		// 	middle_name,
+		// 	last_name,
+		// 	metadata,
+		// 	msisdns,
+		// 	groups,
+		// 	user
+		// })
+
+		// if (contact) return helper.respond(response, {
+		// 	code: constants.SUCCESS_CODE,
+		// 	contact
+		// })
+
+		// return helper.respond(response, {
+		// 	code: constants.FAILURE_CODE,
+		// 	message: "error creating contact"
+		// })
 
 	}
 	catch (error)
 	{
-		const message = "error creating contact"
+		const message = "error bulk importing"
 		logger.log(message, error)
 
 		return helper.respond(response, {
