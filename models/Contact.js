@@ -25,7 +25,16 @@ Contact.init({
 	metadata: {
 		type: DataTypes.JSONB,
 		allowNull: true
-	}
+	},
+    user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        validate: {
+            notNull: {
+                msg: "user_id is required",
+            },
+        },
+    }
 }, {
 	paranoid: true,
 	deletedAt: 'deleted_at',

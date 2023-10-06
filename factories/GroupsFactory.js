@@ -32,41 +32,34 @@ exports.groupsValid = async groups => {
 	}
 }
 
-const getIdQuery = () => ` AND id = :group_id`
-const getSearchQuery = () => ` AND (
-	g.name iLike :search OR
-	g.description iLike :search
-)`
+const getSearchQuery = () => ` AND g.name iLike :search`
 const getGroupByQuery = () => ` GROUP BY g.id, g.name, g.created_at`
 
 
-exports.buildReplacements = (user_id, group_id, search, limit, offset) => {
+exports.buildReplacements = (user_id, search, limit, offset) => {
 
 	const replacements = {user_id, limit, offset, search: `%${search}%`}
 
 	if (search && Number(search[0]) === 0) replacements.search = `%${search.substring(1)}%`
 
-	if (group_id) replacements.group_id = group_id
-
 	return replacements
 }
 
-exports.queryGroups = (search, group_id, order) => {
+exports.queryGroups = (search, order) => {
 
 	order = order ? order.toUpperCase() : 'DESC'
 
 	let query = `
-				SELECT g.id, 
-					   g.name, 
+				SELECT g.id,
+					   g.name,
 					   g.description,
 					   g.created_at,
 					   count(contact_id) AS contacts
 				FROM groups g
-				LEFT JOIN contact_groups cg on g.id = cg.group_id
+				INNER JOIN contact_groups cg on g.id = cg.group_id
 				WHERE g.user_id = :user_id`
 
 	if (search) query += getSearchQuery()
-	if (group_id) query += getIdQuery()
 
 	query += getGroupByQuery()
 	query += helper.getOrderQuery(order)

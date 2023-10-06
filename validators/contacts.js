@@ -3,6 +3,9 @@ const MsisdnFactory = require("../factories/MsisdnsFactory")
 const GroupFactory = require("../factories/GroupsFactory")
 const constants = require("../constants")
 const logger = require("../logger")
+const msisdn = require("../models/Msisdn")
+const Msisdn = require("../models/Msisdn")
+const Group = require("../models/Group")
 
 /**
  * Validates and prepares requests to display apps
@@ -19,6 +22,120 @@ exports.validateAll = (request, response, next) => {
 
 	return next()
 }
+
+/**
+ * Validates and prepares requests to store apps
+ * @param {Request} request
+ * @param {Response} response
+ * @param {next} next
+ * @returns
+ */
+exports.validateCreate = async (request, response, next) => {
+
+	try {
+
+		const {first_name, last_name, msisdns, groups, user} = request.body
+
+
+        // user and msisdn required
+        if (!msisdns || !user || !first_name || !last_name) {
+
+            return helper.respond(response, {
+                code: constants.INVALID_DATA,
+                message: "msisdns, first_name, last_name & user are required"
+            })
+        }
+
+        const unique_msisdns = []
+
+        // check if msisdn exists, if so return error
+        for (const id of msisdns)
+        {
+
+            // check if msisdn is valid
+            if(!MsisdnFactory.validateMsisdn(id))
+            {
+                return helper.respond(response, {
+                    code: constants.INVALID_DATA,
+                    message: `Invalid msisdn: ${id}`
+                })
+            }
+
+            // check for duplicates
+            if (unique_msisdns.includes(id))
+            {
+                return helper.respond(response, {
+                    code: constants.INVALID_DATA,
+                    message: `Duplicate msisdn found for: ${id}`
+                })
+            }
+
+            unique_msisdns.push(id)
+
+            const msisdn_found = await Msisdn.findByPk(id)
+
+            if (msisdn_found)
+            {
+                return helper.respond(response, {
+                    code: constants.INVALID_DATA,
+                    message: `msisdn: "${id}" already exists`
+                })
+            }
+        }
+
+        const unique_groups = [];
+        // check if all groups exists
+        for (const id of groups)
+        {
+
+            // check for duplicates
+            if (unique_groups.includes(id))
+            {
+                return helper.respond(response, {
+                    code: constants.INVALID_DATA,
+                    message: `Duplicate group found for: ${id}`
+                })
+            }
+
+            unique_groups.push(id)
+
+            // check if valid uuid
+            if (!helper.isValidUuid(id))
+            {
+                return helper.respond(response, {
+                    code: constants.INVALID_DATA,
+                    message: `invalid group id: ${id}`
+                })
+            }
+
+            // check if group exists
+            const group_found = await Group.findByPk(id)
+            if (!group_found)
+            {
+                return helper.respond(response, {
+                    code: constants.INVALID_DATA,
+                    message: `group: ${id} doesn't exists`
+                })
+            }
+        }
+
+       return next();
+
+
+	} catch (error) {
+
+        const message = "error validating data to create contact: ";
+
+		logger.error(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message
+		})
+
+	}
+}
+
 
 /**
  * Validates and prepares requests to store apps

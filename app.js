@@ -9,6 +9,7 @@ const logger = require("./logger");
 const helper = require("./helpers");
 const constants = require("./constants");
 const database = require("./database/connection");
+const {Sequelize} = require("sequelize")
 require("dotenv").config({ path: path.join(__dirname, "./.env") });
 
 const User = require("./models/User");
@@ -20,6 +21,7 @@ const Message = require("./models/Message");
 const MessagePart = require("./models/MessagePart");
 const Conversation = require("./models/Conversation");
 const ContactGroup = require("./models/ContactGroup");
+const ContactMsisdn = require("./models/ContactMsisdn");
 const ContactMsisdnUser = require("./models/ContactMsisdnUser");
 const Carrier = require("./models/Carrier")
 const GatewayCarrier = require("./models/GatewayCarrier")
@@ -84,14 +86,16 @@ User.hasMany(Sender);
 Sender.belongsTo(User);
 Message.belongsTo(Sender);
 Sender.hasMany(Message);
-Contact.belongsToMany(User, { through: ContactMsisdnUser });
-User.belongsToMany(Contact, { through: ContactMsisdnUser });
-Msisdn.belongsToMany(Contact, { through: ContactMsisdnUser });
-Contact.belongsToMany(Msisdn, { through: ContactMsisdnUser });
+// Contact.belongsToMany(User, { through: ContactMsisdnUser });
+// User.belongsToMany(Contact, { through: ContactMsisdnUser });
+// Msisdn.belongsToMany(Contact, { through: ContactMsisdnUser });
+// Contact.belongsToMany(Msisdn, { through: ContactMsisdnUser });
 User.hasMany(Message);
 Message.belongsTo(User);
 Group.belongsToMany(Contact, { through: ContactGroup });
 Contact.belongsToMany(Group, { through: ContactGroup });
+Msisdn.belongsToMany(Contact, { through: ContactMsisdn});
+Contact.belongsToMany(Msisdn, { through: ContactMsisdn});
 Message.hasMany(MessagePart);
 MessagePart.belongsTo(Message);
 Conversation.belongsTo(User);
@@ -99,6 +103,9 @@ User.hasMany(Conversation);
 
 Gateway.belongsToMany(Carrier, { through: GatewayCarrier });
 Carrier.belongsToMany(Gateway, { through: GatewayCarrier });
+
+User.hasMany(Contact);
+Contact.belongsTo(User);
 
 
 (async () => {

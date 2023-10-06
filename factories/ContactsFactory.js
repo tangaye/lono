@@ -144,30 +144,18 @@ exports.createContact = async ({
  * @return {` AND (
 		groups::jsonb @? '$[*].name ? (@ like_regex ${string} flag "i")' OR
       	msisdns::jsonb @? '$[*].id ? (@ like_regex ${string} flag "i")' OR
-      	users::jsonb @? '$[*].name ? (@ like_regex ${string} flag "i")' OR
       	first_name ilike '%${string}%' OR
-      	middle_name ilike '%${string}%' OR
       	last_name ilike '%${string}%' )`}
  */
-const getSearchQuery = search => ` AND (
+const getSearchQuery = search => ` WHERE (
 		groups::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
       	msisdns::jsonb @? '$[*].id ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
-      	users::jsonb @? '$[*].name ? (@ like_regex ${JSON.stringify(search)} flag "i")' OR
       	first_name ilike '%${search}%' OR
-      	middle_name ilike '%${search}%' OR
       	last_name ilike '%${search}%' )`
 
-/**
- * returns query to find a particular contact
- * @return {string}
- */
-const getIdQuery = () => ` AND id = :contact_id`
-
-exports.buildReplacements = (user_id, contact_id, limit, offset) => {
+exports.buildReplacements = (user_id, limit, offset) => {
 
 	const replacements = {user_id, limit, offset}
-
-	if (contact_id) replacements.contact_id = contact_id
 
 	return replacements
 }
@@ -175,54 +163,43 @@ exports.buildReplacements = (user_id, contact_id, limit, offset) => {
 /**
  * setups query to fetch contacts
  * @param search search value
- * @param contact_id contact id, when fetching a particular contact
  * @param user_id contacts user id
  * @param order asc or desc
  * @return {string}
  */
-exports.queryContacts = (search, contact_id, user_id, order) => {
+exports.queryContacts = (search, user_id, order) => {
 
 	order = order ? order.toUpperCase() : 'DESC'
 
 	if (search && Number(search[0]) === 0) search = search.substring(1)
 
 	let query = `
-				SELECT *
-				FROM (
-					 SELECT
-						   c.id,
-						   c.first_name,
-						   c.middle_name,
-						   c.last_name,
-						   c.created_at,
-						   (
-								SELECT json_agg(json_build_object('id', m.id))
-								FROM msisdns m
-								LEFT JOIN contact_msisdns_users cmu ON m.id = cmu.msisdn_id
-								WHERE cmu.contact_id = c.id AND cmu.user_id = :user_id
-				
-						   ) AS msisdns,
-							(
-								SELECT json_agg(json_build_object('id', u.id, 'name', u.name))
-								FROM users u
-								LEFT JOIN contact_msisdns_users cmu ON u.id = cmu.user_id
-								WHERE cmu.contact_id = c.id AND cmu.user_id = :user_id
-						   ) AS users,
-						   (
-								SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
-								FROM contact_groups
-								LEFT JOIN groups g ON g.id = contact_groups.group_id
-								WHERE contact_groups.contact_id = c.id AND
-								g.user_id = :user_id
-						   ) AS groups
-					FROM contacts c
-					GROUP BY c.id, c.created_at
-				) contacts
-				WHERE users::jsonb @> '[{"id": ${JSON.stringify(user_id)}}]'`
+        SELECT * FROM
+        (
+            SELECT
+                c.id,
+                c.first_name,
+                c.middle_name,
+                c.last_name,
+                c.created_at,
+                c.user_id,
+                (
+                    SELECT json_agg(json_build_object('id', m.id))
+                    FROM msisdns m
+                    INNER JOIN contact_msisdns cm ON m.id = cm.msisdn_id
+                    WHERE cm.contact_id = c.id
+                ) AS msisdns,
+                (
+                    SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
+                    FROM contact_groups
+                    INNER JOIN groups g ON g.id = contact_groups.group_id
+                    WHERE contact_groups.contact_id = c.id
+                ) AS groups
+            FROM contacts c
+            WHERE c.user_id = :user_id
+        ) contacts`
 
 	if (search) query += getSearchQuery(search)
-	if (contact_id) query += getIdQuery()
-
 	query += helpers.getOrderQuery(order)
 	query += helpers.getLimitOffsetQuery()
 

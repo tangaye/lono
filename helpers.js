@@ -1,10 +1,9 @@
 const colors = require('colors')
 const validator = require("validator")
 const constants = require("./constants")
-const {generateApiKey} = require('generate-api-key')
-const MessageFlow = require("./models/Carrier")
 const Gateway = require('./models/Gateway')
-const bcrypt = require("bc")
+const MessageFlow = require("./models/Carrier")
+const {generateApiKey} = require('generate-api-key')
 
 exports.isValidDate = date => validator.isDate(date)
 
