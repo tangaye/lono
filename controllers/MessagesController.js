@@ -119,7 +119,7 @@ exports.send = async (request, response) => {
 			const message_id = uuidv4()
 
 			const [msisdn, created] = await Msisdn.findOrCreate({
-                where: {id: item.to, user_id: user.id},
+                where: {id: item.to},
 				defaults: {id: item.to, user_id: user.id}
             })
 
