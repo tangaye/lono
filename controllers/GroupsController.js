@@ -195,7 +195,7 @@ exports.update = async (request, response) => {
 
         if (contacts)
         {
-            console.log({contacts})
+            console.log(group.setContacts)
             const updated_contacts = await group.setContacts(contacts, {transaction: t});
 
             // console.log({updated_contacts})

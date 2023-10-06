@@ -156,7 +156,7 @@ exports.create = async (request, response) =>
         {
             for (const msisdn of msisdns)
             {
-                const created = await Msisdn.create({id: msisdn}, {transaction: t})
+                const created = await Msisdn.create({id: msisdn, user_id: user.id}, {transaction: t})
 
                 created_msisdns.push(created);
             }
