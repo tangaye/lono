@@ -10,6 +10,7 @@ const {Op, QueryTypes} = require("sequelize");
 const ContactFactory = require("../factories/ContactsFactory")
 const Gateway = require("../models/Gateway")
 const MessagePart = require("../models/MessagePart")
+const Msisdn = require("../models/Msisdn")
 
 
 /**
@@ -116,8 +117,11 @@ exports.send = async (request, response) => {
 		for (const item of messages) {
 
 			const message_id = uuidv4()
-			const contact = await ContactFactory.createContact({msisdns: [item.to], user})
-			const msisdn = contact ? contact.msisdns.find(msisdn => msisdn.id === item.to) : item.to
+
+			const [msisdn, created] = await Msisdn.findOrCreate({
+                where: {id: item.to, user_id: user.id},
+				defaults: {id: item.to, user_id: user.id}
+            })
 
 			const parts = MessageFactory.breakIntoParts(item.body, 160)
 			const credits = constants.SMS_TARIFF * parts.length
