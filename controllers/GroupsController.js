@@ -174,6 +174,61 @@ exports.get = async (request, response) => {
 
 }
 
+exports.update = async (request, response) => {
+
+    // start transaction
+    const t = await database.transaction();
+
+    try {
+
+        const {user, name, contacts, description} = request.body
+		const id = request.params.id
+
+		const group = await Group.findOne({
+            where: {id, user_id: user.id}
+        }, {transaction: t})
+
+        const updated_group = await group.update({
+            name: name || group.name,
+            description: description || group.description
+        }, {transaction: t})
+
+        if (contacts)
+        {
+            console.log({contacts})
+            const updated_contacts = await group.setContacts(contacts, {transaction: t});
+
+            // console.log({updated_contacts})
+        }
+
+
+        // If the execution reaches this line, no errors were thrown.
+        // We commit the transaction.
+        await t.commit();
+
+        return response.send({
+            errorCode: constants.SUCCESS_CODE,
+            group: updated_group
+        })
+
+	}
+	catch (error)
+	{
+
+        // If the execution reaches this line, an error was thrown.
+        // We rollback the transaction.
+        await t.rollback();
+
+		const message = "error updating group"
+		logger.error(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
+		})
+	}
+}
+
 exports.remove = async (request, response) => {
     try {
 
