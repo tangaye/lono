@@ -38,86 +38,95 @@ exports.validateCreate = async (request, response, next) => {
 
 
         // user and msisdn required
-        if (!msisdns || !user || !first_name || !last_name) {
+        if (!user || !first_name || !last_name) {
 
             return helper.respond(response, {
                 code: constants.INVALID_DATA,
-                message: "msisdns, first_name, last_name & user are required"
+                message: "first_name and last_name are required"
             })
         }
 
-        const unique_msisdns = []
-
-        // check if msisdn exists, if so return error
-        for (const id of msisdns)
+        if (msisdns)
         {
 
-            // check if msisdn is valid
-            if(!MsisdnFactory.validateMsisdn(id))
+            const unique_msisdns = []
+
+            // check if msisdn exists, if so return error
+            for (const id of msisdns)
             {
-                return helper.respond(response, {
-                    code: constants.INVALID_DATA,
-                    message: `Invalid msisdn: ${id}`
-                })
-            }
 
-            // check for duplicates
-            if (unique_msisdns.includes(id))
-            {
-                return helper.respond(response, {
-                    code: constants.INVALID_DATA,
-                    message: `Duplicate msisdn found for: ${id}`
-                })
-            }
+                // check if msisdn is valid
+                if(!MsisdnFactory.validateMsisdn(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `Invalid msisdn: ${id}`
+                    })
+                }
 
-            unique_msisdns.push(id)
+                // check for duplicates
+                if (unique_msisdns.includes(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `Duplicate msisdn found for: ${id}`
+                    })
+                }
 
-            const msisdn_found = await Msisdn.findByPk(id)
+                unique_msisdns.push(id)
 
-            if (msisdn_found)
-            {
-                return helper.respond(response, {
-                    code: constants.INVALID_DATA,
-                    message: `msisdn: "${id}" already exists`
-                })
+                const msisdn_found = await Msisdn.findByPk(id)
+
+                if (msisdn_found)
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `msisdn: "${id}" already exists`
+                    })
+                }
             }
         }
 
-        const unique_groups = [];
-        // check if all groups exists
-        for (const id of groups)
+        if (groups)
         {
-
-            // check for duplicates
-            if (unique_groups.includes(id))
+            const unique_groups = [];
+            // check if all groups exists
+            for (const id of groups)
             {
-                return helper.respond(response, {
-                    code: constants.INVALID_DATA,
-                    message: `Duplicate group found for: ${id}`
-                })
+
+                // check for duplicates
+                if (unique_groups.includes(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `Duplicate group found for: ${id}`
+                    })
+                }
+
+                unique_groups.push(id)
+
+                // check if valid uuid
+                if (!helper.isValidUuid(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `invalid group id: ${id}`
+                    })
+                }
+
+                // check if group exists
+                const group_found = await Group.findByPk(id)
+                if (!group_found)
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `group: ${id} doesn't exists`
+                    })
+                }
             }
 
-            unique_groups.push(id)
-
-            // check if valid uuid
-            if (!helper.isValidUuid(id))
-            {
-                return helper.respond(response, {
-                    code: constants.INVALID_DATA,
-                    message: `invalid group id: ${id}`
-                })
-            }
-
-            // check if group exists
-            const group_found = await Group.findByPk(id)
-            if (!group_found)
-            {
-                return helper.respond(response, {
-                    code: constants.INVALID_DATA,
-                    message: `group: ${id} doesn't exists`
-                })
-            }
         }
+
 
        return next();
 

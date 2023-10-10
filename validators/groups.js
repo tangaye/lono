@@ -26,7 +26,20 @@ exports.validateUpdate = async (request, response, next) =>
 {
     try {
 
+        const id = request.params.id
         const {name, user, contacts} = request.body
+
+        const group = await Group.findOne({
+            where: {id, user_id: user.id}
+        });
+
+        if (!group)
+        {
+            return helper.respond(response, {
+                code: constants.INVALID_DATA,
+                message: `group: ${id} not found`
+            })
+        }
 
         if (!name)
         {
@@ -73,6 +86,7 @@ exports.validateUpdate = async (request, response, next) =>
             }
         }
 
+        request.body.group = group
         return next();
 
     } catch (error) {

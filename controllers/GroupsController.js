@@ -127,20 +127,10 @@ exports.get = async (request, response) => {
 
 		if (id)
 		{
-			const group = await Group.findByPk(id, {
-                attributes: ['id', 'description', 'name', 'created_at'],
-				include: {
-					model: Contact,
-					through: {attributes: []},
-					attributes: ['id', 'first_name', 'middle_name', 'last_name'],
-                    include: {
-                        model: Msisdn,
-                        attributes: ['id'],
-                        through: {attributes: []},
-                    }
-				},
-                where: {user_id: user.id}
-			})
+            const  group = await database.query(GroupFactory.getGroupQuery(), {
+                replacements: {id, user_id: user.id},
+                type: QueryTypes.SELECT
+            })
 
 			if (group) return helper.respond(response, {
 				code: constants.SUCCESS_CODE,
@@ -181,29 +171,55 @@ exports.update = async (request, response) => {
 
     try {
 
-        const {user, name, contacts, description} = request.body
-		const id = request.params.id
+        const {user, name, contacts, description, group} = request.body
 
-		const group = await Group.findOne({
-            where: {id, user_id: user.id}
-        }, {transaction: t})
-
-        const updated_group = await group.update({
+        await group.update({
             name: name || group.name,
             description: description || group.description
         }, {transaction: t})
 
-        if (contacts)
-        {
-            console.log(group.setContacts)
-            const updated_contacts = await group.setContacts(contacts, {transaction: t});
+        // remove contacts not in contacts array
+        if (!contacts || contacts?.length === 0) {
+            await database.query(
+                `delete from contact_groups where group_id = :group_id`, {
+                replacements: { group_id: group.id},
+                type: QueryTypes.DELETE,
+                transaction: t
+            })
+        }
 
-            // console.log({updated_contacts})
+        if (contacts?.length > 0)
+        {
+
+            const values = contacts.map(id => `(gen_random_uuid(), '${group.id}', '${id}', now(), now())`).join(', ');
+
+            // remove contacts not reassigned
+            await database.query(
+                `delete from contact_groups where group_id = :group_id and contact_id not in (:contacts)`, {
+                replacements: { group_id: group.id, contacts},
+                type: QueryTypes.DELETE,
+                transaction: t
+            })
+
+            await database.query(
+                `insert into contact_groups (id, group_id, contact_id, created_at, updated_at) values ${values} ON CONFLICT DO NOTHING`
+                , {
+                replacements: {values},
+                type: QueryTypes.DELETE,
+                transaction: t
+            })
         }
 
 
         // If the execution reaches this line, no errors were thrown.
         // We commit the transaction.
+
+        const updated_group = await database.query(GroupFactory.getGroupQuery(), {
+            replacements: {id: group.id, user_id: user.id},
+            type: QueryTypes.SELECT,
+            transaction: t
+        })
+
         await t.commit();
 
         return response.send({
@@ -218,6 +234,7 @@ exports.update = async (request, response) => {
         // If the execution reaches this line, an error was thrown.
         // We rollback the transaction.
         await t.rollback();
+
 
 		const message = "error updating group"
 		logger.error(message, error)

@@ -54,9 +54,9 @@ exports.queryGroups = (search, order) => {
 					   g.name,
 					   g.description,
 					   g.created_at,
-					   count(contact_id) AS contacts
+					   count(contact_id)::integer AS contacts
 				FROM groups g
-				left JOIN contact_groups cg on g.id = cg.group_id
+				left join contact_groups cg on g.id = cg.group_id
 				WHERE g.user_id = :user_id`
 
 	if (search) query += getSearchQuery()
@@ -82,4 +82,29 @@ exports.getPagingData = (groups, totalItems, page, limit) => {
 	const totalPages = Math.ceil(totalItems / limit);
 
 	return {totalItems, groups, totalPages, currentPage };
+}
+
+exports.getGroupQuery = () => {
+    return ` select
+    id,
+    name,
+    (
+        select json_agg(
+            json_build_object(
+                'id', c.id,
+                'first_name', c.first_name,
+                'middle_name', c.middle_name,
+                'last_name', c.last_name,
+                'msisdns', (
+                    SELECT array_agg(m.id)
+                    FROM msisdns m
+                    inner join contact_msisdns cm on cm.msisdn_id = m.id
+                    where cm.contact_id = c.id
+                )
+            ))
+        from contacts c
+        inner join contact_groups cg on c.id = cg.contact_id and g.id = cg.group_id
+    ) as contacts
+    from groups g
+    where id = :id and g.user_id = :user_id`;
 }
