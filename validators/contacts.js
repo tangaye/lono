@@ -53,39 +53,39 @@ exports.validateCreate = async (request, response, next) => {
             const unique_msisdns = []
 
             // check if msisdn exists, if so return error
-            for (const id of msisdns)
+            for (const number of msisdns)
             {
 
                 // check if msisdn is valid
-                if(!MsisdnFactory.validateMsisdn(id))
+                if(!MsisdnFactory.validateMsisdn(number))
                 {
                     return helper.respond(response, {
                         code: constants.INVALID_DATA,
-                        message: `Invalid msisdn: ${id}`
+                        message: `Invalid msisdn: ${number}`
                     })
                 }
 
                 // check for duplicates
-                if (unique_msisdns.includes(id))
+                if (unique_msisdns.includes(number))
                 {
                     return helper.respond(response, {
                         code: constants.INVALID_DATA,
-                        message: `Duplicate msisdn found for: ${id}`
+                        message: `Duplicate msisdn found for: ${number}`
                     })
                 }
 
-                unique_msisdns.push(id)
+                unique_msisdns.push(number)
 
                 // check if msisdn has been assigned to a user
                 const msisdn_found = await Msisdn.findOne({
-                    where: {number: msisdn, user_id: user.id}
+                    where: {number, user_id: user.id}
                 })
 
                 if (msisdn_found)
                 {
                     return helper.respond(response, {
                         code: constants.INVALID_DATA,
-                        message: `msisdn: "${id}" already exists`
+                        message: `msisdn: "${number}" already exists`
                     })
                 }
             }
