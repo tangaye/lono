@@ -184,7 +184,7 @@ exports.queryContacts = (search, user_id, order) => {
                 c.created_at,
                 c.user_id,
                 (
-                    SELECT json_agg(json_build_object('id', m.id))
+                    SELECT array_agg(m.number)
                     FROM msisdns m
                     INNER JOIN contact_msisdns cm ON m.id = cm.msisdn_id
                     WHERE cm.contact_id = c.id

@@ -178,7 +178,7 @@ exports.update = async (request, response) => {
             description: description || group.description
         }, {transaction: t})
 
-        // remove contacts not in contacts array
+        // if contacts not passed, remove all contacts assigned
         if (!contacts || contacts?.length === 0) {
             await database.query(
                 `delete from contact_groups where group_id = :group_id`, {

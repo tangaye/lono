@@ -91,14 +91,16 @@ exports.latestFive = async (user_id) => {
                 msg.message,
                 msg.credits,
                 msg.status,
-                (SELECT s.name FROM senders s WHERE s.id = msg.sender_id) AS sender,
-                msg.msisdn_id as msisdn,
+                senders.name as sender,
+                msisdns.number as msisdn,
                 CASE WHEN COUNT(mp.id) = 0 THEN NULL ELSE json_agg(json_build_object('part', mp.part, 'status', mp.status)) END AS parts,
                 msg.created_at
             FROM messages msg
                 LEFT JOIN message_parts mp on msg.id = mp.message_id
+                INNER JOIN msisdns on msisdns.id = msg.msisdn_id
+                inner join senders on senders.id = msg.sender_id
             WHERE msg.user_id = :user_id
-			GROUP BY msg.id, msg.created_at
+			GROUP BY msg.id, senders.name, msisdns.number
 			ORDER BY msg.created_at DESC
 			LIMIT 5
 		`,
@@ -163,7 +165,7 @@ exports.storeMessage = async ({
  */
 const getIdQuery = () => ` AND msg.id = :message_id`;
 
-const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at`;
+const getGroupByQuery = () => ` GROUP BY msg.id, senders.name, msisdns.number`;
 
 /**
  * messages search query
@@ -171,7 +173,7 @@ const getGroupByQuery = () => ` GROUP BY msg.id, msg.created_at`;
  */
 
 const getSearchQuery = () => ` AND (
-    msg.msisdn_id like :search OR
+    msisdns.number like :search OR
 	msg.message like :search OR
 	msg.status like :search OR
     mp.status like :search
@@ -212,13 +214,14 @@ exports.buildQuery = (user_id, search, message_id, order) => {
             msg.message,
             msg.credits,
             msg.status,
-            (SELECT s.name FROM senders s WHERE s.id = msg.sender_id) AS sender,
-            msg.msisdn_id as msisdn,
+            senders.name as sender,
+            msisdns.number as msisdn,
             CASE WHEN COUNT(mp.id) = 0 THEN NULL ELSE json_agg(json_build_object('part', mp.part, 'status', mp.status)) END AS parts,
             msg.created_at
         FROM messages msg
             LEFT JOIN message_parts mp on msg.id = mp.message_id
-        WHERE msg.user_id = :user_id`;
+            INNER JOIN msisdns on msisdns.id = msg.msisdn_id
+            inner join senders on senders.id = msg.sender_id`;
 
 	if (search) query += getSearchQuery();
 	if (message_id) query += getIdQuery(search);
@@ -246,9 +249,10 @@ exports.buildExportQuery = () => {
             msg.credits,
             msg.status,
             (SELECT s.name FROM senders s WHERE s.id = msg.sender_id) AS sender,
-            msg.msisdn_id,
+            msisdns.number,
             msg.created_at
         FROM messages msg
+            inner join msisdns on msisdns.id = msg.msisdn_id
         WHERE msg.user_id = :user_id
         AND (
             (msg.created_at::date BETWEEN :start_date AND :end_date)
@@ -256,8 +260,8 @@ exports.buildExportQuery = () => {
             OR (msg.created_at::date <= :end_date AND :start_date IS NULL)
             OR (:start_date IS NULL AND :end_date IS NULL)
         )
-        AND ((:msisdns) IS NULL OR msg.msisdn_id IN (:msisdns))
-        GROUP BY msg.id, msg.created_at
+        AND ((:msisdns) IS NULL OR msisdns.number IN (:msisdns))
+        GROUP BY msg.id, msisdns.number
         ORDER BY created_at ASC`;
 
 	return query;

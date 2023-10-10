@@ -73,27 +73,31 @@ exports.get = async (request, response) => {
 
 		if (id)
 		{
-			const contact = await Contact.findByPk(id, {
-                attributes: ['id', 'first_name', 'middle_name', 'last_name'],
-				include: [
-                    {
-                        model: Msisdn,
-                        through: {attributes: []},
-                        attributes: ['id'],
-				    },
-                    {
-                        model: Group,
-                        through: {attributes: []},
-                        attributes: ['id', 'name', 'description'],
-				    },
-                    {
-                        model: User,
-                        attributes: ['id', 'name'],
-				    },
-
-                ],
-                where: {user_id: user.id}
-			})
+			const contact = await database.query(`
+                SELECT
+                    c.id,
+                    c.first_name,
+                    c.middle_name,
+                    c.last_name,
+                    c.created_at,
+                    (
+                        SELECT array_agg(m.number)
+                        FROM msisdns m
+                        INNER JOIN contact_msisdns cm ON m.id = cm.msisdn_id
+                        WHERE cm.contact_id = c.id
+                    ) AS msisdns,
+                    (
+                        SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
+                        FROM contact_groups
+                        INNER JOIN groups g ON g.id = contact_groups.group_id
+                        WHERE contact_groups.contact_id = c.id
+                    ) AS groups
+                FROM contacts c
+                WHERE c.user_id = :user_id and c.id = :id
+            `, {
+                replacements: { id, user_id: user.id},
+                type: QueryTypes.SELECT
+            })
 
 			if (contact) return helper.respond(response, {
 				code: constants.SUCCESS_CODE,

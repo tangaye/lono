@@ -15,16 +15,12 @@ Message.init({
 		primaryKey: true,
 	},
 	msisdn_id: {
-		type: DataTypes.STRING(12),
+		type: DataTypes.UUID,
 		allowNull: false,
 		validate: {
 			notNull: {
 				msg: "recipient number is required",
-			},
-            len: {
-                args: [1, 12],
-                msg: "recipient number should be 12 characters. ex: 213889998009"
-            }
+			}
 		},
 	},
 	message: {

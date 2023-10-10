@@ -5,16 +5,20 @@ class Msisdn extends Model {}
 
 Msisdn.init({
 	id: {
+		type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+		primaryKey: true
+	},
+    number: {
 		type: DataTypes.STRING(12),
 		allowNull: false,
-		primaryKey: true,
 		validate: {
 			notNull: {
-				msg: "msisdn is required",
+				msg: "number is required",
 			},
 			len: {
 				args: [1, 12],
-				msg: "msisdn should be 12 characters. ex: 213889998009"
+				msg: "number should be 12 characters. ex: 231889998009"
 			}
 		}
 	},

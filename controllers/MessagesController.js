@@ -119,8 +119,8 @@ exports.send = async (request, response) => {
 			const message_id = uuidv4()
 
 			const [msisdn, created] = await Msisdn.findOrCreate({
-                where: {id: item.to},
-				defaults: {id: item.to, user_id: user.id}
+                where: {number: item.to, user_id: user.id},
+				defaults: {number: item.to, user_id: user.id}
             })
 
 			const parts = MessageFactory.breakIntoParts(item.body, 160)
@@ -151,7 +151,7 @@ exports.send = async (request, response) => {
 
             Queue.add({
                 body: item.body,
-                to: msisdn.id,
+                to: item.to,
                 sender: sender.name,
                 message_id: message.id,
                 user_id: user.id,
