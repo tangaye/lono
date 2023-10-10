@@ -1,9 +1,8 @@
 const router = require("express").Router();
 const ContactsController = require("../controllers/ContactsController");
 const {authenticate} = require("../middlewares")
-const {validateAll, validateCreate, validateImport, validateStore} = require("../validators/contacts")
+const {validateAll, validateCreate, validateUpdate, validateImport, validateStore} = require("../validators/contacts")
 
-// router.post('/contacts/create', [authenticate, validateCreate], ContactsController.create)
 
 router.route('/contacts')
 	.get([authenticate, validateAll], ContactsController.all)
@@ -11,6 +10,7 @@ router.route('/contacts')
 
 router.post('/contacts/import', [authenticate, validateImport], ContactsController.bulkImport)
 router.get('/contacts/:id', authenticate, ContactsController.get)
+router.patch('/contacts/:id', [authenticate, validateUpdate], ContactsController.update)
 router.delete('/contacts/:id', authenticate, ContactsController.remove)
 
 module.exports = router;

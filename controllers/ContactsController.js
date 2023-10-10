@@ -73,28 +73,7 @@ exports.get = async (request, response) => {
 
 		if (id)
 		{
-			const contact = await database.query(`
-                SELECT
-                    c.id,
-                    c.first_name,
-                    c.middle_name,
-                    c.last_name,
-                    c.created_at,
-                    (
-                        SELECT array_agg(m.number)
-                        FROM msisdns m
-                        INNER JOIN contact_msisdns cm ON m.id = cm.msisdn_id
-                        WHERE cm.contact_id = c.id
-                    ) AS msisdns,
-                    (
-                        SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
-                        FROM contact_groups
-                        INNER JOIN groups g ON g.id = contact_groups.group_id
-                        WHERE contact_groups.contact_id = c.id
-                    ) AS groups
-                FROM contacts c
-                WHERE c.user_id = :user_id and c.id = :id
-            `, {
+			const contact = await database.query(ContactFactory.getContactQuery(), {
                 replacements: { id, user_id: user.id},
                 type: QueryTypes.SELECT
             })
@@ -131,6 +110,154 @@ exports.get = async (request, response) => {
 
 }
 
+exports.update = async (request, response) => {
+
+    // start transaction
+    const t = await database.transaction();
+
+    try {
+
+        const {user, first_name, middle_name, last_name, msisdns, groups, contact} = request.body
+
+        await contact.update({
+            first_name: first_name || contact.first_name,
+            middle_name: middle_name || contact.middle_name,
+            last_name: last_name || contact.last_name,
+        }, {transaction: t})
+
+        // if groups not passed, remove all assigned assigned
+        if (!groups || groups?.length === 0) {
+            await database.query(
+                `delete from contact_groups where contact_id = :contact_id`, {
+                replacements: { contact_id: contact.id},
+                type: QueryTypes.DELETE,
+                transaction: t
+            })
+        }
+
+        // if msisdns not passed, remove all msisdns assigned
+        if (!msisdns || msisdns?.length === 0) {
+            await database.query(
+                `delete from contact_msisdns where contact_id = :contact_id`, {
+                replacements: { contact_id: contact.id},
+                type: QueryTypes.DELETE,
+                transaction: t
+            })
+        }
+
+        if (groups?.length > 0)
+        {
+
+            // remove groups not reassigned
+            await database.query(
+                `delete from contact_groups where contact_id = :contact_id and group_id not in (:groups)`, {
+                replacements: { contact_id: contact.id, groups},
+                type: QueryTypes.DELETE,
+                transaction: t
+            })
+
+            const values = groups.map(id => `(gen_random_uuid(), '${id}', '${contact.id}', now(), now())`).join(', ');
+
+            await database.query(
+                `insert into contact_groups (id, group_id, contact_id, created_at, updated_at) values ${values} ON CONFLICT DO NOTHING`
+                , {
+                replacements: {values},
+                type: QueryTypes.INSERT,
+                transaction: t
+            })
+        }
+
+        if (msisdns?.length > 0)
+        {
+            // remove msisdns not reassigned
+            await database.query(
+                `delete from contact_msisdns where contact_id = :contact_id and msisdn_id not in (select id from msisdns where number in (:msisdns))`, {
+                replacements: { contact_id: contact.id, msisdns},
+                type: QueryTypes.DELETE,
+                transaction: t
+            })
+
+            for (const number of msisdns)
+            {
+                const msisdn = await Msisdn.findOne({
+                    where: {number, user_id: user.id},
+                    transaction: t
+                })
+
+                if (msisdn)
+                {
+
+                    await database.query(
+                        `insert into contact_msisdns (id, contact_id, msisdn_id, created_at, updated_at) values (gen_random_uuid(), :contact_id, :msisdn_id, now(), now()) ON CONFLICT DO NOTHING`
+                        , {
+                        replacements: {
+                            contact_id: contact.id,
+                            msisdn_id: msisdn.id
+                        },
+                        type: QueryTypes.INSERT,
+                        transaction: t
+                    })
+                }
+                else
+                {
+
+                    const msisdn = await Msisdn.create({
+                        number,
+                        user_id: user.id
+                    }, {transaction: t})
+
+                    await database.query(
+                        `insert into contact_msisdns (id, contact_id, msisdn_id, created_at, updated_at) values (gen_random_uuid(), :contact_id, :msisdn_id, now(), now())`
+                        , {
+                        replacements: {
+                            contact_id: contact.id,
+                            msisdn_id: msisdn.id
+                        },
+                        type: QueryTypes.INSERT,
+                        transaction: t
+                    })
+
+                }
+            }
+
+        }
+
+
+        // If the execution reaches this line, no errors were thrown.
+        // We commit the transaction.
+
+        const updated_contact = await database.query(ContactFactory.getContactQuery(), {
+            replacements: { id: contact.id, user_id: user.id},
+            type: QueryTypes.SELECT,
+            transaction: t
+        })
+
+        await t.commit();
+
+        return response.send({
+            errorCode: constants.SUCCESS_CODE,
+            contact: updated_contact
+        })
+
+	}
+	catch (error)
+	{
+
+        // If the execution reaches this line, an error was thrown.
+        // We rollback the transaction.
+        await t.rollback();
+
+
+		const message = "error updating contact"
+		logger.error(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: error?.errors ? error?.errors[0]?.message : message
+		})
+	}
+}
+
 exports.create = async (request, response) =>
 {
     // start transaction
@@ -160,7 +287,10 @@ exports.create = async (request, response) =>
         {
             for (const msisdn of msisdns)
             {
-                const created = await Msisdn.create({id: msisdn, user_id: user.id}, {transaction: t})
+                const created = await Msisdn.create({
+                    number: msisdn,
+                    user_id: user.id
+                }, {transaction: t})
 
                 created_msisdns.push(created);
             }
@@ -318,12 +448,12 @@ exports.bulkImport = async (request, response) => {
             }
 
             // loop through msisdns
-            for (const id of msisdns)
+            for (const msisdn of msisdns)
             {
                 // find or create msisdns
                 await Msisdn.findOrCreate({
-                    where: {id},
-                    defaults: {id, user_id: user.id},
+                    where: {number: msisdn, user_id: user.id},
+                    defaults: {number: msisdn, user_id: user.id},
                     transaction: t
                 })
             }

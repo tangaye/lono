@@ -221,3 +221,26 @@ exports.getPagingData = (contacts, totalItems, page, limit) => {
 
 	return {totalItems, contacts, totalPages, currentPage };
 }
+
+exports.getContactQuery = () => {
+    return ` SELECT
+            c.id,
+            c.first_name,
+            c.middle_name,
+            c.last_name,
+            c.created_at,
+            (
+                SELECT array_agg(m.number)
+                FROM msisdns m
+                INNER JOIN contact_msisdns cm ON m.id = cm.msisdn_id
+                WHERE cm.contact_id = c.id
+            ) AS msisdns,
+            (
+                SELECT json_agg(json_build_object('id', g.id, 'name', g.name))
+                FROM contact_groups
+                INNER JOIN groups g ON g.id = contact_groups.group_id
+                WHERE contact_groups.contact_id = c.id
+            ) AS groups
+        FROM contacts c
+        WHERE c.user_id = :user_id and c.id = :id`
+}

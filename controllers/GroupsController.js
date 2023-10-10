@@ -205,7 +205,7 @@ exports.update = async (request, response) => {
                 `insert into contact_groups (id, group_id, contact_id, created_at, updated_at) values ${values} ON CONFLICT DO NOTHING`
                 , {
                 replacements: {values},
-                type: QueryTypes.DELETE,
+                type: QueryTypes.INSERT,
                 transaction: t
             })
         }

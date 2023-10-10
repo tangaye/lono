@@ -6,6 +6,7 @@ const logger = require("../logger")
 const msisdn = require("../models/Msisdn")
 const Msisdn = require("../models/Msisdn")
 const Group = require("../models/Group")
+const Contact = require("../models/Contact")
 
 /**
  * Validates and prepares requests to display apps
@@ -75,7 +76,10 @@ exports.validateCreate = async (request, response, next) => {
 
                 unique_msisdns.push(id)
 
-                const msisdn_found = await Msisdn.findByPk(id)
+                // check if msisdn has been assigned to a user
+                const msisdn_found = await Msisdn.findOne({
+                    where: {number: msisdn, user_id: user.id}
+                })
 
                 if (msisdn_found)
                 {
@@ -115,7 +119,10 @@ exports.validateCreate = async (request, response, next) => {
                 }
 
                 // check if group exists
-                const group_found = await Group.findByPk(id)
+                const group_found = await Group.findOne({
+                    where: {id, user_id: user.id}
+                })
+
                 if (!group_found)
                 {
                     return helper.respond(response, {
@@ -143,6 +150,112 @@ exports.validateCreate = async (request, response, next) => {
 		})
 
 	}
+}
+
+exports.validateUpdate = async (request, response, next) =>
+{
+    try {
+
+        const id = request.params.id
+        const {user, groups, msisdns} = request.body
+
+        const contact = await Contact.findOne({
+            where: {id, user_id: user.id}
+        });
+
+        if (!contact)
+        {
+            return helper.respond(response, {
+                code: constants.INVALID_DATA,
+                message: `contact: ${id} not found`
+            })
+        }
+
+        if (msisdns)
+        {
+
+            const unique_msisdns = []
+
+            // check if msisdn exists, if so return error
+            for (const id of msisdns)
+            {
+
+                // check if msisdn is valid
+                if(!MsisdnFactory.validateMsisdn(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `Invalid msisdn: ${id}`
+                    })
+                }
+
+                // check for duplicates
+                if (unique_msisdns.includes(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `Duplicate msisdn found for: ${id}`
+                    })
+                }
+
+                unique_msisdns.push(id)
+            }
+        }
+
+        if (groups)
+        {
+            const unique_groups = [];
+            // check if all groups exists
+            for (const id of groups)
+            {
+
+                // check for duplicates
+                if (unique_groups.includes(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `Duplicate group found for: ${id}`
+                    })
+                }
+
+                unique_groups.push(id)
+
+                // check if valid uuid
+                if (!helper.isValidUuid(id))
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `invalid group id: ${id}`
+                    })
+                }
+
+                // check if group exists
+                const group_found = await Group.findOne({
+                    where: {id, user_id: user.id}
+                })
+                if (!group_found)
+                {
+                    return helper.respond(response, {
+                        code: constants.INVALID_DATA,
+                        message: `group: ${id} doesn't exists`
+                    })
+                }
+            }
+
+        }
+
+        request.body.contact = contact
+        return next();
+
+    } catch (error) {
+        logger.error("error validating data to update contact: ", error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message: "error validating data to update contact"
+		})
+
+    }
 }
 
 exports.validateImport = async (request, response, next) =>
