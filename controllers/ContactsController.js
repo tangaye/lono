@@ -320,25 +320,17 @@ exports.create = async (request, response) =>
             }
         }
 
-        // If the execution reaches this line, no errors were thrown.
+
+        const created_contact = await database.query(ContactFactory.getContactQuery(), {
+            replacements: { id: contact.id, user_id: user.id},
+            type: QueryTypes.SELECT,
+            transaction: t
+        })
+
+         // If the execution reaches this line, no errors were thrown.
         // We commit the transaction.
         await t.commit();
 
-        const created_contact = await Contact.findByPk(contact.id,{
-			attributes: ['id', 'first_name', 'middle_name', 'last_name', 'created_at'],
-			include: [
-				{
-					model: Msisdn,
-					attributes: ['id'],
-					through: {attributes: []}
-				},
-				{
-					model: Group,
-					attributes: ['id', 'name'],
-					through: {attributes: []}
-				}
-			]
-		})
 
         return helper.respond(response, {
 			code: constants.SUCCESS_CODE,
