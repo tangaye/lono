@@ -96,7 +96,7 @@ exports.getGroupQuery = () => {
                 'middle_name', c.middle_name,
                 'last_name', c.last_name,
                 'msisdns', (
-                    SELECT array_agg(m.id)
+                    SELECT array_agg(m.number)
                     FROM msisdns m
                     inner join contact_msisdns cm on cm.msisdn_id = m.id
                     where cm.contact_id = c.id
