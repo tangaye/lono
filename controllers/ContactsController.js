@@ -442,17 +442,25 @@ exports.bulkImport = async (request, response) => {
                 {
                     // find or create group
                     const [group, created] = await Group.findOrCreate({
-                        where: {name: name, user_id: user.id},
+                        where: {
+                            name: {
+                                [Op.iLike]: `%${name}%`,
+                            },
+                            user_id: user.id
+                        },
                         defaults: {name: name, user_id: user.id},
                         transaction: t
                     })
 
                     // add group to contact
-                    if (group) await ContactGroup.findOrCreate({
-                        where: {contact_id: created_contact.id, group_id: group.id},
-                        defaults: {contact_id: created_contact.id, group_id: group.id},
-                        transaction: t
-                    })
+                    if (group) {
+
+                        await ContactGroup.findOrCreate({
+                            where: {contact_id: created_contact.id, group_id: group.id},
+                            defaults: {contact_id: created_contact.id, group_id: group.id},
+                            transaction: t
+                        })
+                    }
                 }
             }
 
