@@ -80,7 +80,7 @@ exports.get = async (request, response) => {
 
 			if (contact) return helper.respond(response, {
 				code: constants.SUCCESS_CODE,
-				contact
+				contact: contact[0]
 			})
 
 			return response.send({

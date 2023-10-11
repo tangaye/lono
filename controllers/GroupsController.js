@@ -134,7 +134,7 @@ exports.get = async (request, response) => {
 
 			if (group) return helper.respond(response, {
 				code: constants.SUCCESS_CODE,
-				group
+				group: group[0]
 			})
 
 			return response.send({
