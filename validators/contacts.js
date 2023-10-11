@@ -3,7 +3,6 @@ const MsisdnFactory = require("../factories/MsisdnsFactory")
 const GroupFactory = require("../factories/GroupsFactory")
 const constants = require("../constants")
 const logger = require("../logger")
-const msisdn = require("../models/Msisdn")
 const Msisdn = require("../models/Msisdn")
 const Group = require("../models/Group")
 const Contact = require("../models/Contact")
@@ -350,6 +349,59 @@ exports.validateStore = async (request, response, next) => {
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
 			message: "error validating data to store contact"
+		})
+
+	}
+}
+
+exports.validateDelete = async(request, response, next) => {
+    try {
+
+		const id = request.params.id
+        const {user} = request.body
+
+        if (!id)
+        {
+            return helper.respond(response, {
+				code: constants.INVALID_DATA,
+				message: "id is required"
+			})
+        }
+
+        if(!helper.isValidUuid(id))
+        {
+            return helper.respond(response, {
+				code: constants.INVALID_DATA,
+				message: "invalid id"
+			})
+        }
+
+        const contact = await Contact.findByPk(id,
+            {where: {user_id: user.id},
+            include: {
+                model: Msisdn
+            }
+        })
+
+        if (!contact)
+        {
+            return helper.respond(response, {
+				code: constants.INVALID_DATA,
+				message: `contact: ${id} not found`
+			})
+        }
+
+		request.body.contact = contact
+        return next();
+
+	} catch (error) {
+
+        const message = "error validating data to delete contact: "
+		logger.error(message, error)
+
+		return helper.respond(response, {
+			code: constants.FAILURE_CODE,
+			message
 		})
 
 	}

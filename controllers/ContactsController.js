@@ -1,6 +1,6 @@
 const ContactFactory = require("../factories/ContactsFactory")
 const database = require("../database/connection")
-const {QueryTypes, Sequelize} = require("sequelize")
+const {QueryTypes, Sequelize, Op} = require("sequelize")
 const constants = require("../constants")
 const helper = require("../helpers")
 const logger = require("../logger")
@@ -356,40 +356,54 @@ exports.create = async (request, response) =>
 }
 
 exports.remove = async (request, response) => {
+
+    const t = await database.transaction();
+
     try {
 
-		const {user} = request.body
-		const id = request.params.id
+		const {user, contact} = request.body
 
-		if (id)
-		{
-			const contact = await Contact.findByPk(id, {where: {user_id: user.id}})
+		await contact.destroy({
+            force: true,
+            transaction: t
+        });
 
-			if (contact) {
+        if (contact.msisdns)
+        {
+            const msisdns = contact.msisdns.map(msisdn => msisdn.id)
 
-                await contact.destroy({force: true});
 
-                return helper.respond(response, {
-                    code: constants.SUCCESS_CODE,
-                    message: "contact deleted"
-                })
-            }
+            await Msisdn.destroy({
+                force: true,
+                where: {
+                    id: {
+                        [Op.in]: [...msisdns]
+                    }
+                },
+                transaction: t
+            })
+        }
 
-			return response.send({
-				errorCode: constants.FAILURE_CODE,
-				message: "contact not found"
-			})
-		}
 
-		return response.send({
-			errorCode: constants.FAILURE_CODE,
-			message: "id is required in request param"
-		})
+
+        // If the execution reaches this line, no errors were thrown.
+        // We commit the transaction.
+        await t.commit();
+
+
+        return helper.respond(response, {
+            code: constants.SUCCESS_CODE,
+            message: "contact deleted"
+        })
 	}
 	catch (error)
 	{
 		const message = "error deleting contact"
 		logger.error(message, error)
+
+        // If the execution reaches this line, an error was thrown.
+        // We rollback the transaction.
+        await t.rollback();
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
