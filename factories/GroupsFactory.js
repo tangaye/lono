@@ -88,6 +88,7 @@ exports.getGroupQuery = () => {
     return ` select
     id,
     name,
+    description,
     (
         select json_agg(
             json_build_object(
