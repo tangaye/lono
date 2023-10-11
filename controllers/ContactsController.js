@@ -236,7 +236,7 @@ exports.update = async (request, response) => {
 
         return response.send({
             errorCode: constants.SUCCESS_CODE,
-            contact: updated_contact
+            contact: updated_contact[0]
         })
 
 	}
