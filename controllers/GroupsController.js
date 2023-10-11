@@ -224,7 +224,7 @@ exports.update = async (request, response) => {
 
         return response.send({
             errorCode: constants.SUCCESS_CODE,
-            group: updated_group
+            group: updated_group[0]
         })
 
 	}
