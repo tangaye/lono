@@ -274,6 +274,25 @@ exports.validateImport = async (request, response, next) =>
             })
         }
 
+        for (const contact of contacts)
+        {
+            if (contact.msisdns)
+            {
+                for (const msisdn of contact.msisdns)
+                {
+                     // check if msisdn is valid
+                     if(!MsisdnFactory.validateMsisdn(msisdn))
+                     {
+                         return helper.respond(response, {
+                             code: constants.INVALID_DATA,
+                             message: `Invalid msisdn: ${msisdn}`
+                         })
+                     }
+                }
+            }
+
+        }
+
         return next();
 
 

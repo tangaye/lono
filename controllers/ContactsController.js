@@ -422,33 +422,51 @@ exports.bulkImport = async (request, response) => {
             }, {transaction: t})
 
             // loop through groups
-            for (const name of groups)
+            if (groups)
             {
-                // find or create group
-                const [group, created] = await Group.findOrCreate({
-                    where: {name: name, user_id: user.id},
-                    defaults: {name: name, user_id: user.id},
-                    transaction: t
-                })
+                for (const name of groups)
+                {
+                    // find or create group
+                    const [group, created] = await Group.findOrCreate({
+                        where: {name: name, user_id: user.id},
+                        defaults: {name: name, user_id: user.id},
+                        transaction: t
+                    })
 
-                // add group to contact
-                if (group) await ContactGroup.findOrCreate({
-                    where: {contact_id: created_contact.id, group_id: group.id},
-                    defaults: {contact_id: created_contact.id, group_id: group.id},
-                    transaction: t
-                })
+                    // add group to contact
+                    if (group) await ContactGroup.findOrCreate({
+                        where: {contact_id: created_contact.id, group_id: group.id},
+                        defaults: {contact_id: created_contact.id, group_id: group.id},
+                        transaction: t
+                    })
+                }
             }
+
 
             // loop through msisdns
-            for (const msisdn of msisdns)
+            if (msisdns)
             {
-                // find or create msisdns
-                await Msisdn.findOrCreate({
-                    where: {number: msisdn, user_id: user.id},
-                    defaults: {number: msisdn, user_id: user.id},
-                    transaction: t
-                })
+
+                for (const number of msisdns)
+                {
+                    // find or create msisdns
+                    const [msisdn, create] = await Msisdn.findOrCreate({
+                        where: {number, user_id: user.id},
+                        defaults: {number, user_id: user.id},
+                        transaction: t
+                    })
+
+                    if (msisdn)
+                    {
+                        await ContactMsisdn.findOrCreate({
+                            where: {contact_id: created_contact.id, msisdn_id: msisdn.id},
+                            defaults: {contact_id: created_contact.id, msisdn_id: msisdn.id},
+                            transaction: t
+                        })
+                    }
+                }
             }
+
         }
 
         // If the execution reaches this line, no errors were thrown.
