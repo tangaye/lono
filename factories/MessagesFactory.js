@@ -221,7 +221,8 @@ exports.buildQuery = (user_id, search, message_id, order) => {
         FROM messages msg
             LEFT JOIN message_parts mp on msg.id = mp.message_id
             INNER JOIN msisdns on msisdns.id = msg.msisdn_id
-            inner join senders on senders.id = msg.sender_id`;
+            inner join senders on senders.id = msg.sender_id
+            WHERE msg.user_id = :user_id`;
 
 	if (search) query += getSearchQuery();
 	if (message_id) query += getIdQuery(search);
