@@ -6,6 +6,7 @@ const logger = require("../logger")
 const Msisdn = require("../models/Msisdn")
 const Group = require("../models/Group")
 const Contact = require("../models/Contact")
+const ContactMsisdn = require("../models/ContactMsisdn")
 
 /**
  * Validates and prepares requests to display apps
@@ -75,17 +76,29 @@ exports.validateCreate = async (request, response, next) => {
 
                 unique_msisdns.push(number)
 
-                // check if msisdn has been assigned to a user
-                const msisdn_found = await Msisdn.findOne({
+                // check if msisdn has been assigned to a user contact
+                const msisdn = await Msisdn.findOne({
                     where: {number, user_id: user.id}
                 })
 
-                if (msisdn_found)
+                if (msisdn)
                 {
-                    return helper.respond(response, {
-                        code: constants.INVALID_DATA,
-                        message: `msisdn: "${number}" already exists`
+
+                    const msisdn_assigned = await ContactMsisdn.findOne({
+                        where: {
+                            msisdn_id: msisdn.id,
+                            user_id: user.id
+                        }
                     })
+
+                    if (msisdn_assigned)
+                    {
+                        return helper.respond(response, {
+                            code: constants.INVALID_DATA,
+                            message: `msisdn: "${number}" already assigned to a contact`
+                        })
+                    }
+
                 }
             }
         }
@@ -176,15 +189,15 @@ exports.validateUpdate = async (request, response, next) =>
             const unique_msisdns = []
 
             // check if msisdn exists, if so return error
-            for (const id of msisdns)
+            for (const number of msisdns)
             {
 
-                // check if msisdn is valid
-                if(!MsisdnFactory.validateMsisdn(id))
+                // check if msisdn is valnumber
+                if(!MsisdnFactory.validateMsisdn(number))
                 {
                     return helper.respond(response, {
                         code: constants.INVALID_DATA,
-                        message: `Invalid msisdn: ${id}`
+                        message: `Invalid msisdn: ${number}`
                     })
                 }
 
@@ -193,11 +206,37 @@ exports.validateUpdate = async (request, response, next) =>
                 {
                     return helper.respond(response, {
                         code: constants.INVALID_DATA,
-                        message: `Duplicate msisdn found for: ${id}`
+                        message: `Duplicate msisdn found for: ${number}`
                     })
                 }
 
-                unique_msisdns.push(id)
+                unique_msisdns.push(number)
+
+                // check if msisdn has been assigned to a user contact
+                const msisdn = await Msisdn.findOne({
+                    where: {number, user_id: user.id}
+                })
+
+                if (msisdn)
+                {
+
+                    const msisdn_assigned = await ContactMsisdn.findOne({
+                        where: {
+                            msisdn_id: msisdn.id,
+                            user_id: user.id
+                        }
+                    })
+
+                    // since updating, check if the msisdn has been assigned to other contacts
+                    if (msisdn_assigned && (msisdn_assigned.contact_id != contact.id))
+                    {
+                        return helper.respond(response, {
+                            code: constants.INVALID_DATA,
+                            message: `msisdn: "${number}" already assigned to a contact`
+                        })
+                    }
+
+                }
             }
         }
 
@@ -261,7 +300,7 @@ exports.validateImport = async (request, response, next) =>
 {
     try {
 
-        const {contacts} = request.body
+        const {contacts, user} = request.body
 
 
         // user and msisdn required
@@ -273,24 +312,66 @@ exports.validateImport = async (request, response, next) =>
             })
         }
 
+        const unique_msisdns = [];
+
+
         for (const contact of contacts)
         {
             if (contact.msisdns)
             {
-                for (const msisdn of contact.msisdns)
+                for (const number of contact.msisdns)
                 {
+
+                    // check for duplicates
+                    if (unique_msisdns.includes(number))
+                    {
+                        return helper.respond(response, {
+                            code: constants.INVALID_DATA,
+                            message: `Duplicate msisdn found for: ${number}`
+                        })
+                    }
+
+                    unique_msisdns.push(number)
+
                      // check if msisdn is valid
-                     if(!MsisdnFactory.validateMsisdn(msisdn))
+                    if(!MsisdnFactory.validateMsisdn(number))
                      {
                          return helper.respond(response, {
                              code: constants.INVALID_DATA,
-                             message: `Invalid msisdn: ${msisdn}`
+                             message: `Invalid msisdn: ${number}`
                          })
                      }
+
+                    // check if msisdn has been assigned to a user contact
+                    const msisdn = await Msisdn.findOne({
+                        where: {number, user_id: user.id}
+                    })
+
+                    if (msisdn)
+                    {
+
+                        const msisdn_assigned = await ContactMsisdn.findOne({
+                            where: {
+                                msisdn_id: msisdn.id,
+                                user_id: user.id
+                            }
+                        })
+
+                        if (msisdn_assigned)
+                        {
+                            return helper.respond(response, {
+                                code: constants.INVALID_DATA,
+                                message: `msisdn: "${number}" already assigned to a contact`
+                            })
+                        }
+
+                    }
                 }
             }
 
         }
+
+        console.log({unique_msisdns})
 
         return next();
 
@@ -309,50 +390,6 @@ exports.validateImport = async (request, response, next) =>
     }
 }
 
-/**
- * Validates and prepares requests to store apps
- * @param {Request} request
- * @param {Response} response
- * @param {next} next
- * @returns
- */
-exports.validateStore = async (request, response, next) => {
-
-	try {
-
-		const {msisdns, groups, user} = request.body
-
-		if (msisdns && user) {
-
-			const msisdns_valid = MsisdnFactory.validate(msisdns)
-			const groups_valid = GroupFactory.groupsValid(groups)
-
-			if (msisdns_valid && groups_valid) return next()
-
-			return helper.respond(response, {
-				code: constants.INVALID_DATA,
-				message: "invalid msisdns"
-			})
-
-		}
-
-		return helper.respond(response, {
-			code: constants.INVALID_DATA,
-			message: "msisdns & user are required"
-		})
-
-
-	} catch (error) {
-
-		logger.error("error validating data to store contact: ", error)
-
-		return helper.respond(response, {
-			code: constants.FAILURE_CODE,
-			message: "error validating data to store contact"
-		})
-
-	}
-}
 
 exports.validateDelete = async(request, response, next) => {
     try {
@@ -376,12 +413,7 @@ exports.validateDelete = async(request, response, next) => {
 			})
         }
 
-        const contact = await Contact.findByPk(id,
-            {where: {user_id: user.id},
-            include: {
-                model: Msisdn
-            }
-        })
+        const contact = await Contact.findByPk(id, {where: {user_id: user.id}})
 
         if (!contact)
         {

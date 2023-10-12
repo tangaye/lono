@@ -30,6 +30,15 @@ ContactMsisdn.init(
 					msg: "msisdn_id is required",
 				},
 			},
+		},
+        user_id: {
+			type: DataTypes.UUID,
+			allowNull: false,
+			validate: {
+				notNull: {
+					msg: "user_id is required",
+				},
+			},
 		}
 	},
 	{

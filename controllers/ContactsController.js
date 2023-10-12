@@ -188,11 +188,12 @@ exports.update = async (request, response) => {
                 {
 
                     await database.query(
-                        `insert into contact_msisdns (id, contact_id, msisdn_id, created_at, updated_at) values (gen_random_uuid(), :contact_id, :msisdn_id, now(), now()) ON CONFLICT DO NOTHING`
+                        `insert into contact_msisdns (id, contact_id, msisdn_id, user_id, created_at, updated_at) values (gen_random_uuid(), :contact_id, :msisdn_id, :user_id, now(), now()) ON CONFLICT DO NOTHING`
                         , {
                         replacements: {
                             contact_id: contact.id,
-                            msisdn_id: msisdn.id
+                            msisdn_id: msisdn.id,
+                            user_id: user.id
                         },
                         type: QueryTypes.INSERT,
                         transaction: t
@@ -207,11 +208,12 @@ exports.update = async (request, response) => {
                     }, {transaction: t})
 
                     await database.query(
-                        `insert into contact_msisdns (id, contact_id, msisdn_id, created_at, updated_at) values (gen_random_uuid(), :contact_id, :msisdn_id, now(), now())`
+                        `insert into contact_msisdns (id, contact_id, msisdn_id, user_id, created_at, updated_at) values (gen_random_uuid(), :contact_id, :msisdn_id, :user_id, now(), now())`
                         , {
                         replacements: {
                             contact_id: contact.id,
-                            msisdn_id: msisdn.id
+                            msisdn_id: msisdn.id,
+                            user_id: user.id
                         },
                         type: QueryTypes.INSERT,
                         transaction: t
@@ -285,14 +287,15 @@ exports.create = async (request, response) =>
         // create msisdns
         if (msisdns)
         {
-            for (const msisdn of msisdns)
+            for (const number of msisdns)
             {
-                const created = await Msisdn.create({
-                    number: msisdn,
-                    user_id: user.id
-                }, {transaction: t})
+                const [msisdn, created] = await Msisdn.findOrCreate({
+                    where: {number, user_id: user.id},
+                    defaults: {number, user_id: user.id},
+                    transaction: t
+                })
 
-                created_msisdns.push(created);
+                created_msisdns.push(msisdn);
             }
         }
 
@@ -303,7 +306,8 @@ exports.create = async (request, response) =>
             {
                 await ContactMsisdn.create({
                     msisdn_id: msisdn.id,
-                    contact_id: contact.id
+                    contact_id: contact.id,
+                    user_id: user.id
                 }, {transaction: t})
             }
         }
@@ -357,38 +361,35 @@ exports.create = async (request, response) =>
 
 exports.remove = async (request, response) => {
 
-    const t = await database.transaction();
+    // const t = await database.transaction();
 
     try {
 
 		const {user, contact} = request.body
 
-		await contact.destroy({
-            force: true,
-            transaction: t
-        });
+		await contact.destroy({force: true});
 
-        if (contact.msisdns)
-        {
-            const msisdns = contact.msisdns.map(msisdn => msisdn.id)
+        // if (contact.msisdns)
+        // {
+        //     const msisdns = contact.msisdns.map(msisdn => msisdn.id)
 
 
-            await Msisdn.destroy({
-                force: true,
-                where: {
-                    id: {
-                        [Op.in]: [...msisdns]
-                    }
-                },
-                transaction: t
-            })
-        }
+        //     // await Msisdn.destroy({
+        //     //     force: true,
+        //     //     where: {
+        //     //         id: {
+        //     //             [Op.in]: [...msisdns]
+        //     //         }
+        //     //     },
+        //     //     transaction: t
+        //     // })
+        // }
 
 
 
         // If the execution reaches this line, no errors were thrown.
         // We commit the transaction.
-        await t.commit();
+        // await t.commit();
 
 
         return helper.respond(response, {
@@ -403,7 +404,7 @@ exports.remove = async (request, response) => {
 
         // If the execution reaches this line, an error was thrown.
         // We rollback the transaction.
-        await t.rollback();
+        // await t.rollback();
 
 		return helper.respond(response, {
 			code: constants.FAILURE_CODE,
@@ -481,8 +482,8 @@ exports.bulkImport = async (request, response) => {
                     if (msisdn)
                     {
                         await ContactMsisdn.findOrCreate({
-                            where: {contact_id: created_contact.id, msisdn_id: msisdn.id},
-                            defaults: {contact_id: created_contact.id, msisdn_id: msisdn.id},
+                            where: {contact_id: created_contact.id, msisdn_id: msisdn.id, user_id: user.id},
+                            defaults: {contact_id: created_contact.id, msisdn_id: msisdn.id, user_id: user.id},
                             transaction: t
                         })
                     }
