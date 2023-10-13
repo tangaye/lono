@@ -39,11 +39,11 @@ exports.validateCreate = async (request, response, next) => {
 
 
         // user and msisdn required
-        if (!user || !first_name || !last_name) {
+        if (!user || !first_name) {
 
             return helper.respond(response, {
                 code: constants.INVALID_DATA,
-                message: "first_name and last_name are required"
+                message: "first_name is required for a contact"
             })
         }
 
@@ -169,7 +169,7 @@ exports.validateUpdate = async (request, response, next) =>
     try {
 
         const id = request.params.id
-        const {user, groups, msisdns} = request.body
+        const {user, first_name, groups, msisdns} = request.body
 
         const contact = await Contact.findOne({
             where: {id, user_id: user.id}
@@ -180,6 +180,14 @@ exports.validateUpdate = async (request, response, next) =>
             return helper.respond(response, {
                 code: constants.INVALID_DATA,
                 message: `contact: ${id} not found`
+            })
+        }
+
+        if (!first_name)
+        {
+            return helper.respond(response, {
+                code: constants.INVALID_DATA,
+                message: "first_name is required for a contact"
             })
         }
 
@@ -314,9 +322,16 @@ exports.validateImport = async (request, response, next) =>
 
         const unique_msisdns = [];
 
-
         for (const contact of contacts)
         {
+            if (!contact.first_name)
+            {
+                return helper.respond(response, {
+                    code: constants.INVALID_DATA,
+                    message: "first_name is required for a contact"
+                })
+            }
+
             if (contact.msisdns)
             {
                 for (const number of contact.msisdns)
