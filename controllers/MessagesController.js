@@ -258,12 +258,6 @@ exports.bulkgateDR = async (request, response) => {
 
         if (!(status && smsID)) throw Error("status, smsID not present in request")
 
-        // const part = await MessagePart.findOne({
-        //     where: {gateway_message_id: smsID}
-        // })
-
-        // const message = await Message.findByPk(part.message_id)
-
         const message = await Message.findOne({where: {gateway_message_id: smsID}})
 
         if (!message) throw Error(`No message found for ${smsID} with status ${status}`)
@@ -279,12 +273,8 @@ exports.bulkgateDR = async (request, response) => {
             part.update({message_status})
         }
 
-        // await Promise.all([
-        //     message.update({status: message_status.name}),
-        //     part.update({status: message_status.name})
-        // ])
-
         return response.sendStatus(200)
+
     } catch (error) {
 
         logger.error("error updating bulkgate message status: ", error);
@@ -330,11 +320,6 @@ exports.orangeDR = async (request, response) =>
             part.update({status})
         }
 
-        // await Promise.all([
-        //     message.update({status}),
-        //     part.update({status})
-        // ])
-
 		return response.sendStatus(200)
 
 	} catch (error) {
@@ -352,11 +337,6 @@ exports.dsevenDR = async (request, response) =>
         const {request_id, status} = request.body
 
         if (!(request_id && status)) return response.sendStatus(400)
-
-        // const part = await MessagePart.findOne({where: {gateway_message_id: request_id
-        // }})
-
-        // if (!part) throw Error(`No message found for ${request_id} with status ${status}`)
 
         const message = await Message.findOne({where: {gateway_message_id: request_id}})
 
@@ -381,9 +361,6 @@ exports.dsevenDR = async (request, response) =>
         {
             part.update({status: message_status})
         }
-        // await Promise.all([
-        //     message.update({status: message_status}), part.update({status: message_status})
-        // ])
 
         return response.sendStatus(200)
 

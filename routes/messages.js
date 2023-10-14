@@ -8,13 +8,10 @@ router.route('/sms')
 	.post([authenticate, senderIsValid, validateStore], MessagesController.send)
 
 router.get("/sms/stats", authenticate, MessagesController.statistics)
-
 router.post("/sms/export", [authenticate, validateExport], MessagesController.export)
 
-router.route("/sms/status")
-	.get(MessagesController.bulkgateDR) // for bulkgate
-	.post(MessagesController.orangeDR) // for orange
-
-router.post("/sms/dseven/dr", MessagesController.dsevenDR)
+router.post("/sms/dr/orange", MessagesController.orangeDR)
+router.get("/sms/dr/bulkgate", MessagesController.bulkgateDR)
+router.post("/sms/dr/dseven", MessagesController.dsevenDR)
 
 module.exports = router;
