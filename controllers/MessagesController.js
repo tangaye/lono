@@ -279,7 +279,7 @@ exports.bulkgateDR = async (request, response) => {
 
         logger.error("error updating bulkgate message status: ", error);
 
-		return response.sendStatus(500)
+		return response.sendStatus(200)
     }
 }
 
@@ -326,7 +326,7 @@ exports.orangeDR = async (request, response) =>
 
 		logger.error("error updating orange message status: ", error);
 
-		return response.sendStatus(constants.SERVER_ERROR);
+		return response.sendStatus(200);
 	}
 }
 
@@ -336,7 +336,7 @@ exports.dsevenDR = async (request, response) =>
 
         const {request_id, status} = request.body
 
-        if (!(request_id && status)) return response.sendStatus(400)
+        if (!(request_id && status)) throw Error(`request_id and status are required`)
 
         const message = await Message.findOne({where: {gateway_message_id: request_id}})
 
@@ -368,7 +368,7 @@ exports.dsevenDR = async (request, response) =>
 
         logger.error("error handling dseven delivery report message status: ", error);
 
-		return response.sendStatus(constants.SERVER_ERROR);
+		return response.sendStatus(200);
     }
 }
 
@@ -401,12 +401,12 @@ exports.dsevenDR = async (request, response) =>
             console.log('Twilio update', {updated_msg})
         }
 
-		return response.send({ ok: 200 })
+		return response.send(200)
 
 	} catch (error) {
 
 		logger.error("error updating twilio message status: ", error);
-		return response.status(constants.SERVER_ERROR).send({ failure: constants.SERVER_ERROR });
+		return response.status(200);
 	}
 }
 
