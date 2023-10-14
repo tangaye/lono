@@ -10,7 +10,7 @@ router.route('/sms')
 router.get("/sms/stats", authenticate, MessagesController.statistics)
 router.post("/sms/export", [authenticate, validateExport], MessagesController.export)
 
-router.post("/sms/dr/orange", MessagesController.orangeDR)
+router.post("/sms/status", MessagesController.orangeDR)
 router.get("/sms/dr/bulkgate", MessagesController.bulkgateDR)
 router.post("/sms/dr/dseven", MessagesController.dsevenDR)
 
