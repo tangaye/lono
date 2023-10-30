@@ -64,7 +64,7 @@ class MTNSmpp {
 
         // In case of errors while trying to connect, an error event will be emitted by the session and the program will be terminated if it's not listened. This is how you should check for errors.
         this.session.on('error', function(e) {
-            console.log({e})
+
             // empty callback to catch emitted errors to prevent exit due unhandled errors
             if (e.code === "ETIMEOUT") {
                 // TIMEOUT
