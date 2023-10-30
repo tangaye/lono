@@ -1,0 +1,47 @@
+name: Deployment
+run-name: ${{ github.actor }} is deploying 🚀
+
+on:
+    push:
+        branches:
+            - main
+env:
+    TWILIO_ACCOUNT_SID: ${{secrets.TWILIO_ACCOUNT_SID}}
+    TWILIO_AUTH_TOKEN: ${{secrets.TWILIO_AUTH_TOKEN}}
+    PORT: ${{secrets.PORT}}
+    NODE_ENV: ${{secrets.NODE_ENV}}
+    REDIS_URL: ${{secrets.REDIS_URL}}
+    DB_URL: ${{secrets.DB_URL}}
+    ROLLBAR_ACCESS_TOKEN: ${{secrets.ROLLBAR_ACCESS_TOKEN}}
+    BULKGATE_BASEURL: ${{secrets.BULKGATE_BASEURL}}
+    BULKGATE_APP_TOKEN: ${{secrets.BULKGATE_APP_TOKEN}}
+    BULKGATE_APP_ID: ${{secrets.BULKGATE_APP_ID}}
+    KC_SERVER_URL: ${{secrets.KC_SERVER_URL}}
+    KC_REALM: ${{secrets.KC_REALM}}
+    KC_ADMIN_CLIENT_ID: ${{secrets.KC_ADMIN_CLIENT_ID}}
+    KC_ADMIN_CLIENT_SECRET: ${{secrets.KC_ADMIN_CLIENT_SECRET}}
+    ORANGE_BASEURL: ${{secrets.ORANGE_BASEURL}}
+    ORANGE_DEV_PHONE_NUMBER: ${{secrets.ORANGE_DEV_PHONE_NUMBER}}
+    ORANGE_AUTHORIZATION_HEADER: ${{secrets.ORANGE_AUTHORIZATION_HEADER}}
+    MATTERMOST_WEBHOOK: ${{secrets.MATTERMOST_WEBHOOK}}
+    CONVERSATION_BUSINESS_NUMBER: ${{secrets.CONVERSATION_BUSINESS_NUMBER}}
+    CONVERSATION_SECRET: ${{secrets.CONVERSATION_SECRET}}
+    DSEVEN_BASEURL: ${{secrets.DSEVEN_BASEURL}}
+    DSEVEN_TOKEN: ${{secrets.DSEVEN_TOKEN}}
+    MTN_SMPP_URL: ${{secrets.MTN_SMPP_URL}}
+    MTN_SMPP_SYSTEM_ID: ${{secrets.MTN_SMPP_SYSTEM_ID}}
+    MTN_SMPP_PASSWORD: ${{secrets.MTN_SMPP_PASSWORD}}
+
+jobs:
+    deploy:
+        runs-on: deploy-lono
+        steps:
+            - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+            - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+            - name: Check out repository code
+              uses: actions/checkout@v4
+            - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+            - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+            - name: Run docker compose
+              run: docker compose up --build -d
+            - run: echo "🍏 This job's status is ${{ job.status }}."

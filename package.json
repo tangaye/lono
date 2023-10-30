@@ -38,6 +38,7 @@
 		"rsmq": "^0.12.3",
 		"rsmq-worker": "^0.4.3",
 		"sequelize": "^6.6.2",
+		"smpp": "^0.6.0-rc.4",
 		"twilio": "^4.0.0",
 		"validator": "^13.7.0"
 	},
