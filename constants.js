@@ -41,9 +41,9 @@ exports.REQUIRED_ENV_VARIABLES = [
     "ORANGE_BASEURL",
     "ORANGE_AUTHORIZATION_HEADER",
     "ORANGE_DEV_PHONE_NUMBER",
-    "MTN_SMPP_URL",
-    "MTN_SMPP_SYSTEM_ID",
-    "MTN_SMPP_PASSWORD"
+    // "MTN_SMPP_URL",
+    // "MTN_SMPP_SYSTEM_ID",
+    // "MTN_SMPP_PASSWORD"
 ];
 
 /**Environment variables needed but not required to run the app*/
